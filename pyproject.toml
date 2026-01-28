@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "imbue_verify"
+version = "0.1.0"
+readme = "README.md"
+dependencies = [
+    "aiohttp>=3.8.0",
+    "click",
+    "imbue_core",
+    "imbue_tools",
+    "jinja2",
+    "loguru",
+    "pydantic",
+    "pygments>=2.0.0",
+    "pytest",
+    "syrupy",
+    "together>=1.5.35",
+]
+requires-python = ">=3.11"
+
+[project.scripts]
+imbue-verify = "imbue_verify.cli.main:main"
+
+[tool.setuptools]
+package-data.imbue_verify = ["py.typed"]
+
+[tool.setuptools.packages.find]
+include = ["imbue_verify*"]
+
+[tool.uv.sources]
+imbue_core = { path = "../generally_intelligent/imbue_core", editable = true }
+imbue_tools = { path = "../generally_intelligent/imbue_tools", editable = true }

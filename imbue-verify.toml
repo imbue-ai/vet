@@ -1,0 +1,16 @@
+[ci]
+confidence_threshold = 0.9
+max_workers = 4
+quiet = true
+output_format = "json"
+base_commit = "main"
+model = "opus"
+
+[security]
+enabled_issue_codes = ["hardcoded_secret", "insecure_code", "race_condition", "resource_leakage"]
+confidence_threshold = 0.7
+
+[high-precision]
+confidence_threshold = 0.7
+temperature = 1.0
+model = "gpt-5.2"
