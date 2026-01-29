@@ -44,7 +44,7 @@ from imbue_core.secrets_utils import get_secret
 # the reason is that these models are actually now mostly deterministic, and it is much easier to debug if we know what model was used
 # also, there's no need to troll yourself by wondering why results have improved (or gotten worse) when you dont realized that the version has shifted under you
 # if you want to use an upgraded model, just upgrade the model to the key displayed on the website
-# please do NOT set these back to the generic model names!  Josh will be very annoyed
+# please do NOT set these back to the generic model names!
 
 
 # TODO: there are likely more models to add

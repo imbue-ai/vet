@@ -61,17 +61,13 @@ class PropagatingTaskGroup(asyncio.TaskGroup):
             self._base_error = None
             exc = None
 
-    async def _aexit(
-        self, et: type[BaseException] | None, exc: BaseException | None
-    ) -> None:
+    async def _aexit(self, et: type[BaseException] | None, exc: BaseException | None) -> None:
         self._exiting = True
 
         if exc is not None and self._is_base_error(exc) and self._base_error is None:  # type: ignore
             self._base_error = exc
 
-        propagate_cancellation_error = (
-            exc if et is asyncio.exceptions.CancelledError else None
-        )
+        propagate_cancellation_error = exc if et is asyncio.exceptions.CancelledError else None
         if self._parent_cancel_requested:
             # If this flag is set we *must* call uncancel().
             assert self._parent_task
@@ -171,9 +167,8 @@ class PropagatingTaskGroup(asyncio.TaskGroup):
                             exc,
                             "Emergency print of error that caused task group to die:",
                         )
-                self._original_message = (
-                    f"TaskGroup died because: {type(exc).__name__}: {exc}\n"
-                    + "".join(traceback.extract_tb(exc.__traceback__).format())
+                self._original_message = f"TaskGroup died because: {type(exc).__name__}: {exc}\n" + "".join(
+                    traceback.extract_tb(exc.__traceback__).format()
                 )
 
         for t in self._tasks:
@@ -273,9 +268,7 @@ async def safe_cancel_and_wait_for_cleanup(
 
     See safe_cancel_multiple_and_wait_for_cleanup for docs.
     """
-    await safe_cancel_multiple_and_wait_for_cleanup(
-        [task], msg, exception_types_to_ignore
-    )
+    await safe_cancel_multiple_and_wait_for_cleanup([task], msg, exception_types_to_ignore)
 
 
 async def safe_cancel_multiple_and_wait_for_cleanup(
@@ -313,18 +306,13 @@ async def safe_cancel_multiple_and_wait_for_cleanup(
 
     filtered_exceptions = []
     for exception in exceptions:
-        if not any(
-            isinstance(exception, exception_type)
-            for exception_type in exception_types_to_ignore
-        ):
+        if not any(isinstance(exception, exception_type) for exception_type in exception_types_to_ignore):
             filtered_exceptions.append(exception)
 
     if len(filtered_exceptions) == 1:
         raise filtered_exceptions[0]
     elif len(filtered_exceptions) > 1:
-        raise ExceptionGroup(
-            "Multiple exceptions in task group while canceling", filtered_exceptions
-        )
+        raise ExceptionGroup("Multiple exceptions in task group while canceling", filtered_exceptions)
 
 
 def _filter_exception_group(exc_group: ExceptionGroup) -> list[Exception]:

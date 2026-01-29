@@ -55,7 +55,7 @@ from imbue_core.secrets_utils import get_secret
 # the reason is that these models are actually now mostly deterministic, and it is much easier to debug if we know what model was used
 # also, there's no need to troll yourself by wondering why results have improved (or gotten worse) when you dont realized that the version has shifted under you
 # if you want to use an upgraded model, just upgrade the model to the key displayed here: https://platform.openai.com/docs/models/overview
-# please do NOT set these back to the generic model names!  Josh will be very annoyed
+# please do NOT set these back to the generic model names!
 
 FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX = "ft:gpt-4o-mini-2024-07-18"
 FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"

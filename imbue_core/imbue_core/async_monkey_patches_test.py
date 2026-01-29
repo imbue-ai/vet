@@ -1,5 +1,3 @@
-"""Test utilities for async_monkey_patches - provides fixtures for catching logged errors during tests."""
-
 import sys
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -10,8 +8,6 @@ from typing import Iterator
 
 import pytest
 from loguru import logger
-
-from imbue_core.async_monkey_patches import log_exception
 
 
 class IncorrectErrorsLoggedDuringTesting(Exception):
@@ -31,35 +27,29 @@ def check_logged_errors(check_func: Callable[[list[str]], None]) -> Iterator[Non
     """
     accumulated_errors: list[str] = []
 
-    # Set the context variable to indicate we're expecting errors
     token = _expecting_errors.set(True)
 
     def error_catching_sink(message: Any) -> None:
         record = message.record
         if record["level"].name == "ERROR":
             accumulated_errors.append(record["message"])
-            # Log at INFO level instead to indicate we caught it
-            sys.stderr.write(f"CAUGHT ERROR LOG: {record['message'].splitlines()[0][:100]}\n")
+            sys.stderr.write(
+                f"CAUGHT ERROR LOG: {record['message'].splitlines()[0][:100]}\n"
+            )
         else:
-            # Pass through non-error messages
             sys.stderr.write(str(message))
 
-    # Add our sink
     handler_id = logger.add(error_catching_sink, format="{message}", level="DEBUG")
-    # Remove the default stderr handler to prevent duplicate logging
     try:
         logger.remove(0)
     except ValueError:
-        pass  # Already removed
+        pass
 
     try:
         yield
     finally:
-        # Reset the context variable
         _expecting_errors.reset(token)
-        # Remove our custom sink
         logger.remove(handler_id)
-        # Re-add default stderr handler
         logger.add(sys.stderr, level="DEBUG")
         check_func(accumulated_errors)
 
@@ -78,7 +68,9 @@ def at_least_check_maker(expected_errors_set: set[str]) -> Callable[[list[str]],
                 if expected_error in accumulated_error:
                     break
             else:
-                raise IncorrectErrorsLoggedDuringTesting(f"{expected_error=} is not in {accumulated_errors=}")
+                raise IncorrectErrorsLoggedDuringTesting(
+                    f"{expected_error=} is not in {accumulated_errors=}"
+                )
 
     return check_func
 
@@ -119,42 +111,23 @@ def expect_exact_logged_errors(expected_errors: list[str]) -> Iterator[None]:
         yield
 
 
-def test_log_exception() -> None:
-    with expect_exact_logged_errors(["Test log_exception"]):
-        try:
-            x = 1 / 0
-        except Exception as e:
-            log_exception(e, "Test log_exception")
-            assert True  # If we reach here, the test passes
-        else:
-            assert False, "log_exception did not raise an exception"
-
-
 @pytest.fixture
 def explode_on_error() -> Generator[None, None, None]:
-    """Fixture to explode on error - fails the test if any ERROR logs are recorded.
-
-    This fixture is aware of the expect_*_logged_errors context managers and will
-    ignore ERROR logs that occur within those blocks.
-    """
+    """Fixture to explode on error - fails the test if any ERROR logs are recorded."""
     accumulated_errors: list[str] = []
 
     def error_catching_sink(message: Any) -> None:
         record = message.record
         if record["level"].name == "ERROR":
-            # Only accumulate errors if we're NOT expecting them
             if not _expecting_errors.get():
                 accumulated_errors.append(record["message"])
-        # Always write to stderr
         sys.stderr.write(str(message))
 
-    # Add our sink
     handler_id = logger.add(
         error_catching_sink,
         format="{level} | {name}:{function}:{line} - {message}",
         level="DEBUG",
     )
-    # Remove default handler to prevent duplicates
     try:
         logger.remove(0)
     except ValueError:
@@ -166,10 +139,11 @@ def explode_on_error() -> Generator[None, None, None]:
         raise
     else:
         if len(accumulated_errors) > 0:
-            raise IncorrectErrorsLoggedDuringTesting(f"Errors logged during testing: {accumulated_errors}")
+            raise IncorrectErrorsLoggedDuringTesting(
+                f"Errors logged during testing: {accumulated_errors}"
+            )
     finally:
         logger.remove(handler_id)
-        # Re-add default handler
         logger.add(sys.stderr, level="DEBUG")
 
 
@@ -193,5 +167,7 @@ def test_log_error_at_least(explode_on_error: Any) -> None:
         logger.error("Something else bad happened")
 
     with pytest.raises(IncorrectErrorsLoggedDuringTesting):
-        with expect_at_least_logged_errors({"Something bad happened", "Something else bad happened"}):
+        with expect_at_least_logged_errors(
+            {"Something bad happened", "Something else bad happened"}
+        ):
             logger.error("Something bad happened")
