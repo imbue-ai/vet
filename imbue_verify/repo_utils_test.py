@@ -15,7 +15,11 @@ def test_get_code_to_check(simple_test_git_repo: Path) -> None:
     """Test that get_code_to_check correctly handles staged, unstaged, and untracked files"""
     repo_path = simple_test_git_repo
     first_commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=repo_path, capture_output=True, text=True, check=True
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_path,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
 
     # Create an untracked file
@@ -67,7 +71,11 @@ def test_get_code_to_check(simple_test_git_repo: Path) -> None:
 
 def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) -> None:
     first_commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=simple_test_git_repo, capture_output=True, text=True, check=True
+        ["git", "rev-parse", "HEAD"],
+        cwd=simple_test_git_repo,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout.strip()
     git_hash, diff, _diff_no_binary = get_code_to_check(first_commit, repo_path=simple_test_git_repo)
     project_context = LazyProjectContext.build(

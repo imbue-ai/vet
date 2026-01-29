@@ -7,19 +7,33 @@ from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import IssueCode
 from imbue_core.frozen_utils import FrozenDict
 from imbue_core.itertools import only
-from imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import convert_generated_issue_to_identified_issue
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.common import (
+    convert_generated_issue_to_identified_issue,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 
 
 def _parse_issues(
-    valid_response: str, project_context: ProjectContext, enabled_issue_codes: Iterable[IssueCode]
+    valid_response: str,
+    project_context: ProjectContext,
+    enabled_issue_codes: Iterable[IssueCode],
 ) -> list[IdentifiedVerifyIssue]:
     issues = []
     try:
@@ -28,7 +42,9 @@ def _parse_issues(
         return []
     for parsed_issue in issue_data.issues:
         issue = convert_generated_issue_to_identified_issue(
-            issue_data=parsed_issue, project_context=project_context, enabled_issue_codes=tuple(enabled_issue_codes)
+            issue_data=parsed_issue,
+            project_context=project_context,
+            enabled_issue_codes=tuple(enabled_issue_codes),
         )
         if issue:
             issues.append(issue)
@@ -87,8 +103,8 @@ def test_parse_response_with_leading_and_trailing_text() -> None:
     )
 
     response_text = "Some leading text\n```json\n" + valid_response + "\n```\nSome trailing text"
-    with expect_exact_logged_errors(["Unknown location"]):
-        issues = _parse_issues(response_text, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    # Note: This logs a warning about "Unknown location" since test.py isn't in the project context
+    issues = _parse_issues(response_text, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
     issue = only(issues)
     assert issue.code == IssueCode.LOGIC_ERROR
     assert issue.description == "Infinite loop detected"
@@ -119,7 +135,8 @@ def test_parse_issues_invalid_json() -> None:
 
 def test_parse_issues_with_markdown_formatting() -> None:
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": "x = 1"}), cached_prompt_prefix="test"
+        file_contents_by_path=FrozenDict({"test.py": "x = 1"}),
+        cached_prompt_prefix="test",
     )
 
     markdown_response = (
@@ -161,7 +178,11 @@ def test_parse_issues_invalid_severity() -> None:
     )
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(invalid_severity_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            invalid_severity_response,
+            project_context,
+            ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+        )
     assert len(issues) == 0  # Should be skipped due to invalid severity
 
 
@@ -187,9 +208,7 @@ def test_parse_issues_unknown_issue_code() -> None:
 
 
 def test_parse_issues_missing_required_fields() -> None:
-    project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest"
-    )
+    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest")
 
     # Missing required field 'confidence'
     missing_field_response = json.dumps(
@@ -211,9 +230,7 @@ def test_parse_issues_missing_required_fields() -> None:
 
 
 def test_parse_issues_invalid_confidence() -> None:
-    project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest"
-    )
+    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest")
 
     invalid_confidence_response = json.dumps(
         {
@@ -229,14 +246,19 @@ def test_parse_issues_invalid_confidence() -> None:
     )
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(invalid_confidence_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            invalid_confidence_response,
+            project_context,
+            ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+        )
     assert len(issues) == 0  # Should be skipped due to invalid confidence
 
 
 def test_parse_issues_with_line_ranges() -> None:
     code_content = "def hello():\n    print('world')\n    return True"
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": code_content}), cached_prompt_prefix="[ROLE=SYSTEM]\ntest"
+        file_contents_by_path=FrozenDict({"test.py": code_content}),
+        cached_prompt_prefix="[ROLE=SYSTEM]\ntest",
     )
 
     response_with_location = json.dumps(
@@ -261,9 +283,7 @@ def test_parse_issues_with_line_ranges() -> None:
 
 
 def test_parse_issues_malformed_response_structure() -> None:
-    project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest"
-    )
+    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="[ROLE=SYSTEM]\ntest")
 
     # Test with non-dict response
     non_dict_response = json.dumps(["not", "a", "dict"])

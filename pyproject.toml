@@ -31,5 +31,14 @@ package-data.imbue_verify = ["py.typed"]
 include = ["imbue_verify*"]
 
 [tool.uv.sources]
-imbue_core = { path = "../generally_intelligent/imbue_core", editable = true }
-imbue_tools = { path = "../generally_intelligent/imbue_tools", editable = true }
+imbue_core = { path = "./imbue_core", editable = true }
+imbue_tools = { path = "./imbue_tools", editable = true }
+
+[dependency-groups]
+dev = [
+    "black",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py311']

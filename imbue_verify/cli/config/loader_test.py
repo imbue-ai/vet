@@ -86,7 +86,11 @@ def test_load_single_config_file_loads_valid_config(tmp_path: Path) -> None:
                 "base_url": "http://localhost:8080/v1",
                 "api_key_env": "TEST_API_KEY",
                 "models": {
-                    "test-model": {"model_id": "test-model-v1", "context_window": 128000, "max_output_tokens": 16384}
+                    "test-model": {
+                        "model_id": "test-model-v1",
+                        "context_window": 128000,
+                        "max_output_tokens": 16384,
+                    }
                 },
             }
         }
@@ -164,7 +168,12 @@ def test_load_models_config_loads_project_config(tmp_path: Path) -> None:
             "project-provider": {
                 "base_url": "http://project:8080/v1",
                 "api_key_env": "PROJECT_KEY",
-                "models": {"project-model": {"context_window": 128000, "max_output_tokens": 16384}},
+                "models": {
+                    "project-model": {
+                        "context_window": 128000,
+                        "max_output_tokens": 16384,
+                    }
+                },
             }
         }
     }
@@ -188,7 +197,12 @@ def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
                         "name": "Global Name",
                         "base_url": "http://global:8080/v1",
                         "api_key_env": "GLOBAL_KEY",
-                        "models": {"global-model": {"context_window": 128000, "max_output_tokens": 16384}},
+                        "models": {
+                            "global-model": {
+                                "context_window": 128000,
+                                "max_output_tokens": 16384,
+                            }
+                        },
                     }
                 }
             }
@@ -206,7 +220,12 @@ def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
                         "name": "Project Name",
                         "base_url": "http://project:8080/v1",
                         "api_key_env": "PROJECT_KEY",
-                        "models": {"project-model": {"context_window": 128000, "max_output_tokens": 16384}},
+                        "models": {
+                            "project-model": {
+                                "context_window": 128000,
+                                "max_output_tokens": 16384,
+                            }
+                        },
                     }
                 }
             }

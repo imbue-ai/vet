@@ -13,7 +13,9 @@ from loguru import logger
 
 from imbue_core.data_types import IssueCode
 from imbue_core.log_utils import ensure_core_log_levels_configured
-from imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+from imbue_tools.get_conversation_history.get_conversation_history import (
+    parse_conversation_history,
+)
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.api import find_issues
 from imbue_verify.cli.config.cli_config_schema import CLI_DEFAULTS
@@ -451,8 +453,8 @@ def main(argv: list[str] | None = None) -> int:
     config = ImbueVerifyConfig(
         disabled_identifiers=("agentic_issue_identifier",),
         language_model_generation_config=language_model_config,
-        enabled_issue_codes=tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None,
-        disabled_issue_codes=tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None,
+        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
+        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
         temperature=args.temperature,
         filter_issues_below_confidence=args.confidence_threshold,
         max_identify_workers=args.max_workers,

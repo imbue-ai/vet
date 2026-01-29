@@ -17,13 +17,19 @@ from imbue_core.data_types import IssueCode
 from imbue_core.frozen_utils import FrozenDict
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
+from imbue_tools.get_conversation_history.input_data_types import (
+    IdentifierInputsMissingError,
+)
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -75,7 +81,10 @@ def test_to_required_inputs() -> None:
 
     # Should support inputs where the commit message and diff are present
     combined_inputs = IdentifierInputs(
-        maybe_goal="test", maybe_diff="test", maybe_files=("test.py",), maybe_conversation_history=()
+        maybe_goal="test",
+        maybe_diff="test",
+        maybe_files=("test.py",),
+        maybe_conversation_history=(),
     )
     cmi = identifier.to_required_inputs(combined_inputs)
     assert isinstance(cmi, CommitInputs)
@@ -104,7 +113,8 @@ def test_get_prompt_structure() -> None:
         cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
     )
     commit_inputs = CommitInputs(
-        maybe_goal="Add hello world function", maybe_diff="+def hello():\n+    print('hello')"
+        maybe_goal="Add hello world function",
+        maybe_diff="+def hello():\n+    print('hello')",
     )
     config = ImbueVerifyConfig()
 

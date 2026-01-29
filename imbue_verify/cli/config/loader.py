@@ -50,7 +50,10 @@ def find_git_repo_root(start_path: Path) -> Path | None:
 
 
 def _get_config_file_paths(
-    global_subpath: str, global_filename: str, project_filename: str, repo_path: Path | None = None
+    global_subpath: str,
+    global_filename: str,
+    project_filename: str,
+    repo_path: Path | None = None,
 ) -> list[Path]:
     paths = [get_xdg_config_home() / global_subpath / global_filename]
 
@@ -189,14 +192,14 @@ def load_cli_config(repo_path: Path | None = None) -> dict[str, CliConfigPreset]
 
 
 def get_config_preset(
-    config_name: str, cli_configs: dict[str, CliConfigPreset], repo_path: Path | None = None
+    config_name: str,
+    cli_configs: dict[str, CliConfigPreset],
+    repo_path: Path | None = None,
 ) -> CliConfigPreset:
     if config_name not in cli_configs:
         available = sorted(cli_configs.keys())
         if available:
-            raise ConfigLoadError(
-                f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}"
-            )
+            raise ConfigLoadError(f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}")
         else:
             paths = get_cli_config_file_paths(repo_path)
             paths_list = "\n".join(f"  - {p} ({'global' if i == 0 else 'project'})" for i, p in enumerate(paths))

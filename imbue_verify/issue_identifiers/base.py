@@ -7,7 +7,9 @@ from imbue_core.data_types import IssueCode
 from imbue_core.data_types import IssueIdentificationDebugInfo
 from imbue_core.pydantic_serialization import SerializableModel
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import to_specific_inputs_type
+from imbue_tools.get_conversation_history.input_data_types import (
+    to_specific_inputs_type,
+)
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
@@ -26,7 +28,10 @@ class IssueIdentifier(SerializableModel, abc.ABC, Generic[T]):
 
     @abc.abstractmethod
     def identify_issues(
-        self, identifier_inputs: T, project_context: ProjectContext, config: ImbueVerifyConfig
+        self,
+        identifier_inputs: T,
+        project_context: ProjectContext,
+        config: ImbueVerifyConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         """
         Identify issues given the identifier inputs.

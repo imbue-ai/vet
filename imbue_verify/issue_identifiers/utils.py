@@ -20,7 +20,10 @@ def xml_post_escape(input_string: str, element_to_post_escape: str) -> str:
         element_to_post_escape -- the element to post-escape (e.g. "code_part")
 
     """
-    pattern = re.compile(f"<({element_to_post_escape})>(.*?)</({element_to_post_escape})>", re.IGNORECASE | re.DOTALL)
+    pattern = re.compile(
+        f"<({element_to_post_escape})>(.*?)</({element_to_post_escape})>",
+        re.IGNORECASE | re.DOTALL,
+    )
     return re.sub(
         pattern,
         lambda x: f"<{x.group(1)}>{escape(x.group(2))}</{x.group(3)}>",
@@ -77,7 +80,8 @@ class GeneratorDoneSentinel:
 
 
 def _run_and_queue_generator(
-    generator: Generator[IterT, None, ReturnT], output_queue: queue.Queue[IterT | GeneratorDoneSentinel]
+    generator: Generator[IterT, None, ReturnT],
+    output_queue: queue.Queue[IterT | GeneratorDoneSentinel],
 ) -> ReturnT:
     try:
         generator_with_capture = ReturnCapturingGenerator(generator)
@@ -101,7 +105,12 @@ def multiplex_generators(
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         output_queue: queue.Queue[IterT | GeneratorDoneSentinel] = queue.Queue()
         futures = [
-            executor.submit(contextvars.copy_context().run, _run_and_queue_generator, gen, output_queue=output_queue)
+            executor.submit(
+                contextvars.copy_context().run,
+                _run_and_queue_generator,
+                gen,
+                output_queue=output_queue,
+            )
             for gen in generators
         ]
 

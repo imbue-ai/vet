@@ -11,20 +11,34 @@ from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import LLMResponse
 from imbue_core.itertools import only
 from imbue_core.pydantic_serialization import SerializableModel
-from imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
+from imbue_tools.get_conversation_history.get_conversation_history import (
+    format_conversation_history_for_prompt,
+)
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import DEFAULT_CONFIDENCE_THRESHOLD
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_costed_response
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
-from imbue_verify.issue_identifiers.harnesses.single_prompt import USER_REQUEST_PREFIX_TEMPLATE
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.common import (
+    extract_invocation_info_from_costed_response,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
+from imbue_verify.issue_identifiers.harnesses.single_prompt import (
+    USER_REQUEST_PREFIX_TEMPLATE,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 CODE_BASED_CRITERIA = (

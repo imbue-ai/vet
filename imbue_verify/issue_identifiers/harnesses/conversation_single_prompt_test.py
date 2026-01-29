@@ -9,9 +9,15 @@ from imbue_core.sculptor.state.messages import LLMModel
 from imbue_core.sculptor.state.messages import ResponseBlockAgentMessage
 from imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
-from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import ConversationSinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_tools.get_conversation_history.input_data_types import (
+    IdentifierInputsMissingError,
+)
+from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import (
+    ConversationSinglePromptHarness,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 
 
 def test_to_required_inputs() -> None:

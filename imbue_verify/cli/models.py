@@ -52,7 +52,9 @@ def get_builtin_models_by_provider() -> dict[str, list[str]]:
     }
 
 
-def get_models_by_provider(user_config: ModelsConfig | None = None) -> dict[str, list[str]]:
+def get_models_by_provider(
+    user_config: ModelsConfig | None = None,
+) -> dict[str, list[str]]:
     providers = get_builtin_models_by_provider()
 
     if user_config:

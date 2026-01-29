@@ -31,11 +31,15 @@ from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
 from imbue_verify.issue_identifiers.common import extract_invocation_info_from_messages
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
 from imbue_verify.issue_identifiers.common import generate_response_from_claude_code
 from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 
 PROMPT_TEMPLATE = """You are analyzing a code repository for potential issues. The repository files are available in {{ repo_path }}.
 
@@ -240,7 +244,10 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         return prompt
 
     def identify_issues(
-        self, identifier_inputs: CommitInputs, project_context: ProjectContext, config: ImbueVerifyConfig
+        self,
+        identifier_inputs: CommitInputs,
+        project_context: ProjectContext,
+        config: ImbueVerifyConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         assert project_context.repo_path is not None, "Project context must have a valid repo_path, got None"
 

@@ -11,18 +11,24 @@ from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import LLMResponse
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import to_specific_inputs_type
+from imbue_tools.get_conversation_history.input_data_types import (
+    to_specific_inputs_type,
+)
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
 from imbue_verify.issue_identifiers.common import extract_invocation_info_from_messages
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
 from imbue_verify.issue_identifiers.common import generate_response_from_claude_code
 from imbue_verify.issue_identifiers.common import get_claude_code_options
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 COLLATION_PROMPT_TEMPLATE = """You are reviewing the results from parallel code analysis for potential issues.
@@ -96,7 +102,9 @@ def _get_collation_prompt(
     return prompt
 
 
-def _convert_parsed_issues_to_combined_string(all_parsed_issues: Iterable[GeneratedIssueSchema]) -> str:
+def _convert_parsed_issues_to_combined_string(
+    all_parsed_issues: Iterable[GeneratedIssueSchema],
+) -> str:
     """Convert all parsed issues from all issue types to a combined string for collation prompt."""
     combined_issues = []
 
@@ -142,7 +150,8 @@ def collate_issues_with_agent(
     issue_generator_debug_info = issue_generator_with_capture.return_value
 
     options = get_claude_code_options(
-        cwd=project_context.repo_path, model_name=config.language_model_generation_config.model_name
+        cwd=project_context.repo_path,
+        model_name=config.language_model_generation_config.model_name,
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
     collation_prompt = _get_collation_prompt(

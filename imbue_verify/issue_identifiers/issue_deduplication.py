@@ -16,10 +16,16 @@ from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_costed_response
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    extract_invocation_info_from_costed_response,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 DEDUPLICATION_PROMPT_TEMPLATE = """[ROLE=USER]
@@ -90,7 +96,9 @@ def _get_deduplication_prompt(
     return prompt
 
 
-def _convert_parsed_issues_to_combined_string(all_parsed_issues: Iterable[GeneratedIssueSchema]) -> str:
+def _convert_parsed_issues_to_combined_string(
+    all_parsed_issues: Iterable[GeneratedIssueSchema],
+) -> str:
     """Convert all parsed issues from all issue types to a combined string for the deduplication prompt."""
     combined_issues = []
 

@@ -18,22 +18,36 @@ from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import IssueIdentifierResult
 from imbue_core.data_types import IssueIdentifierType
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
+from imbue_tools.get_conversation_history.input_data_types import (
+    IdentifierInputsMissingError,
+)
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_tools.types.imbue_verify_config import get_enabled_issue_codes
-from imbue_verify.issue_identifiers.agentic_issue_collation import collate_issues_with_agent
+from imbue_verify.issue_identifiers.agentic_issue_collation import (
+    collate_issues_with_agent,
+)
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import convert_to_issue_identifier_result
 from imbue_verify.issue_identifiers.harnesses.agentic import AgenticHarness
 from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import ConversationSinglePromptHarness
+from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import (
+    ConversationSinglePromptHarness,
+)
 from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.issue_deduplication import deduplicate_issues
 from imbue_verify.issue_identifiers.issue_evaluation import filter_issues
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
@@ -89,7 +103,9 @@ def _convert_all_to_enum(
     return tuple(results)
 
 
-def _get_enabled_identifier_names(config: ImbueVerifyConfig) -> set[IssueIdentifierType]:
+def _get_enabled_identifier_names(
+    config: ImbueVerifyConfig,
+) -> set[IssueIdentifierType]:
     all_names = get_all_valid_identifier_names()
     explicitly_enabled = _convert_all_to_enum(config.enabled_identifiers or tuple(), all_names, IssueIdentifierType)
     explicitly_disabled = _convert_all_to_enum(config.disabled_identifiers or tuple(), all_names, IssueIdentifierType)
@@ -120,9 +136,7 @@ def _build_identifiers(
             (
                 combined_name,
                 harness.make_issue_identifier(
-                    identification_guides=tuple(
-                        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in issue_codes
-                    )
+                    identification_guides=tuple(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in issue_codes)
                 ),
             )
         )
@@ -131,7 +145,8 @@ def _build_identifiers(
 
 
 def _generate_with_name_in_debug_info(
-    name: str, generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]
+    name: str,
+    generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
 ) -> Generator[GeneratedIssueSchema, None, tuple[str, IssueIdentificationDebugInfo]]:
     generator_with_capture = ReturnCapturingGenerator(generator)
     for result in generator_with_capture:
@@ -142,7 +157,7 @@ def _generate_with_name_in_debug_info(
 def _combine_issue_generator_debug_info(
     generator: Generator[GeneratedIssueSchema, None, tuple[tuple[str, IssueIdentificationDebugInfo], ...]],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
-    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = yield from generator
+    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = (yield from generator)
 
     updated_llm_responses = []
     for identifier_name, debug_info in collected_debug_info:
@@ -178,7 +193,11 @@ def run(
             compatible_enabled_identifier_names.append(identifier_name)
             detectable_issue_codes.update(identifier.enabled_issue_codes)
         except IdentifierInputsMissingError as e:
-            logger.debug("skipping identifier {} because of missing inputs: {}", identifier_name, e)
+            logger.debug(
+                "skipping identifier {} because of missing inputs: {}",
+                identifier_name,
+                e,
+            )
             continue
 
         # 2. Collation for agentic identifiers
@@ -192,7 +211,10 @@ def run(
                     identifier.enabled_issue_codes,
                 )
             except IdentifierInputsMissingError as e:
-                logger.warning("collate_issues_with_agent requires commit message and diff, skipping: {}", e)
+                logger.warning(
+                    "collate_issues_with_agent requires commit message and diff, skipping: {}",
+                    e,
+                )
                 continue
         else:
             collated_issues_generator = identified_issues_generator
@@ -222,7 +244,9 @@ def run(
     # 4. Deduplicate issues across all identifiers
     if config.enable_deduplication:
         deduplicated_generator = deduplicate_issues(
-            multiplexed_generators_with_combined_debug_info, config, tuple(detectable_issue_codes)
+            multiplexed_generators_with_combined_debug_info,
+            config,
+            tuple(detectable_issue_codes),
         )
     else:
         deduplicated_generator = multiplexed_generators_with_combined_debug_info

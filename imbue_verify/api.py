@@ -11,7 +11,9 @@ from loguru import logger
 from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import IssueIdentificationDebugInfo
 from imbue_core.sculptor.state.messages import ConversationMessageUnion
-from imbue_tools.get_conversation_history.get_conversation_history import ConversationLoadingError
+from imbue_tools.get_conversation_history.get_conversation_history import (
+    ConversationLoadingError,
+)
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from imbue_tools.repo_utils.project_context import LazyProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext

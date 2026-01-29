@@ -35,7 +35,7 @@ def issue_to_output(issue: IdentifiedVerifyIssue) -> IssueOutput:
 
     return IssueOutput(
         issue_code=str(issue.code),
-        confidence=issue.confidence_score.normalized if issue.confidence_score else None,
+        confidence=(issue.confidence_score.normalized if issue.confidence_score else None),
         file_path=issue.location[0].filename if issue.location else None,
         line_number=issue.location[0].line_start if issue.location else None,
         line_number_end=line_number_end,

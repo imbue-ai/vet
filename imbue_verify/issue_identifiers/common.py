@@ -33,12 +33,16 @@ from imbue_core.data_types import IssueLocation
 from imbue_core.data_types import LineRange
 from imbue_core.data_types import SeverityScore
 from imbue_core.pydantic_serialization import SerializableModel
-from imbue_core.sculptor.telemetry import send_exception_to_posthog
-from imbue_core.sculptor.telemetry_constants import SculptorPosthogEvent
-from imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -80,17 +84,15 @@ class GeneratedResponseSchema(SerializableModel):
     issues: list[GeneratedIssueSchema] = Field(default_factory=list, description="List of identified issues")
 
 
-def generate_issues_from_response_texts(response_texts: Iterable[str]) -> Generator[GeneratedIssueSchema, None, None]:
+def generate_issues_from_response_texts(
+    response_texts: Iterable[str],
+) -> Generator[GeneratedIssueSchema, None, None]:
     """Generate IssueIdentifierResult objects from LLM response text."""
     for response_text in response_texts:
         try:
             parsed_data = parse_model_json_response(response_text, GeneratedResponseSchema)
-        except ResponseParsingError as e:
-            send_exception_to_posthog(
-                SculptorPosthogEvent.FAILED_TO_PARSE_LLM_RESPONSE_WHEN_GENERATING_ISSUES,
-                e,
-                message=f"Failed to parse response text: {response_text}",
-            )
+        except ResponseParsingError:
+            logger.warning(f"Failed to parse response text: {response_text}")
             continue
 
         for raw_issue in parsed_data.issues:
@@ -136,13 +138,9 @@ def convert_generated_issue_to_identified_issue(
                 repo_path = project_context.repo_path
                 assert repo_path is not None
                 issue_location_path = issue_location_path.relative_to(repo_path)
-        except ValueError as e:
+        except ValueError:
             issue_location_path = None
-            send_exception_to_posthog(
-                SculptorPosthogEvent.INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION,
-                e,
-                message=f"Invalid location '{issue_location}', skipping line range detection.",
-            )
+            logger.warning(f"Invalid location '{issue_location}', skipping line range detection.")
         issue_code_part = issue_data.code_part
         if issue_location_path and issue_code_part:
             contents = project_context.file_contents_by_path.get(issue_location_path.as_posix())
@@ -155,11 +153,7 @@ def convert_generated_issue_to_identified_issue(
                         code_part_repr=repr(issue_code_part),
                     )
             else:
-                send_exception_to_posthog(
-                    SculptorPosthogEvent.INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION,
-                    KeyError(issue_location),
-                    message=f"Unknown location '{issue_location}', skipping line range detection.",
-                )
+                logger.warning(f"Unknown location '{issue_location}', skipping line range detection.")
 
         # Convert severity (1-5) to normalized score (0-1)
         severity_normalized = (issue_data.severity - 1) / 4.0  # Map 1-5 to 0-1
@@ -193,7 +187,9 @@ def convert_to_issue_identifier_result(
     generator_with_capture = ReturnCapturingGenerator(generator)
     for issue_data in generator_with_capture:
         issue = convert_generated_issue_to_identified_issue(
-            issue_data=issue_data, project_context=project_context, enabled_issue_codes=enabled_issue_codes
+            issue_data=issue_data,
+            project_context=project_context,
+            enabled_issue_codes=enabled_issue_codes,
         )
         if issue:
             yield IssueIdentifierResult(issue=issue, passes_filtration=issue_data.passes_filtration)
@@ -277,7 +273,9 @@ def extract_invocation_info_from_costed_response(
     )
 
 
-def extract_invocation_info_from_messages(messages: list[AgentMessage]) -> InvocationInfo:
+def extract_invocation_info_from_messages(
+    messages: list[AgentMessage],
+) -> InvocationInfo:
     """Extract invocation information from Agent messages."""
     for message in messages:
         if isinstance(message, AgentResultMessage):

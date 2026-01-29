@@ -23,11 +23,17 @@ from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_costed_response
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    extract_invocation_info_from_costed_response,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
 from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 
 USER_REQUEST_PREFIX_TEMPLATE = """{{cached_prompt_prefix}}
 [ROLE=USER_CACHED]
@@ -134,7 +140,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
                 "include_request_and_diff": True,
                 "cached_prompt_prefix": project_context.cached_prompt_prefix,
                 "cache_full_prompt": config.cache_full_prompt,
-                "extra_context": escape_prompt_markers(config.extra_context) if config.extra_context else None,
+                "extra_context": (escape_prompt_markers(config.extra_context) if config.extra_context else None),
                 "commit_message": escape_prompt_markers(identifier_inputs.goal),
                 "unified_diff": escape_prompt_markers(identifier_inputs.diff),
                 "guides": formatted_guides,
@@ -143,7 +149,10 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         )
 
     def identify_issues(
-        self, identifier_inputs: CommitInputs, project_context: ProjectContext, config: ImbueVerifyConfig
+        self,
+        identifier_inputs: CommitInputs,
+        project_context: ProjectContext,
+        config: ImbueVerifyConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         prompt = self._get_prompt(project_context, config, identifier_inputs)
         language_model = build_language_model_from_config(config.language_model_generation_config)
