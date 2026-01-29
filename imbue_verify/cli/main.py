@@ -12,7 +12,6 @@ from pathlib import Path
 from loguru import logger
 
 from imbue_core.data_types import IssueCode
-from imbue_core.log_utils import ensure_core_log_levels_configured
 from imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
@@ -329,8 +328,6 @@ def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> ar
 
 
 def main(argv: list[str] | None = None) -> int:
-    ensure_core_log_levels_configured()
-
     parser = create_parser()
     args = parser.parse_args(argv)
 

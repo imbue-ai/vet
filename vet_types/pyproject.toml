@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vet_types"
+version = "0.1.0"
+description = "Type definitions for VET (imbue-verify) without telemetry dependencies"
+dependencies = [
+    "pydantic",
+    "imbue_core",
+    "typeid-python",
+]
+requires-python = ">=3.11"
+
+[tool.setuptools]
+package-data.vet_types = ["py.typed"]
+
+[tool.setuptools.packages.find]
+include = ["vet_types*"]

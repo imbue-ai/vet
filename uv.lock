@@ -988,6 +988,7 @@ dependencies = [
     { name = "pytest" },
     { name = "syrupy" },
     { name = "together" },
+    { name = "vet-types" },
 ]
 
 [package.dev-dependencies]
@@ -1008,6 +1009,7 @@ requires-dist = [
     { name = "pytest" },
     { name = "syrupy" },
     { name = "together", specifier = ">=1.5.35" },
+    { name = "vet-types", editable = "vet_types" },
 ]
 
 [package.metadata.requires-dev]
@@ -2764,6 +2766,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/c8/929d81665d83f0b2ffaecb8e66c3091a50f62c7cb5b65e678bd75a96684e/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:cdbd82ff20147461caefc375551595ecf77ebb384e46267f128aca45a0f2cdfc", size = 467029, upload-time = "2026-01-20T20:37:08.277Z" },
     { url = "https://files.pythonhosted.org/packages/8e/a0/27d7daa1bfed7163f4ccaf52d7d2f4ad7bb1002a85b45077938b91ee584f/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eff57e8a5d540006ce73cf0841a643d445afe78ba12e75ac53a95ca2924a56be", size = 333298, upload-time = "2026-01-20T20:37:07.271Z" },
     { url = "https://files.pythonhosted.org/packages/63/d4/acad86ce012b42ce18a12f31ee2aa3cbeeb98664f865f05f68c882945913/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3fd9112ca96978361201e669729784f26c71fecc9c13a7f8a07162c31bd4d1e2", size = 359217, upload-time = "2026-01-20T20:36:59.687Z" },
+]
+
+[[package]]
+name = "vet-types"
+version = "0.1.0"
+source = { editable = "vet_types" }
+dependencies = [
+    { name = "imbue-core" },
+    { name = "pydantic" },
+    { name = "typeid-python" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "imbue-core" },
+    { name = "pydantic" },
+    { name = "typeid-python" },
 ]
 
 [[package]]

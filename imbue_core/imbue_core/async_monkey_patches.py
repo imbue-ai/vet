@@ -6,22 +6,11 @@ from types import TracebackType
 from typing import Any
 from typing import Sequence
 
-import sentry_sdk
+from loguru import logger
 
-from imbue_core.constants import ExceptionPriority
-from imbue_core.error_utils import get_sentry_event_handler
-from imbue_core.error_utils import get_traceback_with_vars
 from imbue_core.errors import ExpectedError
-from imbue_core.s3_uploader import EXTRAS_UPLOADED_FILES_KEY
-from imbue_core.s3_uploader import get_s3_upload_key
-from imbue_core.s3_uploader import get_s3_upload_url
-from imbue_core.s3_uploader import upload_to_s3_with_key
 
 _IS_SHUTTING_DOWN = False
-
-
-# This is the name of the attribute we set on our exceptions to ensure they are logged (esp. to Sentry) at most once.
-EXCEPTION_LOGGED_FLAG = "_was_logged_by_log_exception"
 
 
 def notify_task_groups_of_shutdown() -> None:
@@ -339,101 +328,14 @@ def _filter_exception_group(exc_group: ExceptionGroup) -> list[Exception]:
     return result
 
 
-def _upload_traceback(key: str, exception: BaseException) -> None:
-    tb_with_vars = get_traceback_with_vars(exception)
-    if tb_with_vars is not None:
-        upload_to_s3_with_key(key, tb_with_vars.encode())
-
-
-def pre_filter_exception(exc: BaseException, message: str | None = None) -> bool:
-    # deferred import, will have been imported anyway by this point
-    from loguru import logger
-
-    if getattr(exc, EXCEPTION_LOGGED_FLAG, False):
-        logger.info("Skipping duplicate log of exception {} with message {!r}", exc, message)
-        return True
-    try:
-        setattr(exc, EXCEPTION_LOGGED_FLAG, True)
-    except AttributeError:
-        logger.info("Unable to guarantee that {} will not be logged again", exc)
-    return False
-
-
-def inject_exception_and_log(
-    exc: BaseException,
-    message: str,
-    priority: ExceptionPriority | None = None,
-    *args: Any,
-    **kwargs: Any,
-) -> None:
-    # deferred import, will have been imported anyway by this point
-    from loguru import logger
-
-    # inject received exception stack trace into logger error message
-    options = (exc,) + logger._options[1:]  # pyre-fixme[16]: pyre doesn't know that _options exists
-    if priority is not None:
-        level = priority.value
-    else:
-        level = "ERROR"
-    logger._log(level, False, options, message, args, kwargs)  # pyre-fixme[16]: pyre doesn't know that _log exists
-
-
 def log_exception(
     exc: BaseException,
     message: str,
-    priority: ExceptionPriority | None = None,
     *args: Any,
-    sentry_extra_uploads: dict[str, str] | None = None,
     **kwargs: Any,
 ) -> None:
-    """Josh doesn't like that `loguru.exception()` takes only a message, and grabs the current exception from sys.exc_info().
-
-    So this is a more explicit alternative that takes the exception as an argument.
-    """
-    should_skip = pre_filter_exception(exc, message)
-    if should_skip:
-        return None
-
-    # use a new scope to ensure these attachments don't bleed to other events that might have the same scope
-    # TODO: unify the uploading logic that we have in Sculptor with this, avoid coupling through two global objects (sentry event handler, s3_upload)
-    with sentry_sdk.new_scope() as scope:
-        sentry_event_handler = get_sentry_event_handler()
-        traceback_str = "".join(traceback.format_stack())
-        message = f"{message}\n\nlog_exception CALL SITE TRACEBACK:\n\n{traceback_str}\nORIGINAL EXCEPTION TRACEBACK FOLLOWS:\n"
-        if sentry_event_handler is not None:
-            s3_uploads = []
-            callbacks = []
-            traceback_str_s3_key = get_s3_upload_key("logsite_traceback", ".txt")
-
-            # attach traceback of log_exception callsite
-            logsite_url = get_s3_upload_url(traceback_str_s3_key)
-            s3_uploads.append(logsite_url)
-            callbacks.append(
-                lambda key=traceback_str_s3_key, data=traceback_str: upload_to_s3_with_key(key, data.encode())
-            )
-
-            # for original exception, get traceback with variables and attach
-            traceback_with_variables_s3_key = get_s3_upload_key("original_exc_traceback_with_vars", ".txt")
-            s3_uploads.append(get_s3_upload_url(traceback_with_variables_s3_key))
-            callbacks.append(
-                lambda key=traceback_with_variables_s3_key, exception=exc: _upload_traceback(key, exception)
-            )
-            # upload some extra data if provided
-            if sentry_extra_uploads is not None:
-                for key, value in sentry_extra_uploads.items():
-                    key = get_s3_upload_key(key, ".txt")
-                    s3_uploads.append(get_s3_upload_url(key))
-                    callbacks.append(lambda key=key, data=value: upload_to_s3_with_key(key, data.encode()))
-
-            sentry_event_handler.schedule_callbacks(callbacks)
-
-            # watch out; this will stomp on existing "extras" in the event
-            s3_uploads = [upload for upload in s3_uploads if upload is not None]
-            if s3_uploads:
-                scope.set_extra(EXTRAS_UPLOADED_FILES_KEY, s3_uploads)
-
-        # inject received exception stack trace into logger error message
-        inject_exception_and_log(exc, message, priority, *args, **kwargs)
+    """Log an exception with its traceback to stderr via loguru."""
+    logger.opt(exception=exc).error(message, *args, **kwargs)
 
 
 def apply() -> None:

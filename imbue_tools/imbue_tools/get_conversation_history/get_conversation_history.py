@@ -6,10 +6,10 @@ from loguru import logger
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
-from imbue_core.sculptor.state.chat_state import ContentBlockTypes
-from imbue_core.sculptor.state.messages import ChatInputUserMessage
-from imbue_core.sculptor.state.messages import ConversationMessageUnion
-from imbue_core.sculptor.state.messages import ResponseBlockAgentMessage
+from vet_types.chat_state import ContentBlockTypes
+from vet_types.messages import ChatInputUserMessage
+from vet_types.messages import ConversationMessageUnion
+from vet_types.messages import ResponseBlockAgentMessage
 
 CONVERSATION_FILE_ENV_VAR = "CONVERSATION_FILE"
 TASK_SOURCE_BRANCH_ENV_VAR = "TASK_SOURCE_BRANCH"

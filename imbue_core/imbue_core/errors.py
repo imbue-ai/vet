@@ -3,8 +3,6 @@
 Please subclass from one of the errors in this module for errors that you expect other Imbumans to handle.
 """
 
-from typing import Any
-
 
 class ImbueRuntimeException(BaseException):
     """Base class for all things that could go wrong within Imbue code.
@@ -13,12 +11,7 @@ class ImbueRuntimeException(BaseException):
     ImbueRuntimeExceptions.
     """
 
-    _was_logged_by_log_exception: bool
-
-    def __init__(self, *args: Any) -> None:
-        super().__init__(*args)
-        # New instances start out marked as not-yet-logged.
-        self._was_logged_by_log_exception = False
+    pass
 
 
 class ImbueError(ImbueRuntimeException, Exception):

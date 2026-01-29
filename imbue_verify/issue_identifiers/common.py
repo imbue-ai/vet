@@ -22,7 +22,6 @@ from imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
 from imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from imbue_core.async_monkey_patches import log_exception
-from imbue_core.constants import ExceptionPriority
 from imbue_core.data_types import ConfidenceScore
 from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import InvocationInfo
@@ -172,7 +171,6 @@ def convert_generated_issue_to_identified_issue(
         log_exception(
             e,
             "Error processing issue data: {issue_data}, skipping",
-            priority=ExceptionPriority.LOW_PRIORITY,
             issue_data=issue_data,
         )
         return None

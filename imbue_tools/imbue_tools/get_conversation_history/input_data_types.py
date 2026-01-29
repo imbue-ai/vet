@@ -4,7 +4,7 @@ from typing import TypeVar
 from pydantic import model_validator
 
 from imbue_core.pydantic_serialization import SerializableModel
-from imbue_core.sculptor.state.messages import ConversationMessageUnion
+from vet_types.messages import ConversationMessageUnion
 
 
 class IdentifierInputsMissingError(Exception):

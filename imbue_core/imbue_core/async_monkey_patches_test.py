@@ -1,4 +1,6 @@
+import sys
 from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any
 from typing import Callable
 from typing import Generator
@@ -7,47 +9,46 @@ from typing import Iterator
 import pytest
 from loguru import logger
 
-from imbue_core.async_monkey_patches import log_exception
-from imbue_core.constants import ExceptionPriority
-
 
 class IncorrectErrorsLoggedDuringTesting(Exception):
     pass
 
 
+_expecting_errors: ContextVar[bool] = ContextVar("expecting_errors", default=False)
+
+
 @contextmanager
 def check_logged_errors(check_func: Callable[[list[str]], None]) -> Iterator[None]:
-    """Context manager that monkey patches logger._log to accumulate error messages instead of logging them.
-    Then it runs the check function on the accumulated errors."""
-    original_log_func = logger._log  # pyre-fixme[16]: pyre doesn't know that _log exists
+    """Context manager that intercepts ERROR logs using loguru's sink system.
+    Then it runs the check function on the accumulated errors.
+
+    Sets the _expecting_errors context variable so that explode_on_error knows to
+    ignore errors during this block.
+    """
     accumulated_errors: list[str] = []
 
-    error_level_names = (
-        "ERROR",
-        ExceptionPriority.LOW_PRIORITY.value,
-        ExceptionPriority.MEDIUM_PRIORITY.value,
-        ExceptionPriority.HIGH_PRIORITY.value,
-    )
+    token = _expecting_errors.set(True)
 
-    logger._log = lambda level, flag, options, message, args, kwargs: (
-        (
-            accumulated_errors.append(message) is None
-            and original_log_func(
-                "INFO",
-                flag,
-                options,
-                "CAUGHT ERROR LOG: " + message.splitlines()[0][:100],
-                args,
-                kwargs,
-            )
-        )
-        if level in error_level_names
-        else original_log_func(level, flag, options, message, args, kwargs)
-    )
+    def error_catching_sink(message: Any) -> None:
+        record = message.record
+        if record["level"].name == "ERROR":
+            accumulated_errors.append(record["message"])
+            sys.stderr.write(f"CAUGHT ERROR LOG: {record['message'].splitlines()[0][:100]}\n")
+        else:
+            sys.stderr.write(str(message))
+
+    handler_id = logger.add(error_catching_sink, format="{message}", level="DEBUG")
+    try:
+        logger.remove(0)
+    except ValueError:
+        pass
+
     try:
         yield
     finally:
-        logger._log = original_log_func
+        _expecting_errors.reset(token)
+        logger.remove(handler_id)
+        logger.add(sys.stderr, level="DEBUG")
         check_func(accumulated_errors)
 
 
@@ -72,7 +73,7 @@ def at_least_check_maker(expected_errors_set: set[str]) -> Callable[[list[str]],
 
 @contextmanager
 def expect_at_least_logged_errors(expected_errors: set[str]) -> Iterator[None]:
-    """Context manager that monkey patches logger._log to accumulate error messages instead of logging them.
+    """Context manager that intercepts ERROR logs using loguru's sink system.
     Checks that all expected errors are in the accumulated errors, in no particular order.
     """
     check_func = at_least_check_maker(expected_errors)
@@ -99,57 +100,34 @@ def exact_check_maker(expected_errors: list[str]) -> Callable[[list[str]], None]
 
 @contextmanager
 def expect_exact_logged_errors(expected_errors: list[str]) -> Iterator[None]:
-    """Context manager that monkey patches logger._log to accumulate error messages instead of logging them.
+    """Context manager that intercepts ERROR logs using loguru's sink system.
     Checks that all expected errors are in the accumulated errors, in the same order."""
     check_func = exact_check_maker(expected_errors)
     with check_logged_errors(check_func):
         yield
 
 
-def test_log_exception() -> None:
-    with expect_exact_logged_errors(["Test log_exception"]):
-        try:
-            x = 1 / 0
-        except Exception as e:
-            log_exception(e, "Test log_exception")
-            assert True  # If we reach here, the test passes
-        else:
-            assert False, "log_exception did not raise an exception"
-
-
-def test_log_exception_with_priority() -> None:
-    # ensure_core_log_levels_configured auto-used in conftest
-    with expect_exact_logged_errors(["Test log_exception"]):
-        try:
-            x = 1 / 0
-        except Exception as e:
-            log_exception(e, "Test log_exception", priority=ExceptionPriority.LOW_PRIORITY)
-            assert True  # If we reach here, the test passes
-        else:
-            assert False, "log_exception did not raise an exception"
-
-
 @pytest.fixture
 def explode_on_error() -> Generator[None, None, None]:
-    """Fixture to explode on error."""
-    original_log_func = logger._log  # pyre-fixme[16]: pyre doesn't know that _log exists
+    """Fixture to explode on error - fails the test if any ERROR logs are recorded."""
     accumulated_errors: list[str] = []
 
-    def _log_wrapper(
-        level: str,
-        flag: int,
-        options: tuple[int, ...],
-        message: str,
-        args: tuple,
-        kwargs: dict,
-    ) -> Any:
-        if level == "ERROR":
-            accumulated_errors.append(message)
-        new_options = list(options)
-        new_options[1] = 1
-        return original_log_func(level, flag, tuple(new_options), message, args, kwargs)
+    def error_catching_sink(message: Any) -> None:
+        record = message.record
+        if record["level"].name == "ERROR":
+            if not _expecting_errors.get():
+                accumulated_errors.append(record["message"])
+        sys.stderr.write(str(message))
 
-    logger._log = _log_wrapper
+    handler_id = logger.add(
+        error_catching_sink,
+        format="{level} | {name}:{function}:{line} - {message}",
+        level="DEBUG",
+    )
+    try:
+        logger.remove(0)
+    except ValueError:
+        pass
 
     try:
         yield
@@ -159,7 +137,8 @@ def explode_on_error() -> Generator[None, None, None]:
         if len(accumulated_errors) > 0:
             raise IncorrectErrorsLoggedDuringTesting(f"Errors logged during testing: {accumulated_errors}")
     finally:
-        logger._log = original_log_func
+        logger.remove(handler_id)
+        logger.add(sys.stderr, level="DEBUG")
 
 
 def test_log_error(explode_on_error: Any) -> None:

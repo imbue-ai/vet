@@ -30,7 +30,6 @@ from yasoo.utils import is_obj_supported_primitive
 from yasoo.utils import normalize_type
 from yasoo.utils import resolve_types
 
-from imbue_core.async_monkey_patches import EXCEPTION_LOGGED_FLAG
 from imbue_core.fixed_traceback import FixedTraceback
 from imbue_core.pydantic_serialization import SerializableModel
 from imbue_core.serialization_types import Serializable
@@ -253,7 +252,6 @@ class SerializedException(SerializableModel):
     exception: str
     args: "tuple[SerializedException | JsonTypeAlias, ...]"  # pyre-ignore[11]: pyre doesn't like TypeAliasType
     traceback_dict: JsonTypeAlias
-    was_logged_by_log_exception: bool = False
 
     @classmethod
     def build(cls, exception: BaseException, traceback: TracebackType | None = None) -> "SerializedException":
@@ -269,7 +267,6 @@ class SerializedException(SerializableModel):
             exception=get_fully_qualified_name_for_error(exception),
             args=tuple(_convert_serialized_exception_args(x, traceback) for x in exception.args),
             traceback_dict=FixedTraceback.from_tb(traceback).as_dict(),
-            was_logged_by_log_exception=getattr(exception, EXCEPTION_LOGGED_FLAG, False),
         )
 
     @cached_property
@@ -308,12 +305,6 @@ class SerializedException(SerializableModel):
                 "Ensure that the exception class is serializable and can be constructed with the provided args.",
             )
             raise TypeError(" ".join(message_with_arg_info)) from e
-
-        try:
-            setattr(exception, EXCEPTION_LOGGED_FLAG, True)
-        except AttributeError:
-            # We could not set the flag correctly
-            pass
 
         return exception
 

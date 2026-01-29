@@ -10,7 +10,7 @@ from loguru import logger
 
 from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import IssueIdentificationDebugInfo
-from imbue_core.sculptor.state.messages import ConversationMessageUnion
+from vet_types.messages import ConversationMessageUnion
 from imbue_tools.get_conversation_history.get_conversation_history import (
     ConversationLoadingError,
 )

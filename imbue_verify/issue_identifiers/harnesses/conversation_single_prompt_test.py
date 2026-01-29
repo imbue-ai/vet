@@ -1,12 +1,12 @@
 import pytest
 
 from imbue_core.data_types import IssueCode
-from imbue_core.ids import AssistantMessageID
-from imbue_core.sculptor.state.chat_state import TextBlock
-from imbue_core.sculptor.state.messages import AgentMessageSource
-from imbue_core.sculptor.state.messages import ChatInputUserMessage
-from imbue_core.sculptor.state.messages import LLMModel
-from imbue_core.sculptor.state.messages import ResponseBlockAgentMessage
+from vet_types.chat_state import TextBlock
+from vet_types.ids import AssistantMessageID
+from vet_types.messages import AgentMessageSource
+from vet_types.messages import ChatInputUserMessage
+from vet_types.messages import LLMModel
+from vet_types.messages import ResponseBlockAgentMessage
 from imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from imbue_tools.get_conversation_history.input_data_types import (

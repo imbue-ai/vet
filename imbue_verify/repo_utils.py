@@ -2,7 +2,6 @@ from pathlib import Path
 
 from imbue_core.async_monkey_patches import log_exception
 from imbue_core.computing_environment.data_types import RunCommandError
-from imbue_core.constants import ExceptionPriority
 from imbue_core.simple_git import SyncLocalGitRepo
 from imbue_tools.repo_utils.find_relative_to import find_relative_to_commit_hash
 from imbue_verify.errors import GitException
@@ -51,9 +50,8 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
             except RunCommandError as e:
                 log_exception(
                     e,
-                    "Skipping untracked file we couldn't diff.",
+                    "Skipping untracked file we couldn't diff: {file_path}",
                     file_path=file_path,
-                    priority=ExceptionPriority.LOW_PRIORITY,
                 )
 
             try:
@@ -62,9 +60,8 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
             except RunCommandError as e:
                 log_exception(
                     e,
-                    "Skipping untracked file we couldn't diff (no binary).",
+                    "Skipping untracked file we couldn't diff (no binary): {file_path}",
                     file_path=file_path,
-                    priority=ExceptionPriority.LOW_PRIORITY,
                 )
 
     # Add untracked files to unstaged changes and the combined diff

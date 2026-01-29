@@ -519,7 +519,7 @@ async def force_push_commit(computing_environment: ComputingEnvironment, commit:
         await computing_environment.run_git(["push", "-f", "origin", f"{commit}:{branch_name}"], is_error_logged=False)
     except RunCommandError as e:
         if "fatal: bad object" in e.stderr:
-            # TODO (danielmewes): We're retrying failed fetches here. However, there is also a separate
+            # TODO : We're retrying failed fetches here. However, there is also a separate
             #   force_push_commit_with_retry method that retries the entire force_push_commit.
             #   We should probably try the fetch only once, and then rely on the outer
             #   force_push_commit_with_retry to retry the entire force_push_commit call when retrying is =
