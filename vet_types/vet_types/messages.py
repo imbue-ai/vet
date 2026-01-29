@@ -1,4 +1,4 @@
-"""Message types for vet conversation history.
+"""Message types for Vet conversation history.
 
 These are simplified versions that avoid dependencies on external telemetry libraries.
 """
@@ -65,11 +65,15 @@ class Message(SerializableModel):
     # the source of the message, which can be either the agent, user, or runner.
     source: AgentMessageSource
     # roughly when the message was created, in UTC.
-    approximate_creation_time: datetime.datetime = Field(default_factory=get_current_time)
+    approximate_creation_time: datetime.datetime = Field(
+        default_factory=get_current_time
+    )
 
     @property
     def is_ephemeral(self) -> bool:
-        raise NotImplementedError("All messages must be subclassed off of PersistentMessage or EphemeralMessage")
+        raise NotImplementedError(
+            "All messages must be subclassed off of PersistentMessage or EphemeralMessage"
+        )
 
 
 class PersistentMessage(Message):
