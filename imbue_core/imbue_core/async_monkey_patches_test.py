@@ -33,9 +33,7 @@ def check_logged_errors(check_func: Callable[[list[str]], None]) -> Iterator[Non
         record = message.record
         if record["level"].name == "ERROR":
             accumulated_errors.append(record["message"])
-            sys.stderr.write(
-                f"CAUGHT ERROR LOG: {record['message'].splitlines()[0][:100]}\n"
-            )
+            sys.stderr.write(f"CAUGHT ERROR LOG: {record['message'].splitlines()[0][:100]}\n")
         else:
             sys.stderr.write(str(message))
 
@@ -68,9 +66,7 @@ def at_least_check_maker(expected_errors_set: set[str]) -> Callable[[list[str]],
                 if expected_error in accumulated_error:
                     break
             else:
-                raise IncorrectErrorsLoggedDuringTesting(
-                    f"{expected_error=} is not in {accumulated_errors=}"
-                )
+                raise IncorrectErrorsLoggedDuringTesting(f"{expected_error=} is not in {accumulated_errors=}")
 
     return check_func
 
@@ -139,9 +135,7 @@ def explode_on_error() -> Generator[None, None, None]:
         raise
     else:
         if len(accumulated_errors) > 0:
-            raise IncorrectErrorsLoggedDuringTesting(
-                f"Errors logged during testing: {accumulated_errors}"
-            )
+            raise IncorrectErrorsLoggedDuringTesting(f"Errors logged during testing: {accumulated_errors}")
     finally:
         logger.remove(handler_id)
         logger.add(sys.stderr, level="DEBUG")
@@ -167,7 +161,5 @@ def test_log_error_at_least(explode_on_error: Any) -> None:
         logger.error("Something else bad happened")
 
     with pytest.raises(IncorrectErrorsLoggedDuringTesting):
-        with expect_at_least_logged_errors(
-            {"Something bad happened", "Something else bad happened"}
-        ):
+        with expect_at_least_logged_errors({"Something bad happened", "Something else bad happened"}):
             logger.error("Something bad happened")
