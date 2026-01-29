@@ -30,9 +30,7 @@ class AgentInteraction:
             for assistant_content_block in message.content:
                 if isinstance(assistant_content_block, AgentToolUseBlock):
                     self._unresolved_tool_use_requests.append(assistant_content_block)
-        elif isinstance(message, AgentUserMessage) and isinstance(
-            message.content, list
-        ):
+        elif isinstance(message, AgentUserMessage) and isinstance(message.content, list):
             for content_block in message.content:
                 if isinstance(content_block, AgentToolResultBlock):
                     remaining_unresolved_requests = []
@@ -48,16 +46,12 @@ class AgentInteraction:
                             remaining_unresolved_requests.append(request)
                     self._unresolved_tool_use_requests = remaining_unresolved_requests
 
-    def find_tool_use_record_by_command(
-        self, command: str, by_most_recent: bool = True
-    ) -> ToolUseRecord | None:
+    def find_tool_use_record_by_command(self, command: str, by_most_recent: bool = True) -> ToolUseRecord | None:
         """Look for tool use request and result messages by the tool command.
 
         If by_most_recent is True, the records are searched in reverse order (most recent first).
         """
-        return _find_tool_use_record_by_command(
-            self.tool_use_records, command, by_most_recent
-        )
+        return _find_tool_use_record_by_command(self.tool_use_records, command, by_most_recent)
 
 
 class AgentInteractionRecord(SerializableModel):
@@ -72,9 +66,7 @@ class AgentInteractionRecord(SerializableModel):
     tool_use_records: tuple[ToolUseRecord, ...]
 
     @classmethod
-    def from_agent_interaction(
-        cls, agent_interaction: AgentInteraction
-    ) -> "AgentInteractionRecord":
+    def from_agent_interaction(cls, agent_interaction: AgentInteraction) -> "AgentInteractionRecord":
         return cls(
             prompt=agent_interaction.prompt,
             options=agent_interaction.options,
@@ -82,16 +74,12 @@ class AgentInteractionRecord(SerializableModel):
             tool_use_records=tuple(agent_interaction.tool_use_records),
         )
 
-    def find_tool_use_record_by_command(
-        self, command: str, by_most_recent: bool = True
-    ) -> ToolUseRecord | None:
+    def find_tool_use_record_by_command(self, command: str, by_most_recent: bool = True) -> ToolUseRecord | None:
         """Look for tool use request and result messages by the tool command.
 
         If by_most_recent is True, the records are searched in reverse order (most recent first).
         """
-        return _find_tool_use_record_by_command(
-            self.tool_use_records, command, by_most_recent
-        )
+        return _find_tool_use_record_by_command(self.tool_use_records, command, by_most_recent)
 
 
 def _find_tool_use_record_by_command(

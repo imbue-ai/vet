@@ -14,9 +14,7 @@ from imbue_tools.repo_utils.file_system import InMemoryFileSystem
 from imbue_tools.repo_utils.file_system import SymlinkContents
 
 
-async def write_file_contents_to_dir(
-    file_contents: InMemoryFileSystem, dir_path_str: str
-) -> None:
+async def write_file_contents_to_dir(file_contents: InMemoryFileSystem, dir_path_str: str) -> None:
     dir_path = Path(dir_path_str)
     tasks = [
         asyncio.create_task(_write_single_file_to_dir(dir_path / file_path, content))

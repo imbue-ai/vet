@@ -89,9 +89,7 @@ def fix_full_location(record: "loguru.Record") -> str:
 
     if log_path.is_relative_to(cwd):
         log_path = log_path.relative_to(cwd)
-    location: str = record["extra"].get(
-        "full_location", f"{str(log_path)}:{record['line']}:{record['function']}"
-    )
+    location: str = record["extra"].get("full_location", f"{str(log_path)}:{record['line']}:{record['function']}")
     while len(location) > LOCATION_WIDTH and "/" in location:
         location = location[location.find("/") + 1 :]
     return location[-LOCATION_WIDTH:].rjust(LOCATION_WIDTH)
@@ -101,9 +99,7 @@ def format_task_id(async_task_id: str) -> str:
     return async_task_id[:TASK_ID_MESSAGE_WIDTH].rjust(TASK_ID_MESSAGE_WIDTH)
 
 
-def patch_log_context_in_place(
-    record: "loguru.Record", format_task_id: Callable[[str], str] = format_task_id
-) -> None:
+def patch_log_context_in_place(record: "loguru.Record", format_task_id: Callable[[str], str] = format_task_id) -> None:
     record["extra"]["full_location"] = fix_full_location(record)
 
     async_task_id = None
@@ -133,9 +129,7 @@ def ensure_core_log_levels_configured(
         try:
             logger.level(level, no=no, color=color)
         except (TypeError, ValueError) as e:
-            is_level_already_set_thus_ok = (
-                "already exists, you can't update its severity no" in str(e)
-            )
+            is_level_already_set_thus_ok = "already exists, you can't update its severity no" in str(e)
             if not is_level_already_set_thus_ok:
                 raise
 
@@ -147,8 +141,6 @@ def ensure_core_log_levels_configured(
         try:
             logger.level(level_name, no=level_no)
         except (TypeError, ValueError) as e:
-            is_level_already_set_thus_ok = (
-                "already exists, you can't update its severity no" in str(e)
-            )
+            is_level_already_set_thus_ok = "already exists, you can't update its severity no" in str(e)
             if not is_level_already_set_thus_ok:
                 raise

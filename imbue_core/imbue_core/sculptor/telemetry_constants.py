@@ -57,17 +57,19 @@ class SculptorPosthogEvent(Enum):
     ONBOARDING_EMAIL_CONFIRMATION = "onboarding_email_confirmation"
     ONBOARDING_TELEMETRY_CONSENT = "onboarding_telemetry_consent"
     ONBOARDING_STARTUP_CHECKS = "onboarding_startup_checks"
-    ONBOARDING_USER_CONFIG_SETTINGS = (
-        "onboarding_user_config_settings"  # Deprecated, use the following one:
-    )
+    ONBOARDING_USER_CONFIG_SETTINGS = "onboarding_user_config_settings"  # Deprecated, use the following one:
     ONBOARDING_USER_CONFIG_SETTINGS_LOADED = "onboarding_user_config_settings_loaded"
     ONBOARDING_COMPLETED = "onboarding_completed"
 
     ONBOARDING_ANTHROPIC_API_KEY_SET = "onboarding_anthropic_api_key_set"
-    ONBOARDING_ANTHROPIC_CREDENTIALS_EXIST = "onboarding_anthropic_credentials_exist"  # This only means that oauth completed.
+    ONBOARDING_ANTHROPIC_CREDENTIALS_EXIST = (
+        "onboarding_anthropic_credentials_exist"  # This only means that oauth completed.
+    )
     ONBOARDING_ANTHROPIC_OAUTH_STARTED = "onboarding_anthropic_oauth_started"
     ONBOARDING_ANTHROPIC_OAUTH_CANCELLED = "onboarding_anthropic_oauth_cancelled"
-    ONBOARDING_ANTHROPIC_AUTHORIZED = "onboarding_anthropic_authorized"  # We've successfully authorized, whether via Oauth or API key
+    ONBOARDING_ANTHROPIC_AUTHORIZED = (
+        "onboarding_anthropic_authorized"  # We've successfully authorized, whether via Oauth or API key
+    )
     ONBOARDING_OPENAI_AUTHORIZED = "onboarding_openai_authorized"
     ONBOARDING_DOCKER_INSTALLED = "onboarding_docker_installed"
     ONBOARDING_DOCKER_STARTED = "onboarding_docker_started"
@@ -91,52 +93,28 @@ class SculptorPosthogEvent(Enum):
     TASK_USER_FEEDBACK = "task_user_feedback"
 
     # ENVIRONMENT SETUP
-    ENVIRONMENT_SETUP_REUSED_EXISTING_ENVIRONMENT = (
-        "environment_setup_reused_existing_environment"
-    )
-    ENVIRONMENT_SETUP_FAILED_TO_REUSE_EXISTING_ENVIRONMENT = (
-        "environment_setup_failed_to_reuse_existing_environment"
-    )
-    ENVIRONMENT_SETUP_IMAGE_CREATION_STARTED = (
-        "environment_setup_image_creation_started"
-    )
+    ENVIRONMENT_SETUP_REUSED_EXISTING_ENVIRONMENT = "environment_setup_reused_existing_environment"
+    ENVIRONMENT_SETUP_FAILED_TO_REUSE_EXISTING_ENVIRONMENT = "environment_setup_failed_to_reuse_existing_environment"
+    ENVIRONMENT_SETUP_IMAGE_CREATION_STARTED = "environment_setup_image_creation_started"
     ENVIRONMENT_SETUP_USING_EXISTING_IMAGE = "environment_setup_using_existing_image"
-    ENVIRONMENT_SETUP_IMAGE_CREATION_FINISHED = (
-        "environment_setup_image_creation_finished"
-    )
+    ENVIRONMENT_SETUP_IMAGE_CREATION_FINISHED = "environment_setup_image_creation_finished"
     ENVIRONMENT_SETUP_IMAGE_ENSURED = "environment_setup_image_ensured"
-    ENVIRONMENT_SETUP_HARD_OVERWROTE_WORKSPACE = (
-        "environment_setup_hard_overwrote_workspace"
-    )
+    ENVIRONMENT_SETUP_HARD_OVERWROTE_WORKSPACE = "environment_setup_hard_overwrote_workspace"
     ENVIRONMENT_SETUP_DOCKER_CONTROL_PLANE_ALREADY_DOWNLOADED = (
         "environment_setup_docker_control_plane_already_downloaded"
     )
     ENVIRONMENT_SETUP_DOCKER_CONTROL_PLANE_DOWNLOAD_FINISHED = (
         "environment_setup_docker_control_plane_download_finished"
     )
-    ENVIRONMENT_SETUP_WAITING_FOR_CONTROL_PLANE_SETUP = (
-        "environment_setup_waiting_for_control_plane_setup"
-    )
-    ENVIRONMENT_SETUP_DOCKER_STARTED_EXISTING_CONTAINER = (
-        "environment_setup_docker_started_existing_container"
-    )
-    ENVIRONMENT_SETUP_DOCKER_CONTAINER_CREATED = (
-        "environment_setup_docker_container_created"
-    )
-    ENVIRONMENT_SETUP_DOCKER_CONTAINER_FINISHED_SETUP = (
-        "environment_setup_docker_container_finished_setup"
-    )
+    ENVIRONMENT_SETUP_WAITING_FOR_CONTROL_PLANE_SETUP = "environment_setup_waiting_for_control_plane_setup"
+    ENVIRONMENT_SETUP_DOCKER_STARTED_EXISTING_CONTAINER = "environment_setup_docker_started_existing_container"
+    ENVIRONMENT_SETUP_DOCKER_CONTAINER_CREATED = "environment_setup_docker_container_created"
+    ENVIRONMENT_SETUP_DOCKER_CONTAINER_FINISHED_SETUP = "environment_setup_docker_container_finished_setup"
     ENVIRONMENT_SETUP_REPO_ARCHIVE_CREATED = "environment_setup_repo_archive_created"
     ENVIRONMENT_SETUP_IMAGE_CREATED = "environment_setup_image_created"
-    ENVIRONMENT_SETUP_LOCAL_DOCKERFILE_BUILT = (
-        "environment_setup_local_dockerfile_built"
-    )
-    ENVIRONMENT_SETUP_FELL_BACK_TO_DEFAULT_DEVCONTAINER = (
-        "environment_setup_fell_back_to_default_devcontainer"
-    )
-    ENVIRONMENT_SETUP_WRAPPER_DOCKERFILE_BUILT = (
-        "environment_setup_wrapper_dockerfile_built"
-    )
+    ENVIRONMENT_SETUP_LOCAL_DOCKERFILE_BUILT = "environment_setup_local_dockerfile_built"
+    ENVIRONMENT_SETUP_FELL_BACK_TO_DEFAULT_DEVCONTAINER = "environment_setup_fell_back_to_default_devcontainer"
+    ENVIRONMENT_SETUP_WRAPPER_DOCKERFILE_BUILT = "environment_setup_wrapper_dockerfile_built"
 
     # TOOL READINESS
     TOOL_READINESS_EVENT_COMPLETED = "tool_readiness_event_completed"
@@ -145,9 +123,7 @@ class SculptorPosthogEvent(Enum):
     AGENT_TASK_ENVIRONMENT_SETUP_FINISHED = "agent_task_environment_setup_finished"
     AGENT_TASK_GIT_SETUP_FINALIZED = "agent_task_git_setup_finalized"
     AGENT_TASK_RUNNING_IN_ENVIRONMENT = "agent_task_running_in_environment"
-    AGENT_TASK_RECEIVED_FIRST_TOKEN_FROM_AGENT = (
-        "agent_task_received_first_token_from_agent"
-    )
+    AGENT_TASK_RECEIVED_FIRST_TOKEN_FROM_AGENT = "agent_task_received_first_token_from_agent"
 
     # FIX
     FIX_ISSUE_SELECT = "fix_issue_select"
@@ -225,26 +201,16 @@ class SculptorPosthogEvent(Enum):
     # NOTE: if you're adding a new call to log_error_to_posthog, you should most likely add a new value here!
     # this is the only way that we determine where the error originated (unless you set include_traceback=True),
     # so we don't want to reuse these without a good reason
-    IRRECOVERABLE_EXCEPTION = "irrecoverable_exception"  # only use this if we have no other information on the error's source
-    SENTRY_EXCEPTION_DATA_COLLECTION_TOO_SLOW = (
-        "sentry_exception_data_collection_too_slow"
+    IRRECOVERABLE_EXCEPTION = (
+        "irrecoverable_exception"  # only use this if we have no other information on the error's source
     )
+    SENTRY_EXCEPTION_DATA_COLLECTION_TOO_SLOW = "sentry_exception_data_collection_too_slow"
     CLAUDE_TRANSIENT_ERROR = "claude_transient_error"
     DATABASE_LOCK_ACQUISITION_TIMEOUT = "database_lock_acquisition_timeout"
-    INCOMPATIBLE_DATABASE_LIKELY_FROM_DOWNGRADE = (
-        "incompatible_database_likely_from_downgrade"
-    )
-    FAILED_TO_PARSE_LLM_RESPONSE_WHEN_GENERATING_ISSUES = (
-        "failed_to_parse_llm_response_when_generating_issues"
-    )
-    INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION = (
-        "invalid_file_path_from_llm_in_issue_location"
-    )
+    INCOMPATIBLE_DATABASE_LIKELY_FROM_DOWNGRADE = "incompatible_database_likely_from_downgrade"
+    FAILED_TO_PARSE_LLM_RESPONSE_WHEN_GENERATING_ISSUES = "failed_to_parse_llm_response_when_generating_issues"
+    INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION = "invalid_file_path_from_llm_in_issue_location"
     TASK_FAILED_WITH_EXPECTED_ERROR = "task_failed_with_expected_error"
-    AGENT_RUNNER_FAILED_BECAUSE_DOCKER_IS_DOWN = (
-        "agent_runner_failed_because_docker_is_down"
-    )
-    FAILED_TO_SNAPSHOT_IMAGE_DURING_SHUTDOWN = (
-        "failed_to_snapshot_image_during_shutdown"
-    )
+    AGENT_RUNNER_FAILED_BECAUSE_DOCKER_IS_DOWN = "agent_runner_failed_because_docker_is_down"
+    FAILED_TO_SNAPSHOT_IMAGE_DURING_SHUTDOWN = "failed_to_snapshot_image_during_shutdown"
     THREAD_IRRECOVERABLE_EXCEPTION = "thread_irrecoverable_exception"

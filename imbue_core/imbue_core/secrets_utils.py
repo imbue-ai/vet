@@ -35,33 +35,23 @@ def parse_secrets_file(filepath: str | pathlib.Path) -> dict[str, str]:
                 )
             if "#" in line:
                 if not line.startswith("#"):
-                    raise YouAreBeingTooFancyInYourSettingsFile(
-                        "Put comments at the start of the line"
-                    )
+                    raise YouAreBeingTooFancyInYourSettingsFile("Put comments at the start of the line")
                 continue
             if "\\" in line:
-                raise YouAreBeingTooFancyInYourSettingsFile(
-                    "No line continuations or other character escapes allowed"
-                )
+                raise YouAreBeingTooFancyInYourSettingsFile("No line continuations or other character escapes allowed")
             if line.startswith("export "):
                 k, v = line.strip("export ").strip().split("=", maxsplit=1)
                 k = k.strip()
                 if k != k.upper():
-                    raise YouAreBeingTooFancyInYourSettingsFile(
-                        f"Key {k} must be uppercase"
-                    )
+                    raise YouAreBeingTooFancyInYourSettingsFile(f"Key {k} must be uppercase")
                 v = v.strip()
                 if v.startswith('"'):
                     if not v.endswith('"'):
-                        raise YouAreBeingTooFancyInYourSettingsFile(
-                            f"Value {v} must end with a double quote"
-                        )
+                        raise YouAreBeingTooFancyInYourSettingsFile(f"Value {v} must end with a double quote")
                     v = v[1:-1]
                 if v.startswith("'"):
                     if not v.endswith("'"):
-                        raise YouAreBeingTooFancyInYourSettingsFile(
-                            f"Value {v} must end with a single quote"
-                        )
+                        raise YouAreBeingTooFancyInYourSettingsFile(f"Value {v} must end with a single quote")
                     v = v[1:-1]
                 out[k] = v
             elif line.strip():

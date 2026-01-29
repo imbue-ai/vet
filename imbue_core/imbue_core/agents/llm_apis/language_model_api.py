@@ -50,9 +50,7 @@ from imbue_core.cattrs_serialization import serialize_to_json
 from imbue_core.pydantic_serialization import MutableModel
 
 # Context variable to disable caching.
-IS_LLM_CACHING_DISABLED_GLOBALLY = contextvars.ContextVar(
-    "is_llm_caching_disabled_globally", default=False
-)
+IS_LLM_CACHING_DISABLED_GLOBALLY = contextvars.ContextVar("is_llm_caching_disabled_globally", default=False)
 # Context variable for injecting a default seed which will become part of the LLM cache key.
 LLM_GLOBAL_DEFAULT_SEED = contextvars.ContextVar("llm_global_default_seed", default=0)
 
@@ -66,19 +64,13 @@ EXCLUDED_CACHE_KEY_ARGS = ["self", "is_caching_enabled", "call_id"]
 def _create_base_cache_key_from_frame(frame: FrameType) -> str:
     """Create a cache key from the args of a function by passing its frame."""
     args, _, _, values = inspect.getargvalues(frame)
-    return "|".join(
-        f"{arg}={values[arg]}" for arg in args if arg not in EXCLUDED_CACHE_KEY_ARGS
-    )
+    return "|".join(f"{arg}={values[arg]}" for arg in args if arg not in EXCLUDED_CACHE_KEY_ARGS)
 
 
-CostedResponseT = TypeVar(
-    "CostedResponseT", bound=CostedLanguageModelResponse | CountTokensResponse
-)
+CostedResponseT = TypeVar("CostedResponseT", bound=CostedLanguageModelResponse | CountTokensResponse)
 FinalResponseT = TypeVar(
     "FinalResponseT",
-    bound=CostedLanguageModelResponse
-    | StreamedLanguageModelResponse
-    | CountTokensResponse,
+    bound=CostedLanguageModelResponse | StreamedLanguageModelResponse | CountTokensResponse,
 )
 
 
@@ -126,9 +118,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
 
     async def check_cache_core(
         self,
-        cache_getter: Callable[
-            [], AsyncCache[CachedCostedModelResponse[InputsT, ModelResponseT]]
-        ],
+        cache_getter: Callable[[], AsyncCache[CachedCostedModelResponse[InputsT, ModelResponseT]]],
         cache_key: str,
     ) -> ModelResponseT | None:
         async with cache_getter() as cache:
@@ -138,9 +128,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
             if cached_result.error:
                 if cached_result.error.startswith(PromptTooLongError.__name__):
                     raise PromptTooLongError.from_string(cached_result.error)
-                raise Exception(
-                    f"Unknown cached result error type: {cached_result.error}"
-                )
+                raise Exception(f"Unknown cached result error type: {cached_result.error}")
             assert cached_result.response is not None
             return cached_result.response
         return None
@@ -148,20 +136,12 @@ class LanguageModelAPI(abc.ABC, MutableModel):
     async def check_cache(self, cache_key: str) -> CostedLanguageModelResponse | None:
         return await self.check_cache_core(self.get_response_cache, cache_key)
 
-    async def _get_auth(
-        self, prompt: str, max_tokens: int | None
-    ) -> PaymentAuthorization | None:
+    async def _get_auth(self, prompt: str, max_tokens: int | None) -> PaymentAuthorization | None:
         global_resource_limits = get_global_resource_limits()
         if global_resource_limits is not None:
             prompt_tokens = self.count_tokens(prompt)
-            completion_tokens = (
-                max_tokens
-                if max_tokens is not None
-                else self.get_max_completion_size_in_tokens()
-            )
-            upper_bound_cost_estimate = self.estimate_cost(
-                prompt_tokens, completion_tokens
-            )
+            completion_tokens = max_tokens if max_tokens is not None else self.get_max_completion_size_in_tokens()
+            upper_bound_cost_estimate = self.estimate_cost(prompt_tokens, completion_tokens)
             assert global_resource_limits is not None
             auth: PaymentAuthorization = await global_resource_limits.authorize_spend(
                 upper_bound_cost_estimate,
@@ -179,9 +159,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
             )
         return None
 
-    async def _settle_spend(
-        self, auth: PaymentAuthorization, dollars_used: float
-    ) -> None:
+    async def _settle_spend(self, auth: PaymentAuthorization, dollars_used: float) -> None:
         global_resource_limits = get_global_resource_limits()
         assert global_resource_limits is not None
         await global_resource_limits.settle_spend(auth, dollars_used)
@@ -193,9 +171,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
 
     def assert_not_offline_if_cache_miss(self, prompt: str) -> None:
         max_n_chars = 50
-        prompt_stub = prompt[:max_n_chars] + (
-            "..." if len(prompt) > max_n_chars else ""
-        )
+        prompt_stub = prompt[:max_n_chars] + ("..." if len(prompt) > max_n_chars else "")
         assert (
             not self.is_running_offline
         ), f"Running offline but did not have a cached response for this query! Prompt: {prompt_stub}"
@@ -217,9 +193,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         if _complete_concurrency_hook_fn is not None:
             await _complete_concurrency_hook_fn(self)
 
-        is_caching_enabled_with_override = (
-            is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
-        )
+        is_caching_enabled_with_override = is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
         if params.seed is None:
             params = params.evolve(params.ref().seed, LLM_GLOBAL_DEFAULT_SEED.get())
 
@@ -242,9 +216,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         if _complete_concurrency_hook_fn is not None:
             await _complete_concurrency_hook_fn(self)
 
-        is_caching_enabled_with_override = (
-            is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
-        )
+        is_caching_enabled_with_override = is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
         if params.seed is None:
             params = params.evolve(params.ref().seed, LLM_GLOBAL_DEFAULT_SEED.get())
 
@@ -271,15 +243,11 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         if is_caching_enabled:
             frame = inspect.currentframe()
 
-        costed_response_to_output: Callable[
-            [CostedLanguageModelResponse], CostedLanguageModelResponse
-        ] = lambda cr: cr
+        costed_response_to_output: Callable[[CostedLanguageModelResponse], CostedLanguageModelResponse] = lambda cr: cr
 
         cache_key: str | None = None
         if is_caching_enabled:
-            cache_key, cached_response = await self._get_from_cache(
-                frame, costed_response_to_output
-            )
+            cache_key, cached_response = await self._get_from_cache(frame, costed_response_to_output)
 
             if cached_response is not None:
                 return cached_response
@@ -337,9 +305,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
                     )
                     await asyncio.sleep(sleep_time)
                     sleep_time *= self.retry_backoff_factor
-        raise LanguageModelRetryLimitError(
-            last_error_msg or "Unknown error (this should not happen)"
-        )
+        raise LanguageModelRetryLimitError(last_error_msg or "Unknown error (this should not happen)")
 
     async def _complete(
         self,
@@ -350,15 +316,11 @@ class LanguageModelAPI(abc.ABC, MutableModel):
     ) -> tuple[LanguageModelResponse, ...]:
         # Delegate to _complete_with_usage and extract just the responses
         # May have more than count responses cached, so just return first count responses
-        costed_response = await self._complete_with_usage(
-            prompt, params, is_caching_enabled, call_id
-        )
+        costed_response = await self._complete_with_usage(prompt, params, is_caching_enabled, call_id)
         return costed_response.responses[: params.count]
 
     @final
-    async def _call_api_one_arg(
-        self, api_inputs: LanguageModelCompleteInputs
-    ) -> CostedLanguageModelResponse:
+    async def _call_api_one_arg(self, api_inputs: LanguageModelCompleteInputs) -> CostedLanguageModelResponse:
         """Delegates to the abstract method _call_api, which must be implemented by subclasses."""
         return await self._call_api(
             prompt=api_inputs.prompt,
@@ -385,9 +347,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         if params.seed is None:
             params = params.evolve(params.ref().seed, LLM_GLOBAL_DEFAULT_SEED.get())
 
-        is_caching_enabled_with_override = (
-            is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
-        )
+        is_caching_enabled_with_override = is_caching_enabled and not IS_LLM_CACHING_DISABLED_GLOBALLY.get()
 
         return await self._stream(
             prompt=prompt,
@@ -401,9 +361,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         is_caching_enabled: bool,
         params: LanguageModelGenerationParams,
     ) -> StreamedLanguageModelResponse:
-        assert (
-            params.count == 1
-        ), "Stream API currently only supports count=1 due to limitations of some APIs."
+        assert params.count == 1, "Stream API currently only supports count=1 due to limitations of some APIs."
 
         self._warn_if_no_stop_condition_and_not_conversational(params)
         self.assert_caching_enabled_if_offline(is_caching_enabled)
@@ -421,9 +379,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         )
         cache_key: str | None = None
         if is_caching_enabled:
-            cache_key, cached_response = await self._get_from_cache(
-                frame, costed_response_to_output
-            )
+            cache_key, cached_response = await self._get_from_cache(frame, costed_response_to_output)
 
             if cached_response is not None:
                 return cached_response
@@ -456,9 +412,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
                     # write out the prompt (helps with debugging so we can see when things blow up)
                     await output_path.write_text(prompt)
                     # overwrite the file with the prompt and completion when done
-                    callbacks.append(
-                        PromptDebuggingCallback(prompt=prompt, output_path=output_path)
-                    )
+                    callbacks.append(PromptDebuggingCallback(prompt=prompt, output_path=output_path))
 
                 if auth is not None:
                     callbacks.append(SettleSpendCallback(auth=auth))
@@ -482,17 +436,13 @@ class LanguageModelAPI(abc.ABC, MutableModel):
                 last_error_msg = str(e)
                 if network_failure_count < MAX_RETRIES - 1:
                     if self.retry_jitter_factor > 0:
-                        sleep_time += random.uniform(
-                            0, sleep_time * self.retry_jitter_factor
-                        )
+                        sleep_time += random.uniform(0, sleep_time * self.retry_jitter_factor)
                     logger.debug(
                         f"Transient language model error ({str(e)}) in model {self.model_name}, retrying with sleep time {sleep_time} seconds..."
                     )
                     await asyncio.sleep(sleep_time)
                     sleep_time *= self.retry_backoff_factor
-        raise LanguageModelRetryLimitError(
-            last_error_msg or "Unknown error (this should not happen)"
-        )
+        raise LanguageModelRetryLimitError(last_error_msg or "Unknown error (this should not happen)")
 
     @final
     async def _get_api_stream_one_arg(
@@ -509,12 +459,8 @@ class LanguageModelAPI(abc.ABC, MutableModel):
     ) -> AsyncGenerator[LanguageModelStreamEvent, None]:
         """If defined, the stop sequence should be part of the sequence (if it was actually generated)"""
 
-    def _warn_if_no_stop_condition_and_not_conversational(
-        self, params: LanguageModelGenerationParams
-    ) -> None:
-        if (
-            params.stop is None and params.max_tokens is None
-        ) and not self.is_conversational:
+    def _warn_if_no_stop_condition_and_not_conversational(self, params: LanguageModelGenerationParams) -> None:
+        if (params.stop is None and params.max_tokens is None) and not self.is_conversational:
             logger.debug(
                 "Did not specify either `max_tokens` or `stop`, and this is not a conversational model. The completion will go until the entire context window is filled. Preferably you don't do this, because it is fairly inefficient."
             )
@@ -527,9 +473,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
     ) -> tuple[str | None, FinalResponseT | None]:
         cache_key: str | None
 
-        cache_key, costed_response = await self._get_costed_response_from_frame_core(
-            cache_checker, frame
-        )
+        cache_key, costed_response = await self._get_costed_response_from_frame_core(cache_checker, frame)
 
         if costed_response is not None:
             return cache_key, costed_response_to_output(costed_response)
@@ -538,13 +482,9 @@ class LanguageModelAPI(abc.ABC, MutableModel):
     async def _get_from_cache(
         self,
         frame: FrameType | None,
-        costed_response_to_output: Callable[
-            [CostedLanguageModelResponse], FinalResponseT
-        ],
+        costed_response_to_output: Callable[[CostedLanguageModelResponse], FinalResponseT],
     ) -> tuple[str | None, FinalResponseT | None]:
-        return await self._get_from_cache_core(
-            frame, costed_response_to_output, self.check_cache
-        )
+        return await self._get_from_cache_core(frame, costed_response_to_output, self.check_cache)
 
     async def _get_costed_response_from_frame_core(
         self,
@@ -593,10 +533,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         return self.model_info.max_input_tokens
 
     def get_context_window_size_in_tokens(self) -> int:
-        return (
-            self.get_max_completion_size_in_tokens()
-            + self.get_max_prompt_size_in_tokens()
-        )
+        return self.get_max_completion_size_in_tokens() + self.get_max_prompt_size_in_tokens()
 
 
 COMPLETE_CONCURRENCY_HOOK_FN = Callable[[LanguageModelAPI], Awaitable[None]] | None

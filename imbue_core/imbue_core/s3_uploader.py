@@ -27,7 +27,9 @@ PRODUCTION_UPLOADS_BUCKET = "traceback-uploads-production"
 STAGING_UPLOADS_BUCKET = "traceback-uploads-staging"
 
 DEFAULT_REGION = "us-west-2"
-MAXIMUM_QUEUED_S3_UPLOADS = 50  # rather arbitrary but better to err on the side of caution when going from the current unbounded
+MAXIMUM_QUEUED_S3_UPLOADS = (
+    50  # rather arbitrary but better to err on the side of caution when going from the current unbounded
+)
 
 
 class _S3Uploader(FrozenModel):
@@ -43,12 +45,8 @@ class _S3Uploader(FrozenModel):
 
     def model_post_init(self, context) -> None:
         # NOTE: we use an unsigned client to avoid the need to provide AWS credentials.
-        self._s3_client = boto3.client(
-            "s3", region_name=self.region, config=Config(signature_version=UNSIGNED)
-        )
-        self._thread_pool = ThreadPoolExecutor(
-            max_workers=None, thread_name_prefix=f"s3_upload"
-        )
+        self._s3_client = boto3.client("s3", region_name=self.region, config=Config(signature_version=UNSIGNED))
+        self._thread_pool = ThreadPoolExecutor(max_workers=None, thread_name_prefix=f"s3_upload")
         # Unfortunately, there's no safe access to the queue size of the thread pool so calculating that number precisely
         # using a semaphore. Each queued up uploads acquires a single value and returns it only after its thread is done
         # interacting with S3. The value of the semaphore at any given time is the number of available work slots, and
@@ -65,9 +63,7 @@ class _S3Uploader(FrozenModel):
                 Key=key,
                 Body=contents,
             )
-            logger.debug(
-                "Done uploading to s3://{}/{}", self.bucket, key
-            )  # XXX remove before merge
+            logger.debug("Done uploading to s3://{}/{}", self.bucket, key)  # XXX remove before merge
         except Exception as e:
             logger.info("Failed to upload {} to S3: {}", key, e)
             # if re-raised, who would even catch this exception?
@@ -94,16 +90,12 @@ class _S3Uploader(FrozenModel):
             # this shouldn't ever happen but the docs for `.submit` don't promise
             # anything
             self._thread_limiter.release()
-            logger.debug(
-                "Failed to queue a thread for an upload to {key}: {e}", key=key, e=e
-            )
+            logger.debug("Failed to queue a thread for an upload to {key}: {e}", key=key, e=e)
             return None
 
         return self.s3_uri_from_key(key)
 
-    def wait_for_all_uploads(
-        self, timeout: float | None, is_shutting_down: bool
-    ) -> bool:
+    def wait_for_all_uploads(self, timeout: float | None, is_shutting_down: bool) -> bool:
         """Waits for all the uploads that may still be in progress or queued.
 
         When is_shutting_down is True, the function will block until all uploads are completed and will disable any
@@ -125,9 +117,7 @@ class _S3Uploader(FrozenModel):
         while self._thread_limiter.acquire(timeout=0):
             n += 1
 
-        while (
-            deadline is None or time.monotonic() < deadline
-        ) and n < self.maximum_concurrency:
+        while (deadline is None or time.monotonic() < deadline) and n < self.maximum_concurrency:
             if is_shutting_down:
                 logger.info(
                     "Please stand by: waiting for remaining uploads to finish! Still uploading: {} reports",
@@ -220,6 +210,4 @@ def wait_for_s3_uploads(timeout: float | None, is_shutting_down: bool) -> bool |
     if _S3_UPLOADER is None:
         return None
 
-    return _S3_UPLOADER.wait_for_all_uploads(
-        timeout=timeout, is_shutting_down=is_shutting_down
-    )
+    return _S3_UPLOADER.wait_for_all_uploads(timeout=timeout, is_shutting_down=is_shutting_down)

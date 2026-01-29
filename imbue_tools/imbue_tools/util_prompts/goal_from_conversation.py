@@ -27,9 +27,7 @@ Do not include any reasoning or other text in your response.
 # should be totally sufficient for a goal that's only supposed to be a few sentences
 MAX_OUTPUT_TOKENS = 500
 
-GOAL_GENERATION_DEFAULT_PARAMS = LanguageModelGenerationParams(
-    temperature=0.0, max_tokens=MAX_OUTPUT_TOKENS
-)
+GOAL_GENERATION_DEFAULT_PARAMS = LanguageModelGenerationParams(temperature=0.0, max_tokens=MAX_OUTPUT_TOKENS)
 
 
 def prompt_for_getting_goal_from_conversation(
@@ -37,11 +35,7 @@ def prompt_for_getting_goal_from_conversation(
 ) -> str:
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
     jinja_template = env.from_string(PROMPT_TEMPLATE)
-    return jinja_template.render(
-        conversation_history=format_conversation_history_for_prompt(
-            conversation_history
-        )
-    )
+    return jinja_template.render(conversation_history=format_conversation_history_for_prompt(conversation_history))
 
 
 def get_goal_from_conversation_with_usage(
@@ -65,8 +59,6 @@ def get_goal_from_conversation(
 ) -> str:
     """Query an LLM with the conversation history to get the user's goal."""
     response = only(
-        get_goal_from_conversation_with_usage(
-            conversation_history, language_model_generation_config
-        ).responses
+        get_goal_from_conversation_with_usage(conversation_history, language_model_generation_config).responses
     )
     return response.text

@@ -82,18 +82,14 @@ def get_current_function_name() -> str:
     return prev_frame.f_code.co_name
 
 
-def filter_excluded_files(
-    files: list[Path], directory: Path, exclude_file_name: str = ".gitignore"
-) -> list[Path]:
+def filter_excluded_files(files: list[Path], directory: Path, exclude_file_name: str = ".gitignore") -> list[Path]:
     """Remove files from the list that are matched by a .gitignore or similarly-specified exclude file such as
     .gitignore or ratchet_excluded.txt.
     """
 
     # Underneath the root directory, find all the excluders.
     # They can occur in subfolders and if they do they apply only to that subfolder.
-    excluders = {
-        path for path in directory.rglob(exclude_file_name) if not path.is_symlink()
-    }
+    excluders = {path for path in directory.rglob(exclude_file_name) if not path.is_symlink()}
 
     # Per excluder, make a pathspec.
     for excluder in excluders:
@@ -106,10 +102,7 @@ def filter_excluded_files(
             files = [
                 file
                 for file in files
-                if not (
-                    file.is_relative_to(prefix)
-                    and exclude_spec.match_file(file.relative_to(prefix))
-                )
+                if not (file.is_relative_to(prefix) and exclude_spec.match_file(file.relative_to(prefix)))
             ]
 
     return files

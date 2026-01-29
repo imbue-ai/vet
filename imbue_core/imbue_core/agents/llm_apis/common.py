@@ -13,13 +13,7 @@ from imbue_core.agents.llm_apis.openai_api import (
 from imbue_core.agents.llm_apis.together_api import TOGETHERAI_MODEL_INFO_BY_NAME
 from imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 
-ModelName = (
-    AnthropicModelName
-    | OpenAIModelName
-    | GroqSupportedModelName
-    | TogetherAIModelName
-    | GeminiModelName
-)
+ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | TogetherAIModelName | GeminiModelName
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:

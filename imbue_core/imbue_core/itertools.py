@@ -68,9 +68,7 @@ def generate_flattened(iterable: Iterable[Iterable[T]]) -> Generator[T, None, No
 
 
 # TODO replace with itertools.batched when we can require Python 3.12+
-def generate_chunks(
-    iterable: Iterable[T], chunk_size: int
-) -> Generator[tuple[T, ...], None, None]:
+def generate_chunks(iterable: Iterable[T], chunk_size: int) -> Generator[tuple[T, ...], None, None]:
     """Yield successive n-sized chunks from any iterable"""
     chunk = []
     for item in iterable:

@@ -69,12 +69,7 @@ def log_subprocess_output_line(
     log_level = TRACE if is_logging_traced else DETAIL
     output_line = output_line.rstrip("\n")
     # very brittle parsing of log format for recursive logging: ef460144-072f-4b74-a712-0f728fdd3f50
-    if (
-        len(output_line) >= 36
-        and output_line[4] == "-"
-        and output_line[7] == "-"
-        and output_line[34:36] == "Tuple "
-    ):
+    if len(output_line) >= 36 and output_line[4] == "-" and output_line[7] == "-" and output_line[34:36] == "Tuple ":
         # these lines have already been logged in the child; only relog them if we really want to.
         if relog_loguru_lines:
             logger.opt(raw=True).log(log_level, output_line.rstrip("\n") + "\n")
@@ -90,9 +85,7 @@ def maybe_truncate_middle(output: str, size: int) -> str:
     if len(output) < size:
         return output
     # Note: not doing any sort of escaping or special formatting because this should only be for human consumption
-    truncate_message = (
-        f"\n... OUTPUT TRUNCATED DUE TO BEING OVER {size:_} CHARACTERS ...\n"
-    )
+    truncate_message = f"\n... OUTPUT TRUNCATED DUE TO BEING OVER {size:_} CHARACTERS ...\n"
     truncate_size = (size - len(truncate_message)) // 2 - 1
     return output[:truncate_size] + truncate_message + output[-truncate_size:]
 
@@ -243,19 +236,13 @@ class ProcessError(ExpectedError):
         self.is_output_already_logged = is_output_already_logged
         self.message = message
 
-    def describe(
-        self, is_output_included: bool, output_truncation: int | None = 8_000
-    ) -> str:
+    def describe(self, is_output_included: bool, output_truncation: int | None = 8_000) -> str:
         command = " ".join(shlex.quote(arg) for arg in self.command)
         s = f"{self.message} {self.returncode}. command=`{command}`"
         if is_output_included:
             # TODO: Consider making truncation configurable
             output = self.stdout + "\n" + self.stderr
-            maybe_truncated_output = (
-                maybe_truncate_middle(output, output_truncation)
-                if output_truncation
-                else output
-            )
+            maybe_truncated_output = maybe_truncate_middle(output, output_truncation) if output_truncation else output
             s += f"\noutput:\n{maybe_truncated_output}"
         return s
 
@@ -403,9 +390,7 @@ class PartialOutputContainer:
         for line in lines:
             self.in_progress_line.extend(line)
             if line.endswith((b"\n", b"\r")):
-                on_complete_line(
-                    self.in_progress_line.decode("utf-8", errors="replace")
-                )
+                on_complete_line(self.in_progress_line.decode("utf-8", errors="replace"))
                 self.in_progress_line.clear()
 
     def get_complete_output(self) -> bytes:
@@ -439,12 +424,8 @@ class OutputGatherer:
         return cls(
             stdout=stdout,
             stderr=stderr,
-            stdout_container=PartialOutputContainer(
-                on_complete_line=on_complete_line_from_stdout
-            ),
-            stderr_container=PartialOutputContainer(
-                on_complete_line=on_complete_line_from_stderr
-            ),
+            stdout_container=PartialOutputContainer(on_complete_line=on_complete_line_from_stdout),
+            stderr_container=PartialOutputContainer(on_complete_line=on_complete_line_from_stderr),
             shutdown_event=shutdown_event,
         )
 
@@ -452,9 +433,7 @@ class OutputGatherer:
         is_more_from_stdout = True
         is_more_from_stderr = True
         # We may drop some output if the shutdown event is set, but that's okay.
-        while not self.shutdown_event.is_set() and (
-            is_more_from_stdout or is_more_from_stderr
-        ):
+        while not self.shutdown_event.is_set() and (is_more_from_stdout or is_more_from_stderr):
             # We always attempt to read from both streams to avoid starvation.
             partial_stdout = self.stdout.read(_READ_SIZE)
             if partial_stdout is not None:
@@ -481,9 +460,7 @@ class OutputGatherer:
         ), self.stderr_container.in_progress_line.decode("utf-8", errors="replace")
 
 
-def _shutdown_popen(
-    process: subprocess.Popen[bytes], command: str, shutdown_timeout_sec: float
-) -> int | None:
+def _shutdown_popen(process: subprocess.Popen[bytes], command: str, shutdown_timeout_sec: float) -> int | None:
     logger.debug(
         f"run_local_command: aborting command (via sigterm to {process.pid}) due to signal...\n",
         command=truncate_command(command, 500),
@@ -543,9 +520,7 @@ def run_local_command(
     timeout: float | None = None,
     trace_output: bool = True,
     cwd: Path | None = None,
-    trace_on_complete_line_callback: (
-        Callable[[str], None] | None
-    ) = log_subprocess_output_line,
+    trace_on_complete_line_callback: Callable[[str], None] | None = log_subprocess_output_line,
     trace_log_context: Mapping[str, object] | None = None,
     shutdown_event: Event | CompoundEvent | None = None,
     shutdown_timeout_sec: float = 30.0,
@@ -603,12 +578,8 @@ def run_local_command(
 
     gatherer = OutputGatherer.build_from_popen(
         process,
-        on_complete_line_from_stdout=(
-            trace_on_complete_line_callback if trace_output else None
-        ),
-        on_complete_line_from_stderr=(
-            trace_on_complete_line_callback if trace_output else None
-        ),
+        on_complete_line_from_stdout=(trace_on_complete_line_callback if trace_output else None),
+        on_complete_line_from_stderr=(trace_on_complete_line_callback if trace_output else None),
         shutdown_event=shutdown_event,
     )
 
@@ -659,9 +630,7 @@ def run_local_command_modern_version(
     env: Mapping[str, str] | None = None,
     # This callback gets called once either the process is running or it failed to start.
     # The argument is None on success, or the Exception on failure.
-    on_initialization_complete: Callable[
-        [BaseException | None], None
-    ] = lambda success: None,
+    on_initialization_complete: Callable[[BaseException | None], None] = lambda success: None,
 ) -> FinishedProcess:
     """
     implementation notes:
@@ -748,9 +717,7 @@ def run_local_command_modern_version(
         else:
             # The shutdown event was set or a timeout limit has been reached,
             # so we should shutdown the process.
-            exit_code = _shutdown_popen(
-                process, command_as_string, shutdown_timeout_sec
-            )
+            exit_code = _shutdown_popen(process, command_as_string, shutdown_timeout_sec)
 
     stdout, stderr = gatherer.get_output()
 

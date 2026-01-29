@@ -23,9 +23,7 @@ from imbue_verify.issue_identifiers.identification_guides import (
 def test_to_required_inputs() -> None:
     harness = ConversationSinglePromptHarness()
     classifier = harness.make_issue_identifier(
-        identification_guides=(
-            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.MISLEADING_BEHAVIOR],
-        )
+        identification_guides=(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.MISLEADING_BEHAVIOR],)
     )
 
     # should support inputs where only the conversation history is present

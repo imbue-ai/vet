@@ -72,17 +72,13 @@ class PropagatingTaskGroup(asyncio.TaskGroup):
             self._base_error = None
             exc = None
 
-    async def _aexit(
-        self, et: type[BaseException] | None, exc: BaseException | None
-    ) -> None:
+    async def _aexit(self, et: type[BaseException] | None, exc: BaseException | None) -> None:
         self._exiting = True
 
         if exc is not None and self._is_base_error(exc) and self._base_error is None:  # type: ignore
             self._base_error = exc
 
-        propagate_cancellation_error = (
-            exc if et is asyncio.exceptions.CancelledError else None
-        )
+        propagate_cancellation_error = exc if et is asyncio.exceptions.CancelledError else None
         if self._parent_cancel_requested:
             # If this flag is set we *must* call uncancel().
             assert self._parent_task
@@ -182,9 +178,8 @@ class PropagatingTaskGroup(asyncio.TaskGroup):
                             exc,
                             "Emergency print of error that caused task group to die:",
                         )
-                self._original_message = (
-                    f"TaskGroup died because: {type(exc).__name__}: {exc}\n"
-                    + "".join(traceback.extract_tb(exc.__traceback__).format())
+                self._original_message = f"TaskGroup died because: {type(exc).__name__}: {exc}\n" + "".join(
+                    traceback.extract_tb(exc.__traceback__).format()
                 )
 
         for t in self._tasks:
@@ -284,9 +279,7 @@ async def safe_cancel_and_wait_for_cleanup(
 
     See safe_cancel_multiple_and_wait_for_cleanup for docs.
     """
-    await safe_cancel_multiple_and_wait_for_cleanup(
-        [task], msg, exception_types_to_ignore
-    )
+    await safe_cancel_multiple_and_wait_for_cleanup([task], msg, exception_types_to_ignore)
 
 
 async def safe_cancel_multiple_and_wait_for_cleanup(
@@ -324,18 +317,13 @@ async def safe_cancel_multiple_and_wait_for_cleanup(
 
     filtered_exceptions = []
     for exception in exceptions:
-        if not any(
-            isinstance(exception, exception_type)
-            for exception_type in exception_types_to_ignore
-        ):
+        if not any(isinstance(exception, exception_type) for exception_type in exception_types_to_ignore):
             filtered_exceptions.append(exception)
 
     if len(filtered_exceptions) == 1:
         raise filtered_exceptions[0]
     elif len(filtered_exceptions) > 1:
-        raise ExceptionGroup(
-            "Multiple exceptions in task group while canceling", filtered_exceptions
-        )
+        raise ExceptionGroup("Multiple exceptions in task group while canceling", filtered_exceptions)
 
 
 def _filter_exception_group(exc_group: ExceptionGroup) -> list[Exception]:
@@ -362,9 +350,7 @@ def pre_filter_exception(exc: BaseException, message: str | None = None) -> bool
     from loguru import logger
 
     if getattr(exc, EXCEPTION_LOGGED_FLAG, False):
-        logger.info(
-            "Skipping duplicate log of exception {} with message {!r}", exc, message
-        )
+        logger.info("Skipping duplicate log of exception {} with message {!r}", exc, message)
         return True
     try:
         setattr(exc, EXCEPTION_LOGGED_FLAG, True)
@@ -384,16 +370,12 @@ def inject_exception_and_log(
     from loguru import logger
 
     # inject received exception stack trace into logger error message
-    options = (exc,) + logger._options[
-        1:
-    ]  # pyre-fixme[16]: pyre doesn't know that _options exists
+    options = (exc,) + logger._options[1:]  # pyre-fixme[16]: pyre doesn't know that _options exists
     if priority is not None:
         level = priority.value
     else:
         level = "ERROR"
-    logger._log(
-        level, False, options, message, args, kwargs
-    )  # pyre-fixme[16]: pyre doesn't know that _log exists
+    logger._log(level, False, options, message, args, kwargs)  # pyre-fixme[16]: pyre doesn't know that _log exists
 
 
 def log_exception(
@@ -427,31 +409,21 @@ def log_exception(
             logsite_url = get_s3_upload_url(traceback_str_s3_key)
             s3_uploads.append(logsite_url)
             callbacks.append(
-                lambda key=traceback_str_s3_key, data=traceback_str: upload_to_s3_with_key(
-                    key, data.encode()
-                )
+                lambda key=traceback_str_s3_key, data=traceback_str: upload_to_s3_with_key(key, data.encode())
             )
 
             # for original exception, get traceback with variables and attach
-            traceback_with_variables_s3_key = get_s3_upload_key(
-                "original_exc_traceback_with_vars", ".txt"
-            )
+            traceback_with_variables_s3_key = get_s3_upload_key("original_exc_traceback_with_vars", ".txt")
             s3_uploads.append(get_s3_upload_url(traceback_with_variables_s3_key))
             callbacks.append(
-                lambda key=traceback_with_variables_s3_key, exception=exc: _upload_traceback(
-                    key, exception
-                )
+                lambda key=traceback_with_variables_s3_key, exception=exc: _upload_traceback(key, exception)
             )
             # upload some extra data if provided
             if sentry_extra_uploads is not None:
                 for key, value in sentry_extra_uploads.items():
                     key = get_s3_upload_key(key, ".txt")
                     s3_uploads.append(get_s3_upload_url(key))
-                    callbacks.append(
-                        lambda key=key, data=value: upload_to_s3_with_key(
-                            key, data.encode()
-                        )
-                    )
+                    callbacks.append(lambda key=key, data=value: upload_to_s3_with_key(key, data.encode()))
 
             sentry_event_handler.schedule_callbacks(callbacks)
 

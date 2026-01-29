@@ -144,9 +144,7 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
             # in this case, the cmd should never be used
             cmd = ["CACHED_CLAUDE_CODE_EXEC_PLACEHOLDER"]
             return cmd
-        cli_path = (
-            str(options.cli_path) if options.cli_path is not None else cls._find_cli()
-        )
+        cli_path = str(options.cli_path) if options.cli_path is not None else cls._find_cli()
         cmd = [
             cli_path,
             "--output-format",
@@ -171,9 +169,7 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
             args.extend(["--model", options.model])
 
         if options.permission_prompt_tool_name:
-            args.extend(
-                ["--permission-prompt-tool", options.permission_prompt_tool_name]
-            )
+            args.extend(["--permission-prompt-tool", options.permission_prompt_tool_name])
 
         if options.permission_mode:
             args.extend(["--permission-mode", options.permission_mode])
@@ -187,13 +183,7 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         if options.mcp_servers:
             mcp_config_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
             mcp_config_file.write(
-                json.dumps(
-                    {
-                        "mcpServers": {
-                            k: v.model_dump() for k, v in options.mcp_servers.items()
-                        }
-                    }
-                ).encode("utf-8")
+                json.dumps({"mcpServers": {k: v.model_dump() for k, v in options.mcp_servers.items()}}).encode("utf-8")
             )
             args.extend(["--mcp-config", mcp_config_file.name])
 

@@ -8,14 +8,10 @@ from imbue_core.caching import get_cache
 
 def _create_cache_key(prompt: str, options: AgentOptions) -> str:
     """Create a cache key for the given prompt and options."""
-    return hashlib.md5(
-        f"{prompt} | {options.model_dump_json() if options else ''}".encode()
-    ).hexdigest()
+    return hashlib.md5(f"{prompt} | {options.model_dump_json() if options else ''}".encode()).hexdigest()
 
 
-def check_cache(
-    cache_path: Path, prompt: str, options: AgentOptions
-) -> AgentInteractionRecord | None:
+def check_cache(cache_path: Path, prompt: str, options: AgentOptions) -> AgentInteractionRecord | None:
     """Check the cache for the given prompt and options."""
     cache_key = _create_cache_key(prompt, options)
     cache = get_cache(cache_path)
@@ -25,9 +21,7 @@ def check_cache(
 
     if value is None:
         return None
-    assert isinstance(
-        value, str
-    ), f"Got value of type {type(value)} from cache, expected str"
+    assert isinstance(value, str), f"Got value of type {type(value)} from cache, expected str"
     return AgentInteractionRecord.model_validate_json(value)
 
 

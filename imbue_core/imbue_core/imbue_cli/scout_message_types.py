@@ -17,9 +17,7 @@ class ScoutMessage(SerializableModel):
     """Base class for all scout output messages."""
 
     object_type: str = Field(description="Discriminator field for message type")
-    timestamp: float = Field(
-        default_factory=time.time, description="Unix timestamp when message was created"
-    )
+    timestamp: float = Field(default_factory=time.time, description="Unix timestamp when message was created")
 
 
 class EvidenceMessage(ScoutMessage):
@@ -45,9 +43,7 @@ class ScoreMessage(ScoutMessage):
     overall_score: float  # 0.0 to 1.0
     evidence_count: int  # Number of evidence pieces contributing to this score
     score_breakdown: dict[str, int]  # Distribution of Good/Moderate/Bad evidence counts
-    confidence_breakdown: dict[
-        str, int
-    ]  # Distribution of High/Medium/Low confidence counts
+    confidence_breakdown: dict[str, int]  # Distribution of High/Medium/Low confidence counts
     time_elapsed: float  # Time elapsed since start in seconds
 
 

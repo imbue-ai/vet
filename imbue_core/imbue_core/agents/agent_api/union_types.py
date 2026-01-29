@@ -7,7 +7,6 @@ from imbue_core.agents.agent_api.codex.data_types import CodexOptions
 from imbue_core.pydantic_serialization import build_discriminator
 
 AgentOptionsUnion = Annotated[
-    Annotated[ClaudeCodeOptions, Tag("ClaudeCodeOptions")]
-    | Annotated[CodexOptions, Tag("CodexOptions")],
+    Annotated[ClaudeCodeOptions, Tag("ClaudeCodeOptions")] | Annotated[CodexOptions, Tag("CodexOptions")],
     build_discriminator(),
 ]

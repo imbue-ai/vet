@@ -42,9 +42,7 @@ ISSUE_IDENTIFICATION_GUIDES: tuple[IssueIdentificationGuide, ...] = (
                 "   - Modifications that impact how existing features work in ways not mentioned in the request",
             ]
         ),
-        exceptions=(
-            "Minor refactors directly related to requested changes are acceptable.",
-        ),
+        exceptions=("Minor refactors directly related to requested changes are acceptable.",),
         additional_guide_for_agent="Compare the uncommitted diff and the request to ensure they match.",
     ),
     IssueIdentificationGuide(
@@ -62,9 +60,7 @@ ISSUE_IDENTIFICATION_GUIDES: tuple[IssueIdentificationGuide, ...] = (
             "Inline comments are not updated even though functionality was changed by the diff.",
             "Documentation contains outdated code snippets or commands that need to be updated because of the changes made by the diff.",
         ),
-        exceptions=(
-            "TODOs that are not implemented yet are not considered a documentation mismatch.",
-        ),
+        exceptions=("TODOs that are not implemented yet are not considered a documentation mismatch.",),
         additional_guide_for_agent="Look at code comments and READMEs in the diff or in existing code related to the diff.",
     ),
     IssueIdentificationGuide(
@@ -226,9 +222,7 @@ ISSUE_IDENTIFICATION_GUIDES: tuple[IssueIdentificationGuide, ...] = (
                 "- If the codebase uses a dependency for some functionality, the diff should avoid introducing other packages that provide the same functionality, unless there is a good reason to do so (e.g. the new package is significantly better maintained, has better performance, or is more secure).",
             ]
         ),
-        exceptions=(
-            "Do not raise issues related to package versions or pinning unless it is a critical issue.",
-        ),
+        exceptions=("Do not raise issues related to package versions or pinning unless it is a critical issue.",),
         additional_guide_for_agent="\n".join(
             [
                 "- Look at the diff and dependency management files for issues.",
@@ -417,9 +411,7 @@ ISSUE_IDENTIFICATION_GUIDES: tuple[IssueIdentificationGuide, ...] = (
             "A Python function directly accesses a private attribute, variable or function (prefixed with an underscore) from a different class or file.",
             "A module modifies the internal state of another module directly instead of using and/or adding public API functions.",
         ),
-        exceptions=(
-            "Unit tests that need to access internal state for verification purposes.",
-        ),
+        exceptions=("Unit tests that need to access internal state for verification purposes.",),
     ),
 )
 

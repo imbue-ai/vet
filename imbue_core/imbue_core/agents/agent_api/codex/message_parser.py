@@ -34,9 +34,7 @@ from imbue_core.agents.agent_api.data_types import AgentToolUseBlock
 from imbue_core.agents.agent_api.data_types import AgentUsage
 
 
-def parse_codex_event(
-    data: dict[str, Any], thread_id: str | None = None
-) -> AgentMessage | None:
+def parse_codex_event(data: dict[str, Any], thread_id: str | None = None) -> AgentMessage | None:
     """Parse Codex event into unified message.
 
     Reference:
@@ -57,15 +55,12 @@ def parse_codex_event(
             return None
 
         case CodexTurnCompletedEvent():
-            assert (
-                thread_id is not None
-            ), "thread_id is required for turn.completed event"
+            assert thread_id is not None, "thread_id is required for turn.completed event"
             usage = AgentUsage(
                 input_tokens=codex_event.usage.input_tokens,
                 output_tokens=codex_event.usage.output_tokens,
                 cached_tokens=codex_event.usage.cached_input_tokens,
-                total_tokens=codex_event.usage.input_tokens
-                + codex_event.usage.output_tokens,
+                total_tokens=codex_event.usage.input_tokens + codex_event.usage.output_tokens,
             )
             return AgentResultMessage(
                 session_id=thread_id,
@@ -155,11 +150,7 @@ def parse_codex_item(
                 AgentToolUseBlock(
                     id=codex_item.id,
                     name=codex_item.type,
-                    input={
-                        "changes": [
-                            change.model_dump() for change in codex_item.changes
-                        ]
-                    },
+                    input={"changes": [change.model_dump() for change in codex_item.changes]},
                 ),
                 AgentToolResultBlock(
                     tool_use_id=codex_item.id,

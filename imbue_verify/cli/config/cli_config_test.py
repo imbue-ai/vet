@@ -97,9 +97,7 @@ def test_parse_cli_config_from_dict_handles_all_fields() -> None:
 
 def test_merge_presets_override_takes_precedence() -> None:
     base = CliConfigPreset(confidence_threshold=0.8, max_workers=2, model="base-model")
-    override = CliConfigPreset(
-        confidence_threshold=0.9, max_workers=None, model="override-model"
-    )
+    override = CliConfigPreset(confidence_threshold=0.9, max_workers=None, model="override-model")
 
     result = merge_presets(base, override)
 

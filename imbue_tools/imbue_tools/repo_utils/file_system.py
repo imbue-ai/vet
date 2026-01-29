@@ -44,9 +44,7 @@ class InMemoryFileSystem(SerializableModel):
             text_files=deep_freeze_mapping(sorted_text_files),
         )
 
-    def get(
-        self, file_path: str, default: FileContents | None = None
-    ) -> FileContents | None:
+    def get(self, file_path: str, default: FileContents | None = None) -> FileContents | None:
         if file_path in self.files:
             return self.files[file_path]
         return default

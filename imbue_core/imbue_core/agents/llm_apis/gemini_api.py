@@ -169,9 +169,7 @@ NO_SIMPLE_TEXT_ERROR = "".join(
     ]
 )
 
-_GEMINI_STOP_REASON_TO_STOP_REASON: Final[
-    FrozenMapping[FinishReason, ResponseStopReason]
-] = FrozenDict(
+_GEMINI_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[FinishReason, ResponseStopReason]] = FrozenDict(
     {
         # Gemini treats stop due to natural stop point and provided stop sequence the same
         FinishReason.STOP: ResponseStopReason.END_TURN,
@@ -204,8 +202,7 @@ def _is_flagged_as_unsafe(api_result: GenerateContentResponse) -> bool:
     if candidate.finish_reason == FinishReason.SAFETY:
         return True
     if candidate.finish_reason == FinishReason.OTHER and any(
-        rating.probability != HarmProbability.NEGLIGIBLE
-        for rating in (candidate.safety_ratings or [])
+        rating.probability != HarmProbability.NEGLIGIBLE for rating in (candidate.safety_ratings or [])
     ):
         return True
     return False
@@ -262,9 +259,7 @@ def _gemini_exception_manager() -> Iterator[None]:
         logger.info("Gemini did not return a simple text response.")
         raise BadAPIRequestError(str(e)) from e
     except AttributeError as e:
-        logger.info(
-            "There is an error with the Gemini prompt or processing code: {}.", str(e)
-        )
+        logger.info("There is an error with the Gemini prompt or processing code: {}.", str(e))
         raise BadAPIRequestError(str(e)) from e
     except httpx.RemoteProtocolError as e:
         logger.info(str(e))
@@ -301,9 +296,7 @@ class GeminiAPI(LanguageModelAPI):
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         if v not in GEMINI_MODEL_INFO_BY_NAME:
-            raise LanguageModelInvalidModelNameError(
-                v, cls.__name__, list(GEMINI_MODEL_INFO_BY_NAME)
-            )
+            raise LanguageModelInvalidModelNameError(v, cls.__name__, list(GEMINI_MODEL_INFO_BY_NAME))
         return v
 
     @property
@@ -341,12 +334,10 @@ class GeminiAPI(LanguageModelAPI):
                 ),
             )
 
-            api_result: GenerateContentResponse = (
-                await client.aio.models.generate_content(
-                    model=self.model_info.model_name,
-                    contents=messages,
-                    config=generation_config,
-                )
+            api_result: GenerateContentResponse = await client.aio.models.generate_content(
+                model=self.model_info.model_name,
+                contents=messages,
+                config=generation_config,
             )
 
             prompt_tokens = self.count_tokens(prompt)
@@ -354,8 +345,7 @@ class GeminiAPI(LanguageModelAPI):
             if (
                 api_result.prompt_feedback is not None
                 and api_result.prompt_feedback.block_reason is not None
-                and api_result.prompt_feedback.block_reason
-                != BlockedReason.BLOCKED_REASON_UNSPECIFIED
+                and api_result.prompt_feedback.block_reason != BlockedReason.BLOCKED_REASON_UNSPECIFIED
             ):
                 logger.info(
                     f"Gemini blocked output: {messages=}, {api_result.prompt_feedback.block_reason=}, {api_result.prompt_feedback.safety_ratings=}"
@@ -366,21 +356,13 @@ class GeminiAPI(LanguageModelAPI):
                     completion_tokens=0,
                     stop_reason=ResponseStopReason.NONE,
                     network_failure_count=network_failure_count,
-                    dollars_used=self.calculate_cost(
-                        prompt_tokens, 0
-                    ),  # guestimate of cost,
+                    dollars_used=self.calculate_cost(prompt_tokens, 0),  # guestimate of cost,
                 )
 
-            if _is_flagged_as_unsafe(api_result) or _is_flagged_as_recitation(
-                api_result
-            ):
-                block_reason = fmap(
-                    lambda x: x.block_reason, api_result.prompt_feedback
-                )
+            if _is_flagged_as_unsafe(api_result) or _is_flagged_as_recitation(api_result):
+                block_reason = fmap(lambda x: x.block_reason, api_result.prompt_feedback)
                 safety_ratings = (
-                    api_result.prompt_feedback.safety_ratings
-                    if api_result.prompt_feedback is not None
-                    else None
+                    api_result.prompt_feedback.safety_ratings if api_result.prompt_feedback is not None else None
                 )
                 logger.info(
                     "Gemini flagged output: block_reason={block_reason}, safety_ratings={safety_ratings}",
@@ -405,12 +387,8 @@ class GeminiAPI(LanguageModelAPI):
             )
 
             if finish_reason not in [FinishReason.MAX_TOKENS, FinishReason.STOP]:
-                block_reason = fmap(
-                    lambda x: x.block_reason, api_result.prompt_feedback
-                )
-                safety_ratings = fmap(
-                    lambda x: x.safety_ratings, api_result.prompt_feedback
-                )
+                block_reason = fmap(lambda x: x.block_reason, api_result.prompt_feedback)
+                safety_ratings = fmap(lambda x: x.safety_ratings, api_result.prompt_feedback)
                 logger.info(
                     f"Gemini did not return a simple text response, {block_reason=}, {safety_ratings=}, {finish_reason=}, {candidate.safety_ratings=}"
                 )
@@ -438,29 +416,22 @@ class GeminiAPI(LanguageModelAPI):
                 thoughts = only(thoughts_list)
 
             if text is None:
-                if (
-                    finish_reason == FinishReason.MAX_TOKENS
-                    and generation_config.thinking_config is not None
-                ):
+                if finish_reason == FinishReason.MAX_TOKENS and generation_config.thinking_config is not None:
                     raise BadAPIRequestError(
                         "Gemini ran out of tokens while thinking and did not return a text response"
                     )
                 logger.info("Non-simple-text response: {}", api_result)
-                raise BadAPIRequestError(
-                    "Gemini did not return a simple text response (text is None)"
-                )
+                raise BadAPIRequestError("Gemini did not return a simple text response (text is None)")
 
             prompt_tokens = (
                 api_result.usage_metadata.prompt_token_count
-                if api_result.usage_metadata is not None
-                and api_result.usage_metadata.prompt_token_count is not None
+                if api_result.usage_metadata is not None and api_result.usage_metadata.prompt_token_count is not None
                 else self.count_tokens(prompt)
             )
 
             thought_tokens = (
                 api_result.usage_metadata.thoughts_token_count
-                if api_result.usage_metadata is not None
-                and api_result.usage_metadata.thoughts_token_count is not None
+                if api_result.usage_metadata is not None and api_result.usage_metadata.thoughts_token_count is not None
                 else 0
             )
 
@@ -503,19 +474,13 @@ class GeminiAPI(LanguageModelAPI):
             raise UnsetCachePathError()
         return AsyncCache(self.count_tokens_cache_path, CachedCountTokensResponse)
 
-    async def check_count_tokens_cache(
-        self, cache_key: str
-    ) -> CountTokensResponse | None:
-        return await self.check_cache_core(
-            self.get_count_tokens_response_cache, cache_key
-        )
+    async def check_count_tokens_cache(self, cache_key: str) -> CountTokensResponse | None:
+        return await self.check_cache_core(self.get_count_tokens_response_cache, cache_key)
 
     async def _get_from_count_tokens_cache(
         self, frame: FrameType | None
     ) -> tuple[str | None, CountTokensResponse | None]:
-        return await self._get_from_cache_core(
-            frame, lambda cr: cr, self.check_count_tokens_cache
-        )
+        return await self._get_from_cache_core(frame, lambda cr: cr, self.check_count_tokens_cache)
 
     async def count_tokens_api(self, text: str, is_caching_enabled: bool) -> int | None:
         """Call the count_tokens api to get a definitive token count. May be fragile and is definitely slow."""
@@ -537,15 +502,11 @@ class GeminiAPI(LanguageModelAPI):
 
         with _gemini_exception_manager():
             client = self._get_client()
-            response = client.models.count_tokens(
-                model=self.model_info.model_name, contents=text
-            )
+            response = client.models.count_tokens(model=self.model_info.model_name, contents=text)
 
             total_tokens = response.total_tokens
             if total_tokens is None:
-                raise TransientLanguageModelError(
-                    "Gemini did not return a valid token count"
-                )
+                raise TransientLanguageModelError("Gemini did not return a valid token count")
 
             result = CachedCountTokensResponse(
                 response=CountTokensResponse(
@@ -553,9 +514,7 @@ class GeminiAPI(LanguageModelAPI):
                     cached_content_token_count=response.cached_content_token_count,
                 ),
                 inputs=(
-                    CountTokensInputs(model=self.model_info.model_name, prompt=text)
-                    if self.is_caching_inputs
-                    else None
+                    CountTokensInputs(model=self.model_info.model_name, prompt=text) if self.is_caching_inputs else None
                 ),
             )
 

@@ -172,9 +172,7 @@ def temp_dir(base_dir: str, is_uuid_concatenated: bool = False) -> ContextManage
 
 
 @asynccontextmanager
-async def async_temp_dir(
-    base_dir: str, is_uuid_concatenated: bool = False
-) -> AsyncGenerator[Path, None]:
+async def async_temp_dir(base_dir: str, is_uuid_concatenated: bool = False) -> AsyncGenerator[Path, None]:
     random_id = uuid4()
     if is_uuid_concatenated:
         output_path = anyio.Path(base_dir.rstrip("/") + "_" + str(random_id))

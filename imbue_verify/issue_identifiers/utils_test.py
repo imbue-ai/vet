@@ -13,10 +13,7 @@ def test_xml_post_escape_does_not_escape_if_not_necessary() -> None:
 
 def test_xml_post_escape_properly_escapes_single_line() -> None:
     input_string = "<root><desc>Hey</desc><code_part>1 < 2</code_part></root>"
-    assert (
-        xml_post_escape(input_string, "code_part")
-        == "<root><desc>Hey</desc><code_part>1 &lt; 2</code_part></root>"
-    )
+    assert xml_post_escape(input_string, "code_part") == "<root><desc>Hey</desc><code_part>1 &lt; 2</code_part></root>"
 
 
 def test_xml_post_escape_properly_escapes_multi_line() -> None:
@@ -41,18 +38,12 @@ def test_xml_post_escape_properly_escapes_multi_line() -> None:
 
 def test_xml_post_escape_does_not_escape_if_not_asked_to() -> None:
     input_string = "<root><desc>Hey</desc><code_part>1 < 2</code_part></root>"
-    assert (
-        xml_post_escape(input_string, "desc")
-        == "<root><desc>Hey</desc><code_part>1 < 2</code_part></root>"
-    )
+    assert xml_post_escape(input_string, "desc") == "<root><desc>Hey</desc><code_part>1 < 2</code_part></root>"
 
 
 def test_xml_post_escape_does_not_change_case() -> None:
     input_string = "<root><desc>Hey</desc><code_part>1 < 2</CODE_PART></root>"
-    assert (
-        xml_post_escape(input_string, "code_part")
-        == "<root><desc>Hey</desc><code_part>1 &lt; 2</CODE_PART></root>"
-    )
+    assert xml_post_escape(input_string, "code_part") == "<root><desc>Hey</desc><code_part>1 &lt; 2</CODE_PART></root>"
 
 
 def test_xml_post_escape_does_nothing_if_element_not_present() -> None:
@@ -60,9 +51,7 @@ def test_xml_post_escape_does_nothing_if_element_not_present() -> None:
     assert xml_post_escape(input_string, "code_part") == input_string
 
 
-def _generator_with_barrier(
-    value: int, count: int, barrier: threading.Barrier
-) -> Generator[int, None, int]:
+def _generator_with_barrier(value: int, count: int, barrier: threading.Barrier) -> Generator[int, None, int]:
     for i in range(count):
         barrier.wait(timeout=1.0)
         yield value + i

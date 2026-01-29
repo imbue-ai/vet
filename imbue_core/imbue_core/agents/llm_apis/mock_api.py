@@ -59,9 +59,7 @@ class LanguageModelMock(LanguageModelAPI):
     ) -> tuple[LanguageModelResponse, ...]:
         raise NotImplementedError()
 
-    def _get_token_probabilities(
-        self, response_text: str
-    ) -> tuple[tuple[TokenProbability, ...], ...]:
+    def _get_token_probabilities(self, response_text: str) -> tuple[tuple[TokenProbability, ...], ...]:
         return tuple(
             (TokenProbability(token=pseudo_token, log_probability=0.0, is_stop=False),)
             for pseudo_token in response_text.split()
@@ -134,9 +132,7 @@ class FileBasedLanguageModelMock(LanguageModelMock):
         # TODO: currently the identifier is the last user message, because the entire prompt is really long
         #  if we need to support the same user message with different responses, expand this, maybe chat history?
         identifier = self._get_user_message_from_prompt(prompt)
-        logger.info(
-            "Getting response for identifier: {} from {}", identifier, toml_dict
-        )
+        logger.info("Getting response for identifier: {} from {}", identifier, toml_dict)
         toml_item = toml_dict.get(identifier, None)
         if toml_item is None:
             for toml_key, response in toml_dict.items():
@@ -150,19 +146,13 @@ class FileBasedLanguageModelMock(LanguageModelMock):
         if "responses" in toml_item:
             responses = toml_item["responses"]
             if isinstance(responses, list):
-                return tuple(
-                    r["text"] for r in responses if isinstance(r, dict) and "text" in r
-                )
-            raise ValueError(
-                f"Expected 'responses' to be a list of tables in section '{identifier}'"
-            )
+                return tuple(r["text"] for r in responses if isinstance(r, dict) and "text" in r)
+            raise ValueError(f"Expected 'responses' to be a list of tables in section '{identifier}'")
 
         if "response" in toml_item:
             return (str(toml_item["response"]),)
 
-        raise ValueError(
-            f"No valid response or responses found for identifier '{identifier}'"
-        )
+        raise ValueError(f"No valid response or responses found for identifier '{identifier}'")
 
     async def complete(
         self,
@@ -198,8 +188,6 @@ class FileBasedLanguageModelMock(LanguageModelMock):
                 yield LanguageModelStreamDeltaEvent(delta=response)
                 await asyncio.sleep(MOCK_STREAM_SLEEP_TIME)
         yield LanguageModelStreamEndEvent(
-            usage=LanguageModelResponseUsage(
-                prompt_tokens_used=0, completion_tokens_used=0, dollars_used=0
-            ),
+            usage=LanguageModelResponseUsage(prompt_tokens_used=0, completion_tokens_used=0, dollars_used=0),
             stop_reason=ResponseStopReason.NONE,
         )

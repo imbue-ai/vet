@@ -114,9 +114,7 @@ IMPORTANT: Do not include any additional commentary outside the JSON response, y
 class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
     _identification_guides: tuple[IssueIdentificationGuide, ...]
 
-    def __init__(
-        self, identification_guides: tuple[IssueIdentificationGuide, ...]
-    ) -> None:
+    def __init__(self, identification_guides: tuple[IssueIdentificationGuide, ...]) -> None:
         self._identification_guides = identification_guides
 
     @cached_property
@@ -130,12 +128,9 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         identifier_inputs: CommitInputs,
     ) -> str:
         # Sort the guides by issue code to ensure prompt caching (and snapshotting in tests) works.
-        sorted_guides = sorted(
-            self._identification_guides, key=lambda guide: guide.issue_code
-        )
+        sorted_guides = sorted(self._identification_guides, key=lambda guide: guide.issue_code)
         formatted_guides = {
-            guide.issue_code: format_issue_identification_guide_for_llm(guide)
-            for guide in sorted_guides
+            guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
         }
 
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -145,11 +140,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
                 "include_request_and_diff": True,
                 "cached_prompt_prefix": project_context.cached_prompt_prefix,
                 "cache_full_prompt": config.cache_full_prompt,
-                "extra_context": (
-                    escape_prompt_markers(config.extra_context)
-                    if config.extra_context
-                    else None
-                ),
+                "extra_context": (escape_prompt_markers(config.extra_context) if config.extra_context else None),
                 "commit_message": escape_prompt_markers(identifier_inputs.goal),
                 "unified_diff": escape_prompt_markers(identifier_inputs.diff),
                 "guides": formatted_guides,
@@ -164,9 +155,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         config: ImbueVerifyConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         prompt = self._get_prompt(project_context, config, identifier_inputs)
-        language_model = build_language_model_from_config(
-            config.language_model_generation_config
-        )
+        language_model = build_language_model_from_config(config.language_model_generation_config)
         language_model_params = LanguageModelGenerationParams(
             temperature=config.temperature,
             max_tokens=config.max_output_tokens,
@@ -182,9 +171,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
 
         llm_responses = (
             LLMResponse(
-                metadata=IssueIdentificationLLMResponseMetadata(
-                    agentic_phase=AgenticPhase.ISSUE_IDENTIFICATION
-                ),
+                metadata=IssueIdentificationLLMResponseMetadata(agentic_phase=AgenticPhase.ISSUE_IDENTIFICATION),
                 raw_response=(response.text,),
                 invocation_info=invocation_info,
             ),

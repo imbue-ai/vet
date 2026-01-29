@@ -163,17 +163,15 @@ def _get_capacity_semaphor(model_name: str) -> asyncio.Semaphore:
 
 
 # ref: https://github.com/groq/groq-python/blob/b74ce9e301115520c744e18425653a4c783cb6f5/src/groq/types/chat/chat_completion_chunk.py#L86
-_GROQ_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopReason]] = (
-    FrozenDict(
-        {
-            # Groq copies OpenAI and treats stop due to natural stop point and provided stop sequence the same
-            "stop": ResponseStopReason.END_TURN,
-            "length": ResponseStopReason.MAX_TOKENS,
-            "tool_calls": ResponseStopReason.TOOL_CALLS,
-            "function_call": ResponseStopReason.FUNCTION_CALL,
-            "content_filter": ResponseStopReason.CONTENT_FILTER,
-        }
-    )
+_GROQ_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopReason]] = FrozenDict(
+    {
+        # Groq copies OpenAI and treats stop due to natural stop point and provided stop sequence the same
+        "stop": ResponseStopReason.END_TURN,
+        "length": ResponseStopReason.MAX_TOKENS,
+        "tool_calls": ResponseStopReason.TOOL_CALLS,
+        "function_call": ResponseStopReason.FUNCTION_CALL,
+        "content_filter": ResponseStopReason.CONTENT_FILTER,
+    }
 )
 
 
@@ -212,9 +210,7 @@ class GroqChatAPI(LanguageModelAPI):
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         if v not in GROQ_MODEL_INFO_BY_NAME:
-            raise LanguageModelInvalidModelNameError(
-                v, cls.__name__, list(GROQ_MODEL_INFO_BY_NAME)
-            )
+            raise LanguageModelInvalidModelNameError(v, cls.__name__, list(GROQ_MODEL_INFO_BY_NAME))
         return v
 
     @property
@@ -267,10 +263,7 @@ class GroqChatAPI(LanguageModelAPI):
 
                 # Note, like OpenAI, Groq treats end turn and stop sequence the same
                 # Here we assume it is stop sequence if user has specified a stop sequence
-                if (
-                    params.stop is not None
-                    and stop_reason == ResponseStopReason.END_TURN
-                ):
+                if params.stop is not None and stop_reason == ResponseStopReason.END_TURN:
                     text += params.stop
                 result = LanguageModelResponse(
                     text=text,
@@ -330,9 +323,7 @@ class GroqChatAPI(LanguageModelAPI):
             finish_reason: str | None = None
             async for chunk in api_result:
                 if chunk.choices:
-                    assert (
-                        len(chunk.choices) == 1
-                    ), "Currently only count=1 supported for streaming API."
+                    assert len(chunk.choices) == 1, "Currently only count=1 supported for streaming API."
                     data = only(chunk.choices)
                     delta = data.delta.content
                     if delta is not None:

@@ -70,9 +70,7 @@ class ReturnCapturingGenerator(Generic[IterT, ReturnT]):
 
     @property
     def return_value(self) -> ReturnT:
-        assert (
-            self._done_iterating
-        ), "Cannot call return_value before the generator is exhausted"
+        assert self._done_iterating, "Cannot call return_value before the generator is exhausted"
         # pyre-ignore[16]: we made _return_value in __init__
         return self._return_value
 

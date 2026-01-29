@@ -8,25 +8,19 @@ from imbue_core.cattrs_serialization import deserialize_from_json
 from imbue_core.cattrs_serialization import serialize_to_json
 
 
-async def preload_llm_cache(
-    persistent_cache_path: Path, temp_cache: AsyncCache
-) -> None:
+async def preload_llm_cache(persistent_cache_path: Path, temp_cache: AsyncCache) -> None:
     logger.info(
         "Loading existing cache from {persistent_cache_path}",
         persistent_cache_path=persistent_cache_path,
     )
-    assert (
-        persistent_cache_path.exists()
-    ), f"Cache file {persistent_cache_path} does not exist."
+    assert persistent_cache_path.exists(), f"Cache file {persistent_cache_path} does not exist."
     existing_data = deserialize_from_json(persistent_cache_path.read_text())
     async with temp_cache as cache:
         for key, value in existing_data.items():
             await cache.set(key, value)
 
 
-async def record_llm_responses_in_cache(
-    temp_cache: AsyncCache, persistent_cache_path: Path
-) -> None:
+async def record_llm_responses_in_cache(temp_cache: AsyncCache, persistent_cache_path: Path) -> None:
     logger.info(
         "Updating cache (!!!) at {persistent_cache_path}",
         persistent_cache_path=persistent_cache_path,
@@ -51,10 +45,7 @@ def get_cache_file_from_snapshot_core(snapshot: SnapshotAssertion, suffix: str) 
     test_file = Path(snapshot.test_location.filepath)
     snapshot_dir = test_file.parent / "__snapshots__" / test_file.stem
     snapshot_dir.mkdir(parents=True, exist_ok=True)
-    cache_file = (
-        snapshot_dir
-        / f"{_sanitize_snapshot_name(snapshot.test_location.testname)}.{suffix}"
-    )
+    cache_file = snapshot_dir / f"{_sanitize_snapshot_name(snapshot.test_location.testname)}.{suffix}"
     return cache_file
 
 

@@ -36,23 +36,15 @@ def with_consent(
     """A Pydantic Field factory to annotate a field with a consent level.
     It attaches the level as metadata within the field's JSON schema extras.
     """
-    return _with_consent_level(
-        level, default_factory=default_factory, default=default, **kwargs
-    )
+    return _with_consent_level(level, default_factory=default_factory, default=default, **kwargs)
 
 
-def without_consent(
-    default: Any | None = None, default_factory: Any | None = None, **kwargs: Any
-) -> Any:
+def without_consent(default: Any | None = None, default_factory: Any | None = None, **kwargs: Any) -> Any:
     """A Pydantic Field factory to annotate a field without a consent level."""
-    return _with_consent_level(
-        ConsentLevel.NONE, default_factory=default_factory, default=default, **kwargs
-    )
+    return _with_consent_level(ConsentLevel.NONE, default_factory=default_factory, default=default, **kwargs)
 
 
-def never_log(
-    default: Any | None = None, default_factory: Any | None = None, **kwargs: Any
-) -> Any:
+def never_log(default: Any | None = None, default_factory: Any | None = None, **kwargs: Any) -> Any:
     """A Pydantic Field factory to annotate a field that should never be logged.
     This is used for in-memory or temporary data that should not be stored long-term.
     """

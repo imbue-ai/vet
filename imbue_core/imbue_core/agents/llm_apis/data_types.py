@@ -206,9 +206,7 @@ class CachedCostedLanguageModelResponse(
     pass
 
 
-class CachedCountTokensResponse(
-    CachedCostedModelResponse[CountTokensInputs, CountTokensResponse]
-):
+class CachedCountTokensResponse(CachedCostedModelResponse[CountTokensInputs, CountTokensResponse]):
     pass
 
 

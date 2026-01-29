@@ -42,14 +42,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
         # So here we just create a new transport for each call, and handle things like resuming the session as
         # needed.
         options = self._options
-        if (
-            self._session_id is not None
-            and self._session_id != self._options.resume_session_id
-        ):
+        if self._session_id is not None and self._session_id != self._options.resume_session_id:
             # Inject the current session id into the options before building the command
-            options = self._options.model_copy(
-                update={"resume_session_id": self._session_id}
-            )
+            options = self._options.model_copy(update={"resume_session_id": self._session_id})
         cmd = self._build_cli_cmd(options)
         with AgentSubprocessCLITransport.build(
             AgentSubprocessCLITransportOptions(cmd=[*cmd, prompt], cwd=options.cwd)
@@ -132,9 +127,7 @@ class CodexClient(RealAgentClient[CodexOptions]):
             # in this case, the cmd should never be used
             cmd = ["CACHED_CODEX_EXEC_PLACEHOLDER"]
             return cmd
-        cli_path = (
-            str(options.cli_path) if options.cli_path is not None else cls._find_cli()
-        )
+        cli_path = str(options.cli_path) if options.cli_path is not None else cls._find_cli()
         cmd = [cli_path, "exec"]
         cmd.extend(cls._build_cli_args(options))
         return cmd

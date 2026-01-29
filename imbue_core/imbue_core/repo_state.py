@@ -40,17 +40,11 @@ class RepoOperation(SerializableModel):
 class ConflictedRepoOperation(RepoOperation):
     object_type: str = "ConflictedRepoOperation"
 
-    blob_content_by_hash: Annotated[
-        FrozenDict[str, bytes], PydanticFrozenDictAnnotation
-    ]
+    blob_content_by_hash: Annotated[FrozenDict[str, bytes], PydanticFrozenDictAnnotation]
     index_content: bytes
-    modified_file_contents_by_path: Annotated[
-        FrozenDict[str, bytes], PydanticFrozenDictAnnotation
-    ]
+    modified_file_contents_by_path: Annotated[FrozenDict[str, bytes], PydanticFrozenDictAnnotation]
     conflict_type: ConflictType
-    special_git_file_contents_by_path: Annotated[
-        FrozenDict[str, bytes], PydanticFrozenDictAnnotation
-    ]
+    special_git_file_contents_by_path: Annotated[FrozenDict[str, bytes], PydanticFrozenDictAnnotation]
 
 
 class CleanRepoOperation(RepoOperation):
@@ -95,10 +89,7 @@ class RepoState(SerializableModel):
     @cached_property
     def has_operations(self) -> bool:
         repo_operation = self.repo_operation
-        return (
-            isinstance(repo_operation, ConflictedRepoOperation)
-            or repo_operation.combined_diff.strip() != ""
-        )
+        return isinstance(repo_operation, ConflictedRepoOperation) or repo_operation.combined_diff.strip() != ""
 
     @computed_field
     @cached_property

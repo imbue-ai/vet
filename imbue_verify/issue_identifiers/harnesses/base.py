@@ -13,7 +13,5 @@ T = TypeVar("T", bound=IdentifierInputs)
 
 class IssueIdentifierHarness(abc.ABC, Generic[T]):
     @abc.abstractmethod
-    def make_issue_identifier(
-        self, identification_guides: tuple[IssueIdentificationGuide, ...]
-    ) -> IssueIdentifier[T]:
+    def make_issue_identifier(self, identification_guides: tuple[IssueIdentificationGuide, ...]) -> IssueIdentifier[T]:
         """Return an issue identifier based on this harness by binding it to the provided issue identification guides."""

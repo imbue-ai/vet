@@ -81,9 +81,7 @@ class CachedAgentClient(AgentClient[AgentOptionsT]):
         # If we do want a way to still cache interactions, even if we early exit the generator,
         # then we could use a separate thread to get the agent response and cache it in the background.
         # See https://gitlab.com/generally-intelligent/generally_intelligent/-/merge_requests/7323#note_2897340073
-        agent_interaction_record = AgentInteractionRecord.from_agent_interaction(
-            agent_interaction
-        )
+        agent_interaction_record = AgentInteractionRecord.from_agent_interaction(agent_interaction)
         update_cache(agent_interaction_record, cache_path)
 
     @property

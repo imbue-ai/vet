@@ -24,10 +24,8 @@ class ImbueVerifyConfig(SerializableModel):
     disabled_issue_codes: tuple[IssueCode, ...] | None = ()
 
     # Todo: Different models for different issue identifiers
-    language_model_generation_config: LanguageModelGenerationConfig = (
-        LanguageModelGenerationConfig(
-            model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
-        )
+    language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(
+        model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
     )
     max_identifier_spend_dollars: float = 5.0
     max_output_tokens: int = 20000
@@ -97,10 +95,6 @@ def get_enabled_issue_codes(config: ImbueVerifyConfig) -> set[IssueCode]:
     for code in explicitly_enabled + explicitly_disabled:
         if code not in all_issue_code_values:
             raise ValueError(f"Bad config: unknown issue code: {code}")
-    possibly_enabled_values = (
-        set(explicitly_enabled)
-        if len(explicitly_enabled) > 0
-        else set(v for v in IssueCode)
-    )
+    possibly_enabled_values = set(explicitly_enabled) if len(explicitly_enabled) > 0 else set(v for v in IssueCode)
     disabled_values = set(explicitly_disabled)
     return possibly_enabled_values - disabled_values

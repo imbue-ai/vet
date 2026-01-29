@@ -23,9 +23,7 @@ class AgentCLINotFoundError(AgentCLIConnectionError):
 class AgentProcessError(AgentAPIError):
     """Raised when the CLI process fails."""
 
-    def __init__(
-        self, message: str, exit_code: int | None = None, stderr: str | None = None
-    ) -> None:
+    def __init__(self, message: str, exit_code: int | None = None, stderr: str | None = None) -> None:
         self.exit_code = exit_code
         self.stderr = stderr
 

@@ -246,21 +246,15 @@ def test_get_user_defined_model_ids_extracts_all_ids() -> None:
                 base_url="http://localhost:8080/v1",
                 api_key_env="KEY1",
                 models={
-                    "model-a": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    ),
-                    "model-b": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    ),
+                    "model-a": ModelConfig(context_window=128000, max_output_tokens=16384),
+                    "model-b": ModelConfig(context_window=128000, max_output_tokens=16384),
                 },
             ),
             "provider2": ProviderConfig(
                 base_url="http://localhost:8081/v1",
                 api_key_env="KEY2",
                 models={
-                    "model-c": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    ),
+                    "model-c": ModelConfig(context_window=128000, max_output_tokens=16384),
                 },
             ),
         }
@@ -277,20 +271,12 @@ def test_get_provider_for_model_finds_provider() -> None:
             "provider1": ProviderConfig(
                 base_url="http://localhost:8080/v1",
                 api_key_env="KEY1",
-                models={
-                    "model-a": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    )
-                },
+                models={"model-a": ModelConfig(context_window=128000, max_output_tokens=16384)},
             ),
             "provider2": ProviderConfig(
                 base_url="http://localhost:8081/v1",
                 api_key_env="KEY2",
-                models={
-                    "model-b": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    )
-                },
+                models={"model-b": ModelConfig(context_window=128000, max_output_tokens=16384)},
             ),
         }
     )
@@ -307,11 +293,7 @@ def test_get_provider_for_model_returns_none_for_unknown() -> None:
             "provider1": ProviderConfig(
                 base_url="http://localhost:8080/v1",
                 api_key_env="KEY1",
-                models={
-                    "model-a": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    )
-                },
+                models={"model-a": ModelConfig(context_window=128000, max_output_tokens=16384)},
             ),
         }
     )
@@ -328,11 +310,7 @@ def test_validate_api_key_passes_when_key_is_set() -> None:
                 name="Test Provider",
                 base_url="http://localhost:8080/v1",
                 api_key_env="TEST_API_KEY",
-                models={
-                    "model-a": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    )
-                },
+                models={"model-a": ModelConfig(context_window=128000, max_output_tokens=16384)},
             ),
         }
     )
@@ -348,11 +326,7 @@ def test_validate_api_key_raises_when_key_not_set() -> None:
                 name="Test Provider",
                 base_url="http://localhost:8080/v1",
                 api_key_env="MISSING_KEY",
-                models={
-                    "model-a": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    )
-                },
+                models={"model-a": ModelConfig(context_window=128000, max_output_tokens=16384)},
             ),
         }
     )
@@ -380,21 +354,15 @@ def test_get_models_by_provider_groups_models() -> None:
                 base_url="http://localhost:11434/v1",
                 api_key_env="OLLAMA_KEY",
                 models={
-                    "llama3.2:latest": ModelConfig(
-                        context_window=128000, max_output_tokens=16384
-                    ),
-                    "qwen:7b": ModelConfig(
-                        context_window=32768, max_output_tokens=8192
-                    ),
+                    "llama3.2:latest": ModelConfig(context_window=128000, max_output_tokens=16384),
+                    "qwen:7b": ModelConfig(context_window=32768, max_output_tokens=8192),
                 },
             ),
             "openrouter": ProviderConfig(
                 base_url="https://openrouter.ai/api/v1",
                 api_key_env="OPENROUTER_KEY",
                 models={
-                    "anthropic/claude-3": ModelConfig(
-                        context_window=200000, max_output_tokens=16384
-                    ),
+                    "anthropic/claude-3": ModelConfig(context_window=200000, max_output_tokens=16384),
                 },
             ),
         }

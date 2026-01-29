@@ -65,8 +65,7 @@ def make_identifier() -> IssueIdentifier:
     harness = SinglePromptHarness()
     identifier = harness.make_issue_identifier(
         identification_guides=tuple(
-            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
-            for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK
+            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK
         )
     )
     return identifier
@@ -99,9 +98,7 @@ def test_to_required_inputs() -> None:
         identifier.to_required_inputs(no_inputs)
 
     # Should not support inputs where only one of the commit message and diff are present
-    commit_message_inputs = IdentifierInputs(
-        maybe_goal="test", maybe_conversation_history=()
-    )
+    commit_message_inputs = IdentifierInputs(maybe_goal="test", maybe_conversation_history=())
     with pytest.raises(IdentifierInputsMissingError):
         identifier.to_required_inputs(commit_message_inputs)
     diff_inputs = IdentifierInputs(maybe_diff="test")
@@ -160,19 +157,13 @@ def test_identify_issues_integration() -> None:
             file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
             cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context",
         )
-        commit_inputs = IdentifierInputs(
-            maybe_goal="Add hello function", maybe_diff="+print('hello')"
-        )
+        commit_inputs = IdentifierInputs(maybe_goal="Add hello function", maybe_diff="+print('hello')")
         config = ImbueVerifyConfig()
 
         inputs = identifier.to_required_inputs(commit_inputs)
-        raw_issues_generator = identifier.identify_issues(
-            inputs, project_context, config
-        )
+        raw_issues_generator = identifier.identify_issues(inputs, project_context, config)
         raw_issues = []
-        raw_issues_generator_with_capture = ReturnCapturingGenerator(
-            raw_issues_generator
-        )
+        raw_issues_generator_with_capture = ReturnCapturingGenerator(raw_issues_generator)
         for raw_issue in raw_issues_generator_with_capture:
             raw_issues.append(raw_issue)
         llm_responses = raw_issues_generator_with_capture.return_value.llm_responses

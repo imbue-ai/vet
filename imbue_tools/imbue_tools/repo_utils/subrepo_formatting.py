@@ -126,9 +126,7 @@ def stubify_file_contents_cached(path: str, contents: str) -> str:
         return contents
 
 
-def stubify_and_format_for_agent_context(
-    path: str, contents: str | None
-) -> StubFileContext:
+def stubify_and_format_for_agent_context(path: str, contents: str | None) -> StubFileContext:
     contents_to_use = contents if contents is not None else "RAW FILE CONTENTS"
     stub = stubify_file_contents_cached(path=path, contents=contents_to_use)
     return StubFileContext(path=path, stub=stub)
@@ -207,11 +205,7 @@ def compute_file_format_style(
 ) -> ContextFormatStyle:
     for matcher_format, matcher in subrepo_context_matchers:
         if matcher.match_file(file_path):
-            if (
-                exclusions
-                and matcher_format != ContextFormatStyle.HIDDEN
-                and exclusions.match_file(file_path)
-            ):
+            if exclusions and matcher_format != ContextFormatStyle.HIDDEN and exclusions.match_file(file_path):
                 # Exclusions override any non-hidden format and downgrade it to FILENAME_ONLY.
                 return ContextFormatStyle.FILENAME_ONLY
             # Return the first match
@@ -225,16 +219,12 @@ def compute_file_context_format_styles(
     exclusions: FilenamePattern | None = None,
 ) -> Mapping[str, ContextFormatStyle]:
     return {
-        file_path: compute_file_format_style(
-            file_path, subrepo_context_matchers, exclusions
-        )
+        file_path: compute_file_format_style(file_path, subrepo_context_matchers, exclusions)
         for file_path in file_paths
     }
 
 
-def get_estimated_lower_bound_token_count_for_text_and_model(
-    text: str, model_name: str
-) -> int:
+def get_estimated_lower_bound_token_count_for_text_and_model(text: str, model_name: str) -> int:
     # A factor of 1/4.5 appears to be a reasonable empirical estimate for current models.
     # We use a slighly smaller factor (1/5) to give more of a lower bound estimate.
     return round(len(text) / 5)
@@ -245,13 +235,7 @@ def format_all_for_agent(repo_contents: tuple[FileContext, ...]) -> dict[str, st
 
 
 def format_subrepo(formatted_repo_contents: Mapping[str, str]) -> str:
-    repo_context_str = "".join(
-        [
-            contents
-            for contents in formatted_repo_contents.values()
-            if contents is not None
-        ]
-    )
+    repo_context_str = "".join([contents for contents in formatted_repo_contents.values() if contents is not None])
     return escape_all_jinja_variables(escape_prompt_markers(repo_context_str))
 
 
@@ -262,9 +246,7 @@ def format_subrepo_context_full(repo: Mapping[str, str]) -> str:
         format_all_for_agent(
             format_subrepo_context_into_filecontexts(
                 full_repo_contents=repo,
-                path_to_format_style=defaultdict(
-                    lambda: ContextFormatStyle.FULL_FILE, {}
-                ),
+                path_to_format_style=defaultdict(lambda: ContextFormatStyle.FULL_FILE, {}),
             )
         )
     )
@@ -300,9 +282,7 @@ def format_subrepo_context_into_filecontexts(
         format_file_for_agent_context(path, contents, path_to_format_style[path])
         for path, contents in full_repo_contents.items()
     )
-    repo_contents_with_hidden_removed = tuple(
-        contents for contents in repo_contents if contents is not None
-    )
+    repo_contents_with_hidden_removed = tuple(contents for contents in repo_contents if contents is not None)
     return repo_contents_with_hidden_removed
 
 
@@ -328,9 +308,7 @@ def build_context_from_filecontexts(
     max_context_length = model_config.get_max_context_length()
     available_tokens = max_context_length - tokens_to_reserve
 
-    formatted_repo_contents_with_hidden_removed = format_all_for_agent(
-        repo_contents_with_hidden_removed
-    )
+    formatted_repo_contents_with_hidden_removed = format_all_for_agent(repo_contents_with_hidden_removed)
 
     repo_context_str = format_subrepo(formatted_repo_contents_with_hidden_removed)
 
@@ -341,10 +319,8 @@ def build_context_from_filecontexts(
         # First use an estimation of the token count to see if we are likely below the maximum length. Then
         # double-check with the exact token count.
         # We do this because getting the exact token count is quite slow.
-        estimated_full_repo_context_token_count = (
-            get_estimated_lower_bound_token_count_for_text_and_model(
-                repo_context_str, model_config.model_name
-            )
+        estimated_full_repo_context_token_count = get_estimated_lower_bound_token_count_for_text_and_model(
+            repo_context_str, model_config.model_name
         )
         if estimated_full_repo_context_token_count > available_tokens:
             raise ContextLengthExceededError(
@@ -358,19 +334,11 @@ def build_context_from_filecontexts(
 
     if path_to_format_style is None:
         path_to_format_style = {
-            contents.path: ContextFormatStyle.FULL_FILE
-            for contents in repo_contents_with_hidden_removed
+            contents.path: ContextFormatStyle.FULL_FILE for contents in repo_contents_with_hidden_removed
         }
 
-    is_shortened = any(
-        [
-            style != ContextFormatStyle.FULL_FILE
-            for style in path_to_format_style.values()
-        ]
-    )
-    has_hidden_files = any(
-        [style == ContextFormatStyle.HIDDEN for style in path_to_format_style.values()]
-    )
+    is_shortened = any([style != ContextFormatStyle.FULL_FILE for style in path_to_format_style.values()])
+    has_hidden_files = any([style == ContextFormatStyle.HIDDEN for style in path_to_format_style.values()])
 
     repo_context_prompt = formatted_subrepo_to_prompt(
         repo_context_str=repo_context_str,
@@ -389,9 +357,7 @@ def format_subrepo_context(
     tokens_to_reserve: int,
     template: str = REPO_CONTEXT_TEMPLATE,
 ) -> tuple[str, tuple[FileContextUnion, ...]]:
-    repo_contents_tuple = format_subrepo_context_into_filecontexts(
-        full_repo_contents, path_to_format_style
-    )
+    repo_contents_tuple = format_subrepo_context_into_filecontexts(full_repo_contents, path_to_format_style)
     repo_context_str = build_context_from_filecontexts(
         repo_contents_tuple,
         model_config,

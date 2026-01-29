@@ -9,8 +9,7 @@ from imbue_core.agents.llm_apis.openai_data_types import OpenAIModelInfo
 from imbue_core.pydantic_serialization import build_discriminator
 
 ProviderSpecificModelInfoUnion = Annotated[
-    Annotated[AnthropicModelInfo, Tag("AnthropicModelInfo")]
-    | Annotated[OpenAIModelInfo, Tag("OpenAIModelInfo")],
+    Annotated[AnthropicModelInfo, Tag("AnthropicModelInfo")] | Annotated[OpenAIModelInfo, Tag("OpenAIModelInfo")],
     build_discriminator(),
 ]
 

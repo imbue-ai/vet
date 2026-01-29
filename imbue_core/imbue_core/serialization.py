@@ -58,12 +58,7 @@ class TupleDeserializer(Deserializer):
             return data
         if isinstance(data, list):
             list_types = self._get_list_types(obj_type, data)
-            return tuple(
-                [
-                    self._deserialize(d, t, type_key, allow_extra_fields, all_globals)
-                    for t, d in list_types
-                ]
-            )
+            return tuple([self._deserialize(d, t, type_key, allow_extra_fields, all_globals) for t, d in list_types])
 
         assert isinstance(data, dict), f"Expected a dict, but got {type(data)}"
 
@@ -71,11 +66,7 @@ class TupleDeserializer(Deserializer):
         if type_key is not None:
             type_data = data.get(type_key, None)
 
-            if (
-                type_data is not None
-                and type_data.startswith("builtins.")
-                and type_data != "builtins.dict"
-            ):
+            if type_data is not None and type_data.startswith("builtins.") and type_data != "builtins.dict":
                 return data["value"]
 
         # TODO: we need to potentially handle `builtins.dict`
@@ -91,15 +82,10 @@ class TupleDeserializer(Deserializer):
         #         return data["value"]
 
         # TODO: remove this hack. Many of our sqlite files (search s3_sqlite_path) have FrozenDicts
-        if (
-            isinstance(type_key, str)
-            and data.get(type_key, None) == "flax.core.frozen_dict.FrozenDict"
-        ):
+        if isinstance(type_key, str) and data.get(type_key, None) == "flax.core.frozen_dict.FrozenDict":
             data[type_key] = "imbue_core.frozen_utils.FrozenMapping"
         # we deliberately pass in a `None` type_key sometimes, which results in just returning obj_type
-        obj_type = self._get_object_type(
-            obj_type, data, type_key, all_globals
-        )  # pyre-ignore[6]
+        obj_type = self._get_object_type(obj_type, data, type_key, all_globals)  # pyre-ignore[6]
         if type_key in data:
             data.pop(type_key)
         real_type, generic_args = normalize_type(obj_type, all_globals)
@@ -110,9 +96,7 @@ class TupleDeserializer(Deserializer):
                 bases = {ancestor for b in bases for ancestor in b.__bases__}
 
         if not ignore_custom_deserializer:
-            deserialization_method = self._custom_deserializers.get(
-                obj_type, self._custom_deserializers.get(real_type)
-            )
+            deserialization_method = self._custom_deserializers.get(obj_type, self._custom_deserializers.get(real_type))
             if deserialization_method:
                 return deserialization_method(data)
             for base_class, method in self._inheritance_deserializers.items():
@@ -158,13 +142,9 @@ class TupleDeserializer(Deserializer):
                     )
             elif issubclass(real_type, Iterable):
                 # If we got here it means data is not a list, so obj_type came from the data itself and is safe to use
-                return self._load_iterable(
-                    data, obj_type, type_key, allow_extra_fields, all_globals
-                )
+                return self._load_iterable(data, obj_type, type_key, allow_extra_fields, all_globals)
             elif real_type != obj_type:
-                return self._deserialize(
-                    data, real_type, type_key, allow_extra_fields, external_globals
-                )
+                return self._deserialize(data, real_type, type_key, allow_extra_fields, external_globals)
             else:
                 raise
 
@@ -186,9 +166,7 @@ class TupleDeserializer(Deserializer):
 
 # TODO: probably a good idea to ensure that all dicts are frozen as well...
 class FrozenSerializer(Serializer):
-    def __init__(
-        self, force_serialization: bool, allow_unsafe_list_serialization: bool = False
-    ) -> None:
+    def __init__(self, force_serialization: bool, allow_unsafe_list_serialization: bool = False) -> None:
         super().__init__()
         self._force_serialization = force_serialization
         self._allow_unsafe_list_serialization = allow_unsafe_list_serialization
@@ -206,9 +184,7 @@ class FrozenSerializer(Serializer):
                 logger.info("Converting list to tuple for serialization: {}", obj)
                 obj = tuple(obj)
             else:
-                raise Exception(
-                    f"Lists are not allowed for serialization. Use tuples instead. Current iterable: {obj}"
-                )
+                raise Exception(f"Lists are not allowed for serialization. Use tuples instead. Current iterable: {obj}")
         assert isinstance(
             obj, (tuple, frozenset, bytes)
         ), f"All iterables should be tuples or frozenset. Received {obj}"
@@ -280,9 +256,7 @@ class SerializedException(SerializableModel):
     was_logged_by_log_exception: bool = False
 
     @classmethod
-    def build(
-        cls, exception: BaseException, traceback: TracebackType | None = None
-    ) -> "SerializedException":
+    def build(cls, exception: BaseException, traceback: TracebackType | None = None) -> "SerializedException":
         if traceback is None:
             traceback = exception.__traceback__
             assert traceback is not None, " ".join(
@@ -293,13 +267,9 @@ class SerializedException(SerializableModel):
             )
         return SerializedException(  # pyre-fixme[28]: pyre doesn't understand pydantic
             exception=get_fully_qualified_name_for_error(exception),
-            args=tuple(
-                _convert_serialized_exception_args(x, traceback) for x in exception.args
-            ),
+            args=tuple(_convert_serialized_exception_args(x, traceback) for x in exception.args),
             traceback_dict=FixedTraceback.from_tb(traceback).as_dict(),
-            was_logged_by_log_exception=getattr(
-                exception, EXCEPTION_LOGGED_FLAG, False
-            ),
+            was_logged_by_log_exception=getattr(exception, EXCEPTION_LOGGED_FLAG, False),
         )
 
     @cached_property
@@ -324,14 +294,10 @@ class SerializedException(SerializableModel):
         if self.exception_module:
             return cast(
                 type[BaseException],
-                getattr(
-                    import_module(self.exception_module), self.exception_type, None
-                ),
+                getattr(import_module(self.exception_module), self.exception_type, None),
             )
         else:
-            return cast(
-                type[BaseException], getattr(builtins, self.exception_type, None)
-            )
+            return cast(type[BaseException], getattr(builtins, self.exception_type, None))
 
     def construct_instance(self) -> BaseException:
         try:
@@ -360,9 +326,7 @@ class SerializedException(SerializableModel):
         return f"Traceback (most recent call last):\n{traceback_str}\n{self.exception}: {self.args}"
 
 
-def _convert_serialized_exception_args(
-    error: Serializable, traceback: TracebackType | None = None
-) -> JsonTypeAlias:
+def _convert_serialized_exception_args(error: Serializable, traceback: TracebackType | None = None) -> JsonTypeAlias:
     if isinstance(error, BaseException):
         return SerializedException.build(error, traceback=traceback)
     elif isinstance(error, (list, tuple)):
@@ -383,24 +347,14 @@ def _convert_to_json_serializable_with_better_errors(
         return obj  # type: ignore
     if isinstance(obj, Mapping):
         return {
-            key: _convert_to_json_serializable_with_better_errors(
-                value, f"{path}.{key}"
-            )
-            for key, value in obj.items()
+            key: _convert_to_json_serializable_with_better_errors(value, f"{path}.{key}") for key, value in obj.items()
         }
     if isinstance(obj, Iterable):
-        return [
-            _convert_to_json_serializable_with_better_errors(item, f"{path}[{i}]")
-            for i, item in enumerate(obj)
-        ]
-    raise TypeError(
-        f'Found object of type "{type(obj).__name__}" at {path} which cannot be serialized'
-    )
+        return [_convert_to_json_serializable_with_better_errors(item, f"{path}[{i}]") for i, item in enumerate(obj)]
+    raise TypeError(f'Found object of type "{type(obj).__name__}" at {path} which cannot be serialized')
 
 
-SERIALIZER = FrozenSerializer(
-    force_serialization=False, allow_unsafe_list_serialization=False
-)
+SERIALIZER = FrozenSerializer(force_serialization=False, allow_unsafe_list_serialization=False)
 DESERIALIZER = TupleDeserializer()
 
 # note: you cannot change this without changing other calls to yasoo, this is its default
@@ -463,18 +417,14 @@ def serialize_datetime(data: datetime.datetime) -> dict:
 
 @DESERIALIZER.register()
 def deserialize_datetime(data: dict) -> datetime.datetime:
-    return datetime.datetime.fromtimestamp(
-        data["time"], datetime.timezone.utc if data.get("tzaware", None) else None
-    )
+    return datetime.datetime.fromtimestamp(data["time"], datetime.timezone.utc if data.get("tzaware", None) else None)
 
 
 def serialize_to_dict(obj: Any) -> dict[str, Any]:
     return cast(dict[str, Any], SERIALIZER.serialize(obj))
 
 
-def serialize_to_json(
-    obj: Any, indent: int | None = None, sort_keys: bool = False
-) -> str:
+def serialize_to_json(obj: Any, indent: int | None = None, sort_keys: bool = False) -> str:
     try:
         return json.dumps(SERIALIZER.serialize(obj), indent=indent, sort_keys=sort_keys)
     except Exception as e:
@@ -483,18 +433,14 @@ def serialize_to_json(
 
 def deserialize_from_json(data: str) -> Any:
     try:
-        return DESERIALIZER.deserialize(
-            json.loads(data)
-        )  # pyre-ignore[20]: pyre doesn't understand deserialize
+        return DESERIALIZER.deserialize(json.loads(data))  # pyre-ignore[20]: pyre doesn't understand deserialize
     except Exception as e:
         raise SerializationError(str(e)) from e
 
 
 def deserialize_from_dict(data: dict[str, Any]) -> Any:
     try:
-        return DESERIALIZER.deserialize(
-            data
-        )  # pyre-ignore[20]: pyre doesn't understand deserialize
+        return DESERIALIZER.deserialize(data)  # pyre-ignore[20]: pyre doesn't understand deserialize
     except Exception as e:
         raise SerializationError(str(e)) from e
 
@@ -502,17 +448,13 @@ def deserialize_from_dict(data: dict[str, Any]) -> Any:
 def deserialize_from_dict_with_type(data: dict[str, Any], obj_type: type[T]) -> T:
     try:
         result = DESERIALIZER.deserialize(data, obj_type=obj_type)
-        assert isinstance(
-            result, obj_type
-        ), f"Expected an object of type {obj_type}, but got {result}"
+        assert isinstance(result, obj_type), f"Expected an object of type {obj_type}, but got {result}"
         return result
     except Exception as e:
         raise SerializationError(str(e)) from e
 
 
-def deserialize_from_json_with_type(
-    data: str | bytes | bytearray, obj_type: type[T]
-) -> T:
+def deserialize_from_json_with_type(data: str | bytes | bytearray, obj_type: type[T]) -> T:
     try:
         return deserialize_from_dict_with_type(json.loads(data), obj_type=obj_type)
     except Exception as e:
@@ -521,9 +463,7 @@ def deserialize_from_json_with_type(
 
 def get_serializable_properties(obj: Any) -> dict[str, Any]:
     members = inspect.getmembers(type(obj))
-    marked_members = [
-        name for name, member in members if is_serializable_property(member)
-    ]
+    marked_members = [name for name, member in members if is_serializable_property(member)]
     return {name: getattr(obj, name) for name in marked_members}
 
 

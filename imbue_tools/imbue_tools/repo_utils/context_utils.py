@@ -22,9 +22,7 @@ def escape_all_jinja_variables(text: str) -> str:
     return "{% raw %}" + text + "{% endraw %}"
 
 
-def does_relative_path_match_target_path_suffix(
-    target_path: Path, relative_file_path: Path
-) -> bool:
+def does_relative_path_match_target_path_suffix(target_path: Path, relative_file_path: Path) -> bool:
     """
     Checks if the parts of a relative path match the suffix of a target path.
     """
@@ -49,8 +47,6 @@ def maybe_get_file_path_from_qualified_name(
     possible_relative_file_path = qualified_name.to_path()
     # NOTE: it's possible to make this faster by doing some upfront computation
     for target_file_path in all_file_paths:
-        if does_relative_path_match_target_path_suffix(
-            target_file_path, possible_relative_file_path
-        ):
+        if does_relative_path_match_target_path_suffix(target_file_path, possible_relative_file_path):
             return target_file_path
     return None

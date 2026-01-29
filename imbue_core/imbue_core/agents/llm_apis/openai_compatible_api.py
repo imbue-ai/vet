@@ -37,9 +37,7 @@ from imbue_core.frozen_utils import FrozenMapping
 from imbue_core.itertools import only
 from imbue_core.secrets_utils import get_secret
 
-_OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON: FrozenMapping[
-    str, ResponseStopReason
-] = FrozenDict(
+_OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON: FrozenMapping[str, ResponseStopReason] = FrozenDict(
     {
         "stop": ResponseStopReason.END_TURN,
         "length": ResponseStopReason.MAX_TOKENS,
@@ -66,9 +64,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
     @property
     def model_info(self) -> ModelInfo:
         if self.context_window is None or self.max_output_tokens is None:
-            raise ValueError(
-                "Must provide context_window and max_output_tokens, or subclass must override model_info"
-            )
+            raise ValueError("Must provide context_window and max_output_tokens, or subclass must override model_info")
         return ModelInfo(
             model_name=self.model_name,
             cost_per_input_token=0.0,
@@ -151,9 +147,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                 completion_tokens = usage.completion_tokens
                 prompt_tokens = usage.prompt_tokens
                 cached_tokens = (
-                    usage.prompt_tokens_details.cached_tokens
-                    if usage.prompt_tokens_details is not None
-                    else 0
+                    usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details is not None else 0
                 ) or 0
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
@@ -222,9 +216,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                     continue
 
                 if chunk.choices:
-                    assert (
-                        len(chunk.choices) == 1
-                    ), "Currently only count=1 supported for streaming API."
+                    assert len(chunk.choices) == 1, "Currently only count=1 supported for streaming API."
                     data = only(chunk.choices)
                     delta = data.delta.content
                     if delta is not None:
@@ -232,9 +224,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                     if data.finish_reason:
                         finish_reason = str(data.finish_reason)
 
-            stop_reason = _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON.get(
-                str(finish_reason), ResponseStopReason.NONE
-            )
+            stop_reason = _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON.get(str(finish_reason), ResponseStopReason.NONE)
             if params.stop is not None and stop_reason == ResponseStopReason.END_TURN:
                 yield LanguageModelStreamDeltaEvent(delta=params.stop)
 
@@ -243,9 +233,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                 prompt_tokens = usage.prompt_tokens
                 dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
                 cached_tokens = (
-                    usage.prompt_tokens_details.cached_tokens
-                    if usage.prompt_tokens_details is not None
-                    else 0
+                    usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details is not None else 0
                 ) or 0
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,

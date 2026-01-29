@@ -44,9 +44,7 @@ class FrozenDict(dict[T, TV], FrozenMapping[T, TV]):
         return self._hash
 
     def _mutation_error(self, method: str) -> RuntimeError:
-        return RuntimeError(
-            f"Cannot call mutation method {method} on _FrozenDict {self}"
-        )
+        return RuntimeError(f"Cannot call mutation method {method} on _FrozenDict {self}")
 
     def __setitem__(self, __name: T, __value: TV) -> NoReturn:
         raise self._mutation_error("__setitem__")
@@ -86,9 +84,7 @@ class FrozenDict(dict[T, TV], FrozenMapping[T, TV]):
 
     def __deepcopy__(self, memo: dict[int, Any]) -> "FrozenDict":
         memo[id(self)] = self
-        copied_items = (
-            (deepcopy(key, memo), deepcopy(value, memo)) for key, value in self.items()
-        )
+        copied_items = ((deepcopy(key, memo), deepcopy(value, memo)) for key, value in self.items())
         return type(self)(copied_items)
 
     def __reduce__(self) -> tuple[Any, ...]:
@@ -100,9 +96,7 @@ def empty_mapping() -> FrozenDict[Any, Any]:
 
 
 def deep_freeze_mapping(mapping: Mapping[T, TV]) -> FrozenDict[T, Any]:
-    return FrozenDict(
-        {key: cast(TV, _deep_freeze_any(value)) for key, value in mapping.items()}
-    )
+    return FrozenDict({key: cast(TV, _deep_freeze_any(value)) for key, value in mapping.items()})
 
 
 def _freeze_iterable_values(iterable: Iterable[T]) -> Iterable[Any]:
@@ -120,11 +114,7 @@ def _deep_freeze_any(input_object: object) -> object:
     if isinstance(input_object, (set, frozenset)):
         return deep_freeze_set(input_object)
 
-    if (
-        isinstance(input_object, Iterable)
-        and not isinstance(input_object, str)
-        and not isinstance(input_object, bytes)
-    ):
+    if isinstance(input_object, Iterable) and not isinstance(input_object, str) and not isinstance(input_object, bytes):
         return tuple(_freeze_iterable_values(input_object))
 
     return input_object
@@ -139,9 +129,7 @@ JSON: TypeAlias = "str | int | bool | float | None | dict[str, JSON] | list[JSON
 
 
 # Immutable version of JSON.
-FrozenJSON: TypeAlias = (
-    "str | int | bool | float | None | FrozenDict[str, FrozenJSON] | tuple[FrozenJSON, ...]"
-)
+FrozenJSON: TypeAlias = "str | int | bool | float | None | FrozenDict[str, FrozenJSON] | tuple[FrozenJSON, ...]"
 
 
 def deep_freeze_json(json: JSON) -> FrozenJSON:

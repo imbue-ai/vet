@@ -14,16 +14,12 @@ class NonEmptyStr(str):
         return value
 
     @classmethod
-    def __get_pydantic_core_schema__(
-        cls, source_type: type, handler: GetCoreSchemaHandler
-    ) -> core_schema.CoreSchema:
+    def __get_pydantic_core_schema__(cls, source_type: type, handler: GetCoreSchemaHandler) -> core_schema.CoreSchema:
         """
         Support transparently deserializing strings into ObjectID instances and vice versa.
         """
         return core_schema.no_info_before_validator_function(
-            lambda raw_value: (
-                cls(raw_value) if isinstance(raw_value, str) else raw_value
-            ),
+            lambda raw_value: (cls(raw_value) if isinstance(raw_value, str) else raw_value),
             core_schema.union_schema(
                 [
                     core_schema.is_instance_schema(cls),

@@ -26,25 +26,15 @@ _ROLE_TO_OPENAI_ROLE: Final[FrozenMapping] = FrozenDict(
 )
 
 
-def convert_prompt_to_messages(
-    prompt: str, is_cache_role_preserved: bool = False
-) -> tuple[ConversationMessage, ...]:
+def convert_prompt_to_messages(prompt: str, is_cache_role_preserved: bool = False) -> tuple[ConversationMessage, ...]:
     messages = []
-    for raw_message in convert_prompt_to_openai_messages(
-        prompt, is_cache_role_preserved
-    ):
-        messages.append(
-            ConversationMessage(
-                role=raw_message["role"].upper(), content=raw_message["content"]
-            )
-        )
+    for raw_message in convert_prompt_to_openai_messages(prompt, is_cache_role_preserved):
+        messages.append(ConversationMessage(role=raw_message["role"].upper(), content=raw_message["content"]))
     return tuple(messages)
 
 
 def convert_messages_to_prompt_template(messages: Iterable[ConversationMessage]) -> str:
-    return "\n".join(
-        f"[ROLE={message.role.upper()}]\n{message.content}" for message in messages
-    )
+    return "\n".join(f"[ROLE={message.role.upper()}]\n{message.content}" for message in messages)
 
 
 def create_costed_language_model_response_for_single_result(
@@ -87,9 +77,7 @@ def create_costed_language_model_response_for_single_result(
 
 
 # FIXME: we should make sure that all our LLM providers use the same function here, some clean up is required
-def convert_prompt_to_openai_messages(
-    prompt: str, is_cache_role_preserved: bool = False
-) -> list[dict[str, str]]:
+def convert_prompt_to_openai_messages(prompt: str, is_cache_role_preserved: bool = False) -> list[dict[str, str]]:
     prompt = prompt.lstrip()
     assert prompt.startswith("[ROLE=")
     prompt = prompt.replace("[ROLE=", "", 1)

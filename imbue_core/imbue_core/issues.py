@@ -62,9 +62,6 @@ class IdentifiedIssue(Issue):
 
 
 IssueUnion = Annotated[
-    (
-        Annotated[CheckFailedIssue, Tag("CheckFailedIssue")]
-        | Annotated[IdentifiedIssue, Tag("IdentifiedIssue")]
-    ),
+    (Annotated[CheckFailedIssue, Tag("CheckFailedIssue")] | Annotated[IdentifiedIssue, Tag("IdentifiedIssue")]),
     build_discriminator(),
 ]

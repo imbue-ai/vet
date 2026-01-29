@@ -82,9 +82,7 @@ def _get_collation_prompt(
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(
-            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
-        )
+        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
         for code in sorted_issue_codes
     }
 
@@ -121,9 +119,7 @@ def _convert_parsed_issues_to_combined_string(
 
 
 def collate_issues_with_agent(
-    issue_generator: Generator[
-        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
-    ],
+    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
     identifier_inputs: IdentifierInputs,
     project_context: ProjectContext,
     config: ImbueVerifyConfig,
@@ -164,12 +160,8 @@ def collate_issues_with_agent(
     claude_response = generate_response_from_claude_code(collation_prompt, options)
     assert claude_response is not None
     response_text, collation_messages = claude_response
-    collation_raw_messages = tuple(
-        json.dumps(message.model_dump()) for message in collation_messages
-    )
-    collation_invocation_info = extract_invocation_info_from_messages(
-        collation_messages
-    )
+    collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
+    collation_invocation_info = extract_invocation_info_from_messages(collation_messages)
 
     collation_llm_responses = (
         LLMResponse(
