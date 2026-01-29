@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from imbue_verify.cli.config.schema import ModelConfig
-from imbue_verify.cli.config.schema import ModelsConfig
-from imbue_verify.cli.config.schema import ProviderConfig
-from imbue_verify.cli.models import DEFAULT_MODEL_ID
-from imbue_verify.cli.models import get_all_model_ids
-from imbue_verify.cli.models import get_builtin_model_ids
-from imbue_verify.cli.models import get_builtin_models_by_provider
-from imbue_verify.cli.models import get_models_by_provider
-from imbue_verify.cli.models import is_user_defined_model
-from imbue_verify.cli.models import is_valid_model_id
-from imbue_verify.cli.models import validate_model_id
+from vet.cli.config.schema import ModelConfig
+from vet.cli.config.schema import ModelsConfig
+from vet.cli.config.schema import ProviderConfig
+from vet.cli.models import DEFAULT_MODEL_ID
+from vet.cli.models import get_all_model_ids
+from vet.cli.models import get_builtin_model_ids
+from vet.cli.models import get_builtin_models_by_provider
+from vet.cli.models import get_models_by_provider
+from vet.cli.models import is_user_defined_model
+from vet.cli.models import is_valid_model_id
+from vet.cli.models import validate_model_id
 
 SAMPLE_USER_CONFIG = ModelsConfig(
     providers={

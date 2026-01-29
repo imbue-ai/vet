@@ -2,8 +2,8 @@ import contextvars
 import threading
 from typing import Generator
 
-from imbue_verify.issue_identifiers.utils import multiplex_generators
-from imbue_verify.issue_identifiers.utils import xml_post_escape
+from vet.issue_identifiers.utils import multiplex_generators
+from vet.issue_identifiers.utils import xml_post_escape
 
 
 def test_xml_post_escape_does_not_escape_if_not_necessary() -> None:

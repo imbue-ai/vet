@@ -7,20 +7,20 @@ from unittest.mock import patch
 
 import pytest
 
-from imbue_verify.cli.config.loader import ConfigLoadError
-from imbue_verify.cli.config.loader import MissingAPIKeyError
-from imbue_verify.cli.config.loader import _load_single_config_file
-from imbue_verify.cli.config.loader import find_git_repo_root
-from imbue_verify.cli.config.loader import get_config_file_paths
-from imbue_verify.cli.config.loader import get_models_by_provider_from_config
-from imbue_verify.cli.config.loader import get_provider_for_model
-from imbue_verify.cli.config.loader import get_user_defined_model_ids
-from imbue_verify.cli.config.loader import get_xdg_config_home
-from imbue_verify.cli.config.loader import load_models_config
-from imbue_verify.cli.config.loader import validate_api_key_for_model
-from imbue_verify.cli.config.schema import ModelConfig
-from imbue_verify.cli.config.schema import ModelsConfig
-from imbue_verify.cli.config.schema import ProviderConfig
+from vet.cli.config.loader import ConfigLoadError
+from vet.cli.config.loader import MissingAPIKeyError
+from vet.cli.config.loader import _load_single_config_file
+from vet.cli.config.loader import find_git_repo_root
+from vet.cli.config.loader import get_config_file_paths
+from vet.cli.config.loader import get_models_by_provider_from_config
+from vet.cli.config.loader import get_provider_for_model
+from vet.cli.config.loader import get_user_defined_model_ids
+from vet.cli.config.loader import get_xdg_config_home
+from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import validate_api_key_for_model
+from vet.cli.config.schema import ModelConfig
+from vet.cli.config.schema import ModelsConfig
+from vet.cli.config.schema import ProviderConfig
 
 
 def test_get_xdg_config_home_uses_env_var(tmp_path: Path) -> None:

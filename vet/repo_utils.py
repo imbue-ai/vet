@@ -4,12 +4,12 @@ from imbue_core.async_monkey_patches import log_exception
 from imbue_core.computing_environment.data_types import RunCommandError
 from imbue_core.simple_git import SyncLocalGitRepo
 from imbue_tools.repo_utils.find_relative_to import find_relative_to_commit_hash
-from imbue_verify.errors import GitException
+from vet.errors import GitException
 
-# Maximum length of LLM prompts used within imbue_verify in tokens, without the repository-specific context.
+# Maximum length of LLM prompts used within vet in tokens, without the repository-specific context.
 # Currently, the prompt is well under 10k tokens, but this value might need to be bumped up if we add a lot of additional
 # identification guides, few-shot examples, or other context.
-IMBUE_VERIFY_MAX_PROMPT_TOKENS = 10000
+VET_MAX_PROMPT_TOKENS = 10000
 
 
 def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]:

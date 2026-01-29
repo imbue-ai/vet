@@ -19,19 +19,19 @@ from imbue_core.itertools import only
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.base import IssueIdentifier
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.base import IssueIdentifier
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import (
     extract_invocation_info_from_costed_response,
 )
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
+from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
 
@@ -124,7 +124,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
     def _get_prompt(
         self,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,
+        config: VetConfig,
         identifier_inputs: CommitInputs,
     ) -> str:
         # Sort the guides by issue code to ensure prompt caching (and snapshotting in tests) works.
@@ -152,7 +152,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         self,
         identifier_inputs: CommitInputs,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,
+        config: VetConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         prompt = self._get_prompt(project_context, config, identifier_inputs)
         language_model = build_language_model_from_config(config.language_model_generation_config)

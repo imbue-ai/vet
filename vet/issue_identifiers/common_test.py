@@ -15,17 +15,17 @@ from imbue_tools.llm_output_parsing.parse_model_json_response import (
 )
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import (
     convert_generated_issue_to_identified_issue,
 )
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
 

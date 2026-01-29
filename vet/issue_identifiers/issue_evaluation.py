@@ -23,23 +23,23 @@ from imbue_tools.llm_output_parsing.parse_model_json_response import (
 )
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import DEFAULT_CONFIDENCE_THRESHOLD
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
+from imbue_tools.types.vet_config import DEFAULT_CONFIDENCE_THRESHOLD
+from imbue_tools.types.vet_config import VetConfig
 from imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import (
     extract_invocation_info_from_costed_response,
 )
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.harnesses.single_prompt import (
+from vet.issue_identifiers.harnesses.single_prompt import (
     USER_REQUEST_PREFIX_TEMPLATE,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 CODE_BASED_CRITERIA = (
     "1. The issue is based on specific code, and not merely on the absence of information in the codebase snapshot. (true/false)",
@@ -118,7 +118,7 @@ class ConversationBasedEvaluationResponse(SerializableModel):
 def _format_prompt(
     issue: GeneratedIssueSchema,
     project_context: ProjectContext,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     inputs: IdentifierInputs,
     is_code_based_issue: bool,
 ) -> str:
@@ -176,7 +176,7 @@ def evaluate_code_issue_through_llm(
     issue: GeneratedIssueSchema,
     inputs: IdentifierInputs,
     project_context: ProjectContext,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     is_code_based_issue: bool,
 ) -> tuple[bool, tuple[LLMResponse, ...]]:
     """
@@ -234,7 +234,7 @@ MODEL_CONFIDENCE_THRESHOLD_DEFAULTS: dict[str, float] = {
 }
 
 
-def get_imbue_verify_confidence_threshold(config: ImbueVerifyConfig) -> float:
+def get_vet_confidence_threshold(config: VetConfig) -> float:
     model_name = config.language_model_generation_config.model_name
 
     if model_name in MODEL_CONFIDENCE_THRESHOLD_DEFAULTS:
@@ -246,8 +246,8 @@ def get_imbue_verify_confidence_threshold(config: ImbueVerifyConfig) -> float:
     return DEFAULT_CONFIDENCE_THRESHOLD
 
 
-def evaluate_issue_through_confidence(issue: GeneratedIssueSchema, config: ImbueVerifyConfig) -> bool:
-    threshold = get_imbue_verify_confidence_threshold(config)
+def evaluate_issue_through_confidence(issue: GeneratedIssueSchema, config: VetConfig) -> bool:
+    threshold = get_vet_confidence_threshold(config)
     return issue.confidence >= threshold
 
 
@@ -255,7 +255,7 @@ def filter_issues(
     issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
     inputs: IdentifierInputs,
     project_context: ProjectContext,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     # Currently, the LLM-based filter only works reliably for code-related issue types.
     is_code_based_issue_generator: bool,
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:

@@ -1,4 +1,4 @@
-"""Shared type definitions for imbue_verify."""
+"""Shared type definitions for Vet."""
 
 from vet_types.chat_state import ContentBlock
 from vet_types.chat_state import ContentBlockTypes

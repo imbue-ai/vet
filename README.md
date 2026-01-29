@@ -1,8 +1,8 @@
-# VET : Verify EveryThing
+# Vet : Verify EveryThing
 
-VET is a standalone verification tool for **code changes** and **coding agent behavior**.
+Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
-It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. VET is optimized for use by humans, CI, and coding agents.
+It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
 
 ## Installation
 
@@ -12,7 +12,7 @@ pip install vet
 
 ## Quickstart
 
-Run VET in the current repo:
+Run Vet in the current repo:
 
 ```bash
 vet "Implement X without breaking Y"
@@ -26,7 +26,7 @@ vet "Refactor storage layer" --base-commit main
 
 ## How it works
 
-VET snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
+Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
 TODO: Create rendering pipeline for this. GitHub MD doesn't directly support Graphviz.
 
@@ -58,12 +58,12 @@ digraph VET_DataFlow {
 }
 ```
 
-## Why VET
+## Why Vet
 
 - **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
 - **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
-- **No telemetry collected by us**: VET does not collect any user data.
+- **No telemetry collected by us**: Vet does not collect any user data.
 
 ## Output & exit codes
 
@@ -77,7 +77,7 @@ Output formats:
 
 ## CI usage
 
-Recommended CI usage is to run VET with JSON output and display a warning if any issues are found.
+Recommended CI usage is to run Vet with JSON output and display a warning if any issues are found.
 
 Example:
 
@@ -85,15 +85,15 @@ Example:
 vet --base-commit main --output-format json > vet-report.json
 ```
 
-- If VET exits `0`, no issues were found.
-- If VET exits `1`, issues were found (treat as a failing check).
-- If VET exits `2`, the invocation/config is invalid (treat as a failing check).
+- If Vet exits `0`, no issues were found.
+- If Vet exits `1`, issues were found (treat as a failing check).
+- If Vet exits `2`, the invocation/config is invalid (treat as a failing check).
 
 ## Configuration
 
 ### Model configuration
 
-VET supports custom model definitions using OpenAI-compatible endpoints via JSON config files searched in:
+Vet supports custom model definitions using OpenAI-compatible endpoints via JSON config files searched in:
 
 - `$XDG_CONFIG_HOME/imbue/models.json` (or `~/.config/imbue/models.json`)
 - `models.json` at your repo root
@@ -138,7 +138,7 @@ vet "Harden error handling" --model gpt-4o-mini
 
 ### Configuration profiles (TOML)
 
-VET supports named profiles so teams can standardize CI usage without long CLI invocations.
+Vet supports named profiles so teams can standardize CI usage without long CLI invocations.
 
 Profiles set defaults like model choice, enabled issue codes, output format, and thresholds.
 
@@ -146,7 +146,7 @@ Profiles set defaults like model choice, enabled issue codes, output format, and
 
 ### Conversation history
 
-VET can **optionally** ingest agent conversation history via a **history loader command**.
+Vet can **optionally** ingest agent conversation history via a **history loader command**.
 
 #### History loader contract
 
@@ -155,8 +155,8 @@ VET can **optionally** ingest agent conversation history via a **history loader 
 Security note: this executes a command on your machine. Only run history loader commands you trust.
 
 - Output format: **any text**
-- VET treats this as an opaque transcript (it may include user/assistant messages, tool calls, tool results, logs, etc.)
-- If you want VET to catch “claimed to run tests” style issues reliably, ensure your transcript includes tool invocations/results (or other evidence), not just prose.
+- Vet treats this as an opaque transcript (it may include user/assistant messages, tool calls, tool results, logs, etc.)
+- If you want Vet to catch “claimed to run tests” style issues reliably, ensure your transcript includes tool invocations/results (or other evidence), not just prose.
 
 Example:
 
@@ -178,6 +178,6 @@ vet --history-loader "vet-history gemini-cli --latest"
 
 ## Privacy / telemetry
 
-VET does **not** collect telemetry and does not send usage data to external services.
+Vet does **not** collect telemetry and does not send usage data to external services.
 
-If you configure VET to use a hosted inference provider, that provider may log requests; selecting a provider is the user’s responsibility.
+If you configure Vet to use a hosted inference provider, that provider may log requests; selecting a provider is the user’s responsibility.

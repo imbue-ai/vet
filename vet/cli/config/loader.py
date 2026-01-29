@@ -9,11 +9,11 @@ from pydantic import ValidationError
 from imbue_core.agents.configs import LanguageModelGenerationConfig
 from imbue_core.agents.configs import OpenAICompatibleModelConfig
 from imbue_core.agents.llm_apis.common import get_model_max_output_tokens
-from imbue_verify.cli.config.cli_config_schema import CliConfigPreset
-from imbue_verify.cli.config.cli_config_schema import merge_presets
-from imbue_verify.cli.config.cli_config_schema import parse_cli_config_from_dict
-from imbue_verify.cli.config.schema import ModelsConfig
-from imbue_verify.cli.config.schema import ProviderConfig
+from vet.cli.config.cli_config_schema import CliConfigPreset
+from vet.cli.config.cli_config_schema import merge_presets
+from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
+from vet.cli.config.schema import ModelsConfig
+from vet.cli.config.schema import ProviderConfig
 
 
 class ConfigLoadError(Exception):
@@ -160,7 +160,7 @@ def build_language_model_config(model_id: str, user_config: ModelsConfig) -> Lan
 
 
 def get_cli_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("imbue-verify", "config.toml", "imbue-verify.toml", repo_path)
+    return _get_config_file_paths("vet", "config.toml", "vet.toml", repo_path)
 
 
 def _load_cli_config_file(config_path: Path) -> dict[str, CliConfigPreset]:

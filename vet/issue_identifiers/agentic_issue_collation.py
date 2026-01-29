@@ -16,20 +16,20 @@ from imbue_tools.get_conversation_history.input_data_types import (
 )
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_messages
-from imbue_verify.issue_identifiers.common import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import extract_invocation_info_from_messages
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.common import generate_response_from_claude_code
-from imbue_verify.issue_identifiers.common import get_claude_code_options
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.common import generate_response_from_claude_code
+from vet.issue_identifiers.common import get_claude_code_options
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 COLLATION_PROMPT_TEMPLATE = """You are reviewing the results from parallel code analysis for potential issues.
 Multiple specialized agents analyzed the following code diff, each focusing on a specific type of issue.
@@ -122,7 +122,7 @@ def collate_issues_with_agent(
     issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
     identifier_inputs: IdentifierInputs,
     project_context: ProjectContext,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     enabled_issue_codes: tuple[IssueCode, ...],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
     """

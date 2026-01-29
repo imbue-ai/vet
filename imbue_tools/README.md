@@ -1,5 +1,5 @@
 # Purpose
-Shared functionality for imbue-cli tools like imbue-verify, imbue-retrieve, etc.
+Shared functionality for imbue-cli tools like vet, imbue-retrieve, etc.
 
 # Contents
 - formatting git repos as LLM input

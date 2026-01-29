@@ -8,7 +8,7 @@ from imbue_core.nested_evolver import assign
 from imbue_core.nested_evolver import chill
 from imbue_core.nested_evolver import evolver
 from imbue_tools.repo_utils.project_context import LazyProjectContext
-from imbue_verify.repo_utils import get_code_to_check
+from vet.repo_utils import get_code_to_check
 
 
 def test_get_code_to_check(simple_test_git_repo: Path) -> None:

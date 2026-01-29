@@ -1,24 +1,24 @@
-# imbue_verify
+# vet
 
-Imbue verify is a library and CLI tool for verifying code quality and correctness.
+Vet is a library and CLI tool for verifying code quality and correctness.
 
 ## Installation
 
 From the repository root:
 
 ```bash
-uv sync --project imbue-verify
+uv sync --project vet
 ```
 
 ## Usage
 
 ```bash
-uv run imbue-verify --help
-uv run imbue-verify "description of what the code change accomplishes"
-uv run imbue-verify --list-models
-uv run imbue-verify "description of what the code change accomplishes" --model claude-opus-4-5-20251101
-uv run imbue-verify --model claude-opus-4-5-20251101 # no goal specified
-uv run imbue-verify --model claude-opus-4-5-20251101 --base-commit main # default is HEAD
+uv run vet --help
+uv run vet "description of what the code change accomplishes"
+uv run vet --list-models
+uv run vet "description of what the code change accomplishes" --model claude-opus-4-5-20251101
+uv run vet --model claude-opus-4-5-20251101 # no goal specified
+uv run vet --model claude-opus-4-5-20251101 --base-commit main # default is HEAD
 ```
 
 ## Custom Models
@@ -62,7 +62,7 @@ Example configuration:
 
 ## Exit Status
 
-The following are the **expected** exit status codes for imbue-verify:
+The following are the **expected** exit status codes for vet:
 
 - `0` - Success, no issues found
 - `1` - Issues were found in the code
@@ -80,17 +80,17 @@ Issue identifiers are pieces of logic capable of finding issues in code. We fore
     - To check for the quality of a single commit.
     - "Assuming that we can treat the commit message as a requirement, how well does the commit implement it?"
 
-By default, `imbue_verify` runs all the registered issue identifiers and outputs all the found issues on the standard output in JSON format.
+By default, `vet` runs all the registered issue identifiers and outputs all the found issues on the standard output in JSON format.
 
 #### Adding new Issue Identifiers
 
 If you want to add a new issue identifier, you need to:
 
 1. Implement the `IssueIdentifier` protocol from `imbue_tools.repo_utils.data_types`.
-2. Register the new issue identifier by adding it to `IDENTIFIERS` in `imbue_verify.issue_identifiers.registry`.
+2. Register the new issue identifier by adding it to `IDENTIFIERS` in `vet.issue_identifiers.registry`.
 
 Based on your needs, instead of the above, you can also extend one of the existing batched zero-shot issue identifiers:
-    - `imbue_verify/issue_identifiers/batched_commit_check.py`
+    - `vet/issue_identifiers/batched_commit_check.py`
       (for commit checking)
 In that case you would simply expand the rubric in the prompt. That is actually the preferred way to catch issues at the moment due to efficiency.
 Refer to the source code for more details.
@@ -99,7 +99,7 @@ Refer to the source code for more details.
 
 ### Logging Configuration
 
-When creating a new entrypoint into imbue_verify, you must call `ensure_core_log_levels_configured()` to register the custom log levels used throughout the codebase.
+When creating a new entrypoint into vet, you must call `ensure_core_log_levels_configured()` to register the custom log levels used throughout the codebase.
 
 ```python
 from imbue_core.log_utils import ensure_core_log_levels_configured

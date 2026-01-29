@@ -210,15 +210,6 @@ wheels = [
 ]
 
 [[package]]
-name = "backoff"
-version = "2.2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/47/d7/5bbeb12c44d7c4f2fb5b56abce497eb5ed9f34d85701de869acedd602619/backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba", size = 17001, upload-time = "2022-10-05T19:19:32.061Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/73/b6e24bd22e6720ca8ee9a85a0c4a2971af8497d8f3193fa05390cbd46e09/backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8", size = 15148, upload-time = "2022-10-05T19:19:30.546Z" },
-]
-
-[[package]]
 name = "black"
 version = "25.12.0"
 source = { registry = "https://pypi.org/simple" }
@@ -872,7 +863,6 @@ dependencies = [
     { name = "loguru" },
     { name = "openai" },
     { name = "pathspec" },
-    { name = "posthog" },
     { name = "prometheus-client" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -884,7 +874,6 @@ dependencies = [
     { name = "pytest-asyncio" },
     { name = "pytest-mock" },
     { name = "python-gitlab" },
-    { name = "sentry-sdk" },
     { name = "syrupy" },
     { name = "tblib" },
     { name = "tenacity" },
@@ -913,7 +902,6 @@ requires-dist = [
     { name = "loguru" },
     { name = "openai", specifier = ">=1.79.0" },
     { name = "pathspec" },
-    { name = "posthog", specifier = "==5.4.0" },
     { name = "prometheus-client", specifier = ">=0.20.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "pydantic-settings" },
@@ -925,7 +913,6 @@ requires-dist = [
     { name = "pytest-asyncio" },
     { name = "pytest-mock" },
     { name = "python-gitlab", specifier = ">=4.5.0" },
-    { name = "sentry-sdk" },
     { name = "syrupy" },
     { name = "tblib", specifier = "==2.0.0" },
     { name = "tenacity", specifier = ">=8.2.2" },
@@ -965,7 +952,7 @@ dependencies = [
 
 [package.optional-dependencies]
 test = [
-    { name = "imbue-verify" },
+    { name = "vet" },
 ]
 
 [package.metadata]
@@ -974,7 +961,6 @@ requires-dist = [
     { name = "async-lru" },
     { name = "attrs" },
     { name = "imbue-core", editable = "../imbue_core" },
-    { name = "imbue-verify", marker = "extra == 'test'", editable = "../" },
     { name = "jinja2" },
     { name = "libcst" },
     { name = "loguru" },
@@ -987,41 +973,9 @@ requires-dist = [
     { name = "python-gitlab" },
     { name = "requests" },
     { name = "syrupy" },
+    { name = "vet", marker = "extra == 'test'", editable = "../" },
 ]
 provides-extras = ["test"]
-
-[[package]]
-name = "imbue-verify"
-version = "0.1.0"
-source = { editable = "../" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "click" },
-    { name = "imbue-core" },
-    { name = "imbue-tools" },
-    { name = "jinja2" },
-    { name = "loguru" },
-    { name = "pydantic" },
-    { name = "pygments" },
-    { name = "pytest" },
-    { name = "syrupy" },
-    { name = "together" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp", specifier = ">=3.8.0" },
-    { name = "click" },
-    { name = "imbue-core", editable = "../imbue_core" },
-    { name = "imbue-tools", editable = "." },
-    { name = "jinja2" },
-    { name = "loguru" },
-    { name = "pydantic" },
-    { name = "pygments", specifier = ">=2.0.0" },
-    { name = "pytest" },
-    { name = "syrupy" },
-    { name = "together", specifier = ">=1.5.35" },
-]
 
 [[package]]
 name = "iniconfig"
@@ -1690,22 +1644,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
-]
-
-[[package]]
-name = "posthog"
-version = "5.4.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "backoff" },
-    { name = "distro" },
-    { name = "python-dateutil" },
-    { name = "requests" },
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/48/20/60ae67bb9d82f00427946218d49e2e7e80fb41c15dc5019482289ec9ce8d/posthog-5.4.0.tar.gz", hash = "sha256:701669261b8d07cdde0276e5bc096b87f9e200e3b9589c5ebff14df658c5893c", size = 88076, upload-time = "2025-06-20T23:19:23.485Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/98/e480cab9a08d1c09b1c59a93dade92c1bb7544826684ff2acbfd10fcfbd4/posthog-5.4.0-py3-none-any.whl", hash = "sha256:284dfa302f64353484420b52d4ad81ff5c2c2d1d607c4e2db602ac72761831bd", size = 105364, upload-time = "2025-06-20T23:19:22.001Z" },
 ]
 
 [[package]]
@@ -2500,19 +2438,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sentry-sdk"
-version = "2.51.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6f/9f/094bbb6be5cf218ab6712c6528310687f3d3fe8818249fcfe1d74192f7c5/sentry_sdk-2.51.0.tar.gz", hash = "sha256:b89d64577075fd8c13088bc3609a2ce77a154e5beb8cba7cc16560b0539df4f7", size = 407447, upload-time = "2026-01-28T10:29:50.962Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/da/df379404d484ca9dede4ad8abead5de828cdcff35623cd44f0351cf6869c/sentry_sdk-2.51.0-py2.py3-none-any.whl", hash = "sha256:e21016d318a097c2b617bb980afd9fc737e1efc55f9b4f0cdc819982c9717d5f", size = 431426, upload-time = "2026-01-28T10:29:48.868Z" },
-]
-
-[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -2803,6 +2728,61 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d1/c8/929d81665d83f0b2ffaecb8e66c3091a50f62c7cb5b65e678bd75a96684e/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:cdbd82ff20147461caefc375551595ecf77ebb384e46267f128aca45a0f2cdfc", size = 467029, upload-time = "2026-01-20T20:37:08.277Z" },
     { url = "https://files.pythonhosted.org/packages/8e/a0/27d7daa1bfed7163f4ccaf52d7d2f4ad7bb1002a85b45077938b91ee584f/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eff57e8a5d540006ce73cf0841a643d445afe78ba12e75ac53a95ca2924a56be", size = 333298, upload-time = "2026-01-20T20:37:07.271Z" },
     { url = "https://files.pythonhosted.org/packages/63/d4/acad86ce012b42ce18a12f31ee2aa3cbeeb98664f865f05f68c882945913/uuid_utils-0.14.0-pp311-pypy311_pp73-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:3fd9112ca96978361201e669729784f26c71fecc9c13a7f8a07162c31bd4d1e2", size = 359217, upload-time = "2026-01-20T20:36:59.687Z" },
+]
+
+[[package]]
+name = "vet"
+version = "0.1.0"
+source = { editable = "../" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "click" },
+    { name = "imbue-core" },
+    { name = "imbue-tools" },
+    { name = "jinja2" },
+    { name = "loguru" },
+    { name = "pydantic" },
+    { name = "pygments" },
+    { name = "pytest" },
+    { name = "syrupy" },
+    { name = "together" },
+    { name = "vet-types" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp", specifier = ">=3.8.0" },
+    { name = "click" },
+    { name = "imbue-core", editable = "../imbue_core" },
+    { name = "imbue-tools", editable = "." },
+    { name = "jinja2" },
+    { name = "loguru" },
+    { name = "pydantic" },
+    { name = "pygments", specifier = ">=2.0.0" },
+    { name = "pytest" },
+    { name = "syrupy" },
+    { name = "together", specifier = ">=1.5.35" },
+    { name = "vet-types", editable = "../vet_types" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "black" }]
+
+[[package]]
+name = "vet-types"
+version = "0.1.0"
+source = { editable = "../vet_types" }
+dependencies = [
+    { name = "imbue-core" },
+    { name = "pydantic" },
+    { name = "typeid-python" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "imbue-core" },
+    { name = "pydantic" },
+    { name = "typeid-python" },
 ]
 
 [[package]]

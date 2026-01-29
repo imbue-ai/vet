@@ -92,7 +92,7 @@ class LazyProjectContext(SerializableModel):
         diff: str,
         language_model_name: str,
         repo_path: Path,
-        # How many tokens to keep for the imbue_verify specific prompt and any output tokens.
+        # How many tokens to keep for the vet specific prompt and any output tokens.
         tokens_to_reserve: int,
         context_window: int | None = None,
         is_custom_model: bool = False,

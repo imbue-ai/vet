@@ -7,16 +7,16 @@ from unittest.mock import patch
 
 import pytest
 
-from imbue_verify.cli.config.cli_config_schema import CLI_DEFAULTS
-from imbue_verify.cli.config.cli_config_schema import CliConfigPreset
-from imbue_verify.cli.config.cli_config_schema import merge_presets
-from imbue_verify.cli.config.cli_config_schema import parse_cli_config_from_dict
-from imbue_verify.cli.config.loader import ConfigLoadError
-from imbue_verify.cli.config.loader import _load_cli_config_file
-from imbue_verify.cli.config.loader import get_cli_config_file_paths
-from imbue_verify.cli.config.loader import get_config_preset
-from imbue_verify.cli.config.loader import load_cli_config
-from imbue_verify.cli.main import apply_config_preset
+from vet.cli.config.cli_config_schema import CLI_DEFAULTS
+from vet.cli.config.cli_config_schema import CliConfigPreset
+from vet.cli.config.cli_config_schema import merge_presets
+from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
+from vet.cli.config.loader import ConfigLoadError
+from vet.cli.config.loader import _load_cli_config_file
+from vet.cli.config.loader import get_cli_config_file_paths
+from vet.cli.config.loader import get_config_preset
+from vet.cli.config.loader import load_cli_config
+from vet.cli.main import apply_config_preset
 
 
 def test_parse_cli_config_from_dict_parses_single_config() -> None:
@@ -133,7 +133,7 @@ def test_cli_defaults_and_cli_config_preset_have_same_fields() -> None:
     They must have identical field names to ensure presets can override any default.
     This test catches drift if a field is added to one model but not the other.
     """
-    from imbue_verify.cli.config.cli_config_schema import CliDefaults
+    from vet.cli.config.cli_config_schema import CliDefaults
 
     defaults_fields = set(CliDefaults.model_fields.keys())
     preset_fields = set(CliConfigPreset.model_fields.keys())
@@ -150,7 +150,7 @@ def test_get_cli_config_file_paths_returns_global_path(tmp_path: Path) -> None:
         paths = get_cli_config_file_paths(repo_path=None)
 
     assert len(paths) == 1
-    assert paths[0] == tmp_path / "imbue-verify" / "config.toml"
+    assert paths[0] == tmp_path / "vet" / "config.toml"
 
 
 def test_get_cli_config_file_paths_includes_project_path(tmp_path: Path) -> None:
@@ -161,8 +161,8 @@ def test_get_cli_config_file_paths_includes_project_path(tmp_path: Path) -> None
         paths = get_cli_config_file_paths(repo_path=repo_path)
 
     assert len(paths) == 2
-    assert paths[0] == tmp_path / "xdg" / "imbue-verify" / "config.toml"
-    assert paths[1] == repo_path / "imbue-verify.toml"
+    assert paths[0] == tmp_path / "xdg" / "vet" / "config.toml"
+    assert paths[1] == repo_path / "vet.toml"
 
 
 def test_get_cli_config_file_paths_finds_git_root(tmp_path: Path) -> None:
@@ -175,7 +175,7 @@ def test_get_cli_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path / "xdg")}):
         paths = get_cli_config_file_paths(repo_path=subdir)
 
-    assert paths[1] == git_root / "imbue-verify.toml"
+    assert paths[1] == git_root / "vet.toml"
 
 
 def test_load_cli_config_file_loads_valid_toml(tmp_path: Path) -> None:
@@ -253,7 +253,7 @@ def test_load_cli_config_returns_empty_when_no_files_exist(tmp_path: Path) -> No
 def test_load_cli_config_loads_single_file(tmp_path: Path) -> None:
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    config_file = repo_path / "imbue-verify.toml"
+    config_file = repo_path / "vet.toml"
     config_file.write_text(
         """
 [ci]
@@ -270,8 +270,8 @@ confidence_threshold = 0.9
 
 def test_load_cli_config_merges_global_and_project(tmp_path: Path) -> None:
     xdg_config = tmp_path / "xdg"
-    (xdg_config / "imbue-verify").mkdir(parents=True)
-    global_config = xdg_config / "imbue-verify" / "config.toml"
+    (xdg_config / "vet").mkdir(parents=True)
+    global_config = xdg_config / "vet" / "config.toml"
     global_config.write_text(
         """
 [ci]
@@ -285,7 +285,7 @@ model = "global-model"
 
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    project_config = repo_path / "imbue-verify.toml"
+    project_config = repo_path / "vet.toml"
     project_config.write_text(
         """
 [ci]
@@ -347,8 +347,8 @@ def test_get_config_preset_raises_on_unknown_with_no_configs(tmp_path: Path) -> 
     assert "unknown" in error_msg
     assert "No configuration files found" in error_msg
     # Verify the error message contains dynamically generated paths with labels
-    assert f"{tmp_path / 'xdg' / 'imbue-verify' / 'config.toml'} (global)" in error_msg
-    assert f"{repo_path / 'imbue-verify.toml'} (project)" in error_msg
+    assert f"{tmp_path / 'xdg' / 'vet' / 'config.toml'} (global)" in error_msg
+    assert f"{repo_path / 'vet.toml'} (project)" in error_msg
 
 
 def _create_default_args() -> argparse.Namespace:

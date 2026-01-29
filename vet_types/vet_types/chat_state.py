@@ -1,4 +1,4 @@
-"""Chat state types for imbue_verify."""
+"""Chat state types for Vet."""
 
 from typing import Annotated
 from typing import Any
@@ -56,7 +56,9 @@ class CommandBlock(ContentBlock):
     object_type: str = "CommandBlock"
     type: Literal["command"] = "command"
     command: str
-    is_automated: bool = Field(default=False, description="Whether the command is automated")
+    is_automated: bool = Field(
+        default=False, description="Whether the command is automated"
+    )
 
 
 ToolInput = dict[str, Any]
@@ -67,13 +69,17 @@ class ToolUseBlock(ContentBlock):
     type: Literal["tool_use"] = "tool_use"
     id: ToolUseID = Field(..., description="Unique identifier for this tool use")
     name: str = Field(..., description="Name of the tool being used")
-    input: ToolInput = Field(default_factory=ToolInput, description="Input parameters for the tool")
+    input: ToolInput = Field(
+        default_factory=ToolInput, description="Input parameters for the tool"
+    )
 
 
 class ToolResultContent(SerializableModel):
     """Base class for tool result content with type discriminator"""
 
-    content_type: str = Field(..., description="Type discriminator for tool result content")
+    content_type: str = Field(
+        ..., description="Type discriminator for tool result content"
+    )
 
 
 class SimpleToolContent(ToolResultContent):
@@ -108,9 +114,15 @@ class ToolResultBlock(ContentBlock):
     type: Literal["tool_result"] = "tool_result"
     tool_use_id: ToolUseID = Field(..., description="ID of the corresponding tool use")
     tool_name: str = Field(..., description="Name of the tool that was used")
-    invocation_string: str = Field(..., description="String representation of how the tool was invoked")
-    content: ToolResultContentType = Field(..., description="Result content from the tool execution")
-    is_error: bool = Field(default=False, description="Whether the tool execution resulted in an error")
+    invocation_string: str = Field(
+        ..., description="String representation of how the tool was invoked"
+    )
+    content: ToolResultContentType = Field(
+        ..., description="Result content from the tool execution"
+    )
+    is_error: bool = Field(
+        default=False, description="Whether the tool execution resulted in an error"
+    )
 
 
 class WarningBlock(ContentBlock):
@@ -118,7 +130,9 @@ class WarningBlock(ContentBlock):
     type: Literal["warning"] = "warning"
     message: str = Field(..., description="Warning message")
     traceback: str | None = Field(..., description="Warning traceback")
-    warning_type: str | None = Field(..., description="Type of warning, i.e. name of the exception that was raised")
+    warning_type: str | None = Field(
+        ..., description="Type of warning, i.e. name of the exception that was raised"
+    )
 
 
 class ErrorBlock(ContentBlock):
@@ -126,7 +140,9 @@ class ErrorBlock(ContentBlock):
     type: Literal["error"] = "error"
     message: str = Field(..., description="Error message")
     traceback: str = Field(..., description="Error traceback")
-    error_type: str = Field(..., description="Type of error, i.e. name of the exception that was raised")
+    error_type: str = Field(
+        ..., description="Type of error, i.e. name of the exception that was raised"
+    )
 
 
 class FileBlock(ContentBlock):

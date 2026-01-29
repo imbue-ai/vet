@@ -1,7 +1,7 @@
-"""Public API for imbue_verify.
+"""Public API for vet.
 
 This module provides functions to identify issues in code changes. Issue identifiers are pieces of logic capable of finding issues in code.
-By default, imbue_verify runs all registered issue identifiers and returns all found issues.
+By default, vet runs all registered issue identifiers and returns all found issues.
 """
 
 from pathlib import Path
@@ -17,12 +17,12 @@ from imbue_tools.get_conversation_history.get_conversation_history import (
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from imbue_tools.repo_utils.project_context import LazyProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
+from imbue_tools.types.vet_config import VetConfig
 from imbue_tools.util_prompts.goal_from_conversation import get_goal_from_conversation
-from imbue_verify.issue_identifiers import registry
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
-from imbue_verify.repo_utils import IMBUE_VERIFY_MAX_PROMPT_TOKENS
-from imbue_verify.repo_utils import get_code_to_check
+from vet.issue_identifiers import registry
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.repo_utils import VET_MAX_PROMPT_TOKENS
+from vet.repo_utils import get_code_to_check
 
 
 def get_issues_with_raw_responses(
@@ -30,7 +30,7 @@ def get_issues_with_raw_responses(
     diff: str,
     diff_no_binary: str,
     goal: str,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     repo_path: Path,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
 ) -> tuple[tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext]:
@@ -62,8 +62,8 @@ def get_issues_with_raw_responses(
         diff,
         language_model_name=lm_config.model_name,
         repo_path=repo_path,
-        # This needs to account for the imbue_verify prompt, as well as the max_tokens output tokens.
-        tokens_to_reserve=IMBUE_VERIFY_MAX_PROMPT_TOKENS + diff_no_binary_tokens + config.max_output_tokens,
+        # This needs to account for the vet prompt, as well as the max_tokens output tokens.
+        tokens_to_reserve=VET_MAX_PROMPT_TOKENS + diff_no_binary_tokens + config.max_output_tokens,
         context_window=lm_config.get_max_context_length(),
         is_custom_model=lm_config.is_custom_model(),
     )
@@ -94,7 +94,7 @@ def find_issues(
     repo_path: Path,
     relative_to: str,
     goal: str,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
     logger.info(
