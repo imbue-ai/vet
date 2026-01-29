@@ -36,20 +36,18 @@ class LLMModel(StrEnum):
 
 class AgentMessageSource(StrEnum):
     """
-    Messages can come the AGENT (in-container LLM), USER (chat messages & direct interactions),
-    SCULPTOR_SYSTEM (multifaceted sculptor app and service code) and RUNNER (the process
-    controlling a task on the server.)
+    Messages can come from the AGENT (LLM), USER (chat messages & direct interactions),
+    SYSTEM (app and service code) and RUNNER (the process controlling a task).
     """
 
-    # Messages coming directly from the agent from inside the environment.
+    # Messages coming directly from the agent.
     AGENT = "AGENT"
 
-    # Messages coming directly from a user interacting with the interface, ie chat
+    # Messages coming directly from a user interacting with the interface, ie chat.
     USER = "USER"
 
-    # Messages coming from sculptor-mediated actions and automations, like local sync updates
-    # or manual sync operations.
-    SCULPTOR_SYSTEM = "SCULPTOR_SYSTEM"
+    # Messages coming from system-mediated actions and automations.
+    SYSTEM = "SYSTEM"
 
     # Messages coming from the task runner wrapper, such as environment shutdown.
     RUNNER = "RUNNER"
@@ -65,15 +63,11 @@ class Message(SerializableModel):
     # the source of the message, which can be either the agent, user, or runner.
     source: AgentMessageSource
     # roughly when the message was created, in UTC.
-    approximate_creation_time: datetime.datetime = Field(
-        default_factory=get_current_time
-    )
+    approximate_creation_time: datetime.datetime = Field(default_factory=get_current_time)
 
     @property
     def is_ephemeral(self) -> bool:
-        raise NotImplementedError(
-            "All messages must be subclassed off of PersistentMessage or EphemeralMessage"
-        )
+        raise NotImplementedError("All messages must be subclassed off of PersistentMessage or EphemeralMessage")
 
 
 class PersistentMessage(Message):

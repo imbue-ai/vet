@@ -575,7 +575,7 @@ def is_diffs_without_index_equal(diff_1: str, diff_2: str) -> bool:
     return get_diff_without_index(diff_1) == get_diff_without_index(diff_2)
 
 
-# Copy-pasted from imbue to avoid moving the whole hammers machinery over to imbue-core.
+# Utility function for running shell commands and collecting output.
 async def get_lines_from_process(shell_command: str, is_exit_code_validated: bool = True, **kwargs: Any) -> list[str]:
     p = await asyncio.create_subprocess_shell(shell_command, stdin=PIPE, stdout=PIPE, stderr=STDOUT, **kwargs)
     lines = [x.decode("UTF-8") for x in (await p.communicate())[0].splitlines()]

@@ -49,15 +49,9 @@ def is_live_debugging() -> bool:
 
 @functools.lru_cache(maxsize=1)
 def get_filesystem_root() -> str:
-    env_value = os.getenv("SCIENCE_FILESYSTEM_ROOT")
+    env_value = os.getenv("FILESYSTEM_ROOT")
     if not env_value:
-        if is_on_osx():
-            return "/tmp/science"
-        else:
-            # When on the physical cluster (and possibly other core clusters), this path is mounted to a unique per-container file path.
-            # Anything produced at runtime >10mb should likely go here, as well as anything you might want to dig up for later debugging.
-            # The hosts clean up the paths from dead containers periodically, but large data processing jobs should still clean up after themselves.
-            return "/mnt/private"
+        return "/tmp"
     return env_value
 
 

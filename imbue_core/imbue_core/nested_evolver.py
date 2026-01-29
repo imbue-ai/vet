@@ -2,8 +2,6 @@
 
 One of the design goals is that mypy, autocomplete, and automatic refactoring work for the assignments made into these nested structures.
 
-See: https://imbue-ai.slack.com/archives/C05D0SM2RT5/p1726185313480779?thread_ts=1722865932.537289&cid=C05D0SM2RT5
-
 If you make changes here and then the tests fail with:
 ```
 E   RecursionError: maximum recursion depth exceeded

@@ -48,7 +48,6 @@ async def iterable_to_async(iterable: Iterable[T]) -> AsyncGenerator[T, None]:
         yield item
 
 
-# TODO delete/migrate out computronium/computronium/universal/utils.py
 def generate_unique(
     source: Iterable[T],
     key: Callable[[T], TV] = cast(Callable[[T], TV], lambda item: item),

@@ -868,10 +868,9 @@ def _serialize_to_json_dumpable_object(
         # with `is_reversible=False` since we won't know the type to be able to recreate the object.
         assert is_reversible, "Cannot restructure inputs if is_reversible=False"
 
-    # TODO: this is a hack to make it possible to serialize ExecutionContexts for class method hammers.
+    # TODO: this is a hack to make it possible to serialize ExecutionContexts for class methods.
     #  This lets us serialize ExecutionContexts for calls to class methods without serializing the class itself.
-    #  The long-term solutions are 1) either get rid of all class method hammers,
-    #  or 2) write a custom hook that can serialize type objects.
+    #  The long-term solution is to write a custom hook that can serialize type objects.
     if type(obj) is dict and "__class__" in obj:
         del obj["__class__"]
 

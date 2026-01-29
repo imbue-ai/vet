@@ -119,7 +119,7 @@ class TupleDeserializer(Deserializer):
                             if e.name.lower() == value.lower():
                                 return e
                 return real_type(value)
-            # TODO (49780118-61e5-446b-b44b-cabb3ffc0ba2): serialization currently breaks with builtin.dicts and dicts with non-string keys
+            # TODO: serialization currently breaks with builtin.dicts and dicts with non-string keys
             #   if you have weird keys in your dict this branch won't be hit and your object won't be properly deserialized
             elif issubclass(real_type, Mapping):
                 key_type = generic_args[0] if generic_args else None

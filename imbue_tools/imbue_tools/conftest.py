@@ -15,8 +15,7 @@ from imbue_core.test_utils import make_llm_cache_with_snapshot
 llm_cache_path = async_fixture(make_llm_cache_with_snapshot)
 
 
-# this is copied from sculptor/conftest.py
-# (it must be copied rather than imported because of the autouse)
+# This fixture must be defined locally (not imported) because of the autouse flag.
 @pytest.fixture(autouse=True)
 def always_explode_on_error(
     explode_on_error: Callable[[], Generator[None, None, None]],
