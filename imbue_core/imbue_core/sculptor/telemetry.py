@@ -111,7 +111,9 @@ class PosthogEventPayload(SerializableModel):
     """
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
-        super().__init_subclass__(**kwargs)  # pyre-fixme[6]: pyre can't type check this untyped dict
+        super().__init_subclass__(
+            **kwargs
+        )  # pyre-fixme[6]: pyre can't type check this untyped dict
 
         # Run validation after subclass is defined
         cls._validate_class()
@@ -125,7 +127,9 @@ class PosthogEventPayload(SerializableModel):
         for field_name in cls.__annotations__.keys():
             field_info = cls.__dict__[field_name]
             # Check that we're using pydantic.Field
-            assert isinstance(field_info, FieldInfo), "Field {} does not extend pydantic.Field".format(field_name)
+            assert isinstance(
+                field_info, FieldInfo
+            ), "Field {} does not extend pydantic.Field".format(field_name)
             # Get the extra schema info, defaulting to an empty dict if it's None
             extra_schema: dict[str, Any] = {}
             match field_info.json_schema_extra:
@@ -142,10 +146,14 @@ class PosthogEventPayload(SerializableModel):
                 case _:
                     pass
 
-            assert "consent_level" in extra_schema, """Field '{}' in '{}' is missing the
+            assert (
+                "consent_level" in extra_schema
+            ), """Field '{}' in '{}' is missing the
 'consent_level' metadata. Please use the decorator
 with_consent or without_consent to populate the field annotation:
-`json_schema_extra={{'consent_level': ...}}`""".format(field_name, cls.__name__)
+`json_schema_extra={{'consent_level': ...}}`""".format(
+                field_name, cls.__name__
+            )
 
 
 # All data models sent to PostHog MUST define consent annotations and subclass PosthogEventPayload.
@@ -161,7 +169,9 @@ class PosthogEventModel(SerializableModel, Generic[T]):
     """
 
     # Always defined fields
-    name: SculptorPosthogEvent = without_consent(description="Name of event, give it meaning!")
+    name: SculptorPosthogEvent = without_consent(
+        description="Name of event, give it meaning!"
+    )
     component: ProductComponent = without_consent(description="App component")
 
     # User Activity field
@@ -169,7 +179,8 @@ class PosthogEventModel(SerializableModel, Generic[T]):
 
     # Task ID - should be set if this event is associated with a task.
     task_id: str | None = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, description="The task id if this event is task-specific"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        description="The task id if this event is task-specific",
     )
 
     # Payload field with consent level
@@ -205,7 +216,9 @@ def _create_posthog_event_payload_event_data_class(
 
 
 # When we don't know what kind of Payload to use, we use this, which is the bare minimum TelemetryInfo data.
-TelemetryInfoEventData: type[PosthogEventPayload] = _create_posthog_event_payload_event_data_class()
+TelemetryInfoEventData: type[PosthogEventPayload] = (
+    _create_posthog_event_payload_event_data_class()
+)
 
 
 # For every Event, we define additional fields that it might have.
@@ -271,7 +284,9 @@ class PosthogProtocol(Protocol):
         Flush all messages and cleanly shut down the client.
         """
 
-    def capture_exception(self, exception: BaseException, distinct_id=None, properties=None) -> None:
+    def capture_exception(
+        self, exception: BaseException, distinct_id=None, properties=None
+    ) -> None:
         """Capture an exception event."""
 
 
@@ -313,7 +328,9 @@ class StubPosthog:
     def shutdown(self) -> None:
         pass
 
-    def capture_exception(self, exception: BaseException, distinct_id=None, properties=None) -> None:
+    def capture_exception(
+        self, exception: BaseException, distinct_id=None, properties=None
+    ) -> None:
         pass
 
 
@@ -343,7 +360,9 @@ _POSTHOG_USER_INSTANCE: PosthogUserInstance | AnonymousPosthogUserInstance | Non
 
 
 def is_posthog_identified() -> bool:
-    return _POSTHOG_USER_INSTANCE is not None and not _POSTHOG_USER_INSTANCE.is_anonymous
+    return (
+        _POSTHOG_USER_INSTANCE is not None and not _POSTHOG_USER_INSTANCE.is_anonymous
+    )
 
 
 # This used to be cached, but we wanted the user to be able to change telemetry preferences within a container.
@@ -354,10 +373,14 @@ def _get_telemetry_task_info_if_inside_container() -> TelemetryTaskInfo | None:
     and to mock, monkeypatch would need to replace definitions at those locations.
 
     With this, monkeypatch only needs to replace this function."""
-    telemetry_info_path = Path("/imbue_addons/state") / TELEMETRY_TASK_INFO_JSON_STATE_FILE
+    telemetry_info_path = (
+        Path("/imbue_addons/state") / TELEMETRY_TASK_INFO_JSON_STATE_FILE
+    )
     if telemetry_info_path.exists():
         try:
-            telemetry_task_info = TelemetryTaskInfo.model_validate_json(telemetry_info_path.read_text())
+            telemetry_task_info = TelemetryTaskInfo.model_validate_json(
+                telemetry_info_path.read_text()
+            )
             return telemetry_task_info
         except ValidationError as e:
             log_exception(
@@ -377,7 +400,10 @@ def get_telemetry_task_info_if_inside_container() -> TelemetryTaskInfo | None:
 # TODO (CAP-636): Remove upstream git repo logic once GitLab mirroring is completed.
 def get_original_git_repo_url_if_inside_container() -> str | None:
     telemetry_task_info = get_telemetry_task_info_if_inside_container()
-    if telemetry_task_info and telemetry_task_info.telemetry_project_info.original_git_repo_url:
+    if (
+        telemetry_task_info
+        and telemetry_task_info.telemetry_project_info.original_git_repo_url
+    ):
         return telemetry_task_info.telemetry_project_info.original_git_repo_url
     return None
 
@@ -472,7 +498,9 @@ def identify_posthog_user(user_config_accessor: Callable[[], UserConfig]) -> Non
     posthog = _POSTHOG_USER_INSTANCE.posthog_instance
 
     _POSTHOG_USER_INSTANCE = PosthogUserInstance(
-        posthog_instance=posthog, is_anonymous=False, user_config_accessor=user_config_accessor
+        posthog_instance=posthog,
+        is_anonymous=False,
+        user_config_accessor=user_config_accessor,
     )
 
     latest_user_config = _POSTHOG_USER_INSTANCE.access_user_config()
@@ -519,7 +547,9 @@ def posthog_context(
             log_exception(e, "Error in logging to posthog")
 
 
-def is_consent_allowable(required_consent: ConsentLevel | None, privacy_settings: PrivacySettings) -> bool:
+def is_consent_allowable(
+    required_consent: ConsentLevel | None, privacy_settings: PrivacySettings
+) -> bool:
     """Check the appropriate value of user consent fields to establish allowable consent."""
     if required_consent is None:
         return True
@@ -540,7 +570,9 @@ def is_consent_allowable(required_consent: ConsentLevel | None, privacy_settings
         return False
 
 
-def filter_model_by_consent(model: SerializableModel, privacy_settings: PrivacySettings) -> SerializableModel:
+def filter_model_by_consent(
+    model: SerializableModel, privacy_settings: PrivacySettings
+) -> SerializableModel:
     """Recursively filter a SerializableModel based on consent toggles.
 
     Args:
@@ -565,12 +597,16 @@ def filter_model_by_consent(model: SerializableModel, privacy_settings: PrivacyS
         if is_consent_allowable(required_level, privacy_settings):
             # If the field value is also a SerializableModel, recursively filter it
             if isinstance(field_value, SerializableModel):
-                updates[field_name] = filter_model_by_consent(field_value, privacy_settings)
+                updates[field_name] = filter_model_by_consent(
+                    field_value, privacy_settings
+                )
             elif isinstance(field_value, list):
                 filtered_list = []
                 for item in field_value:
                     if isinstance(item, SerializableModel):
-                        filtered_list.append(filter_model_by_consent(item, privacy_settings))
+                        filtered_list.append(
+                            filter_model_by_consent(item, privacy_settings)
+                        )
                     else:
                         filtered_list.append(item)
                 updates[field_name] = filtered_list
@@ -610,7 +646,9 @@ def filter_model_by_consent(model: SerializableModel, privacy_settings: PrivacyS
             __base__=base_class,
             **field_definitions,  # pyre-ignore[6]: pyre can't check this since it's an untyped dict
         )
-        return filtered_model_class(**updates)  # pyre-ignore[6]: pyre can't check this since it's an untyped dict
+        return filtered_model_class(
+            **updates
+        )  # pyre-ignore[6]: pyre can't check this since it's an untyped dict
 
 
 def emit_posthog_event(posthog_event: PosthogEventModel[Any]) -> None:
@@ -644,7 +682,9 @@ def emit_posthog_event(posthog_event: PosthogEventModel[Any]) -> None:
 
             # Use the recursive filtering function
             try:
-                filtered_model = filter_model_by_consent(posthog_event, privacy_settings)
+                filtered_model = filter_model_by_consent(
+                    posthog_event, privacy_settings
+                )
                 properties = filtered_model.model_dump()
             except Exception as e:
                 logger.info("Failed to filter posthog event: {}", e)
@@ -655,7 +695,9 @@ def emit_posthog_event(posthog_event: PosthogEventModel[Any]) -> None:
             if properties.get("payload"):
                 payload = properties["payload"]
                 if not any(value is not None for value in payload.values()):
-                    logger.debug("No payload data to log for event of type {}", event_name)
+                    logger.debug(
+                        "No payload data to log for event of type {}", event_name
+                    )
                     return
 
             # Check for task-specific telemetry info and add it to the properties
@@ -664,7 +706,9 @@ def emit_posthog_event(posthog_event: PosthogEventModel[Any]) -> None:
                 # I think we will further change where we put this.
                 properties["task_id"] = str(telemetry_task_info.task_id)
 
-            posthog_user_instance.posthog_instance.capture(event=event_name, properties=properties)
+            posthog_user_instance.posthog_instance.capture(
+                event=event_name, properties=properties
+            )
 
 
 def shutdown_posthog() -> None:
@@ -675,20 +719,30 @@ def shutdown_posthog() -> None:
 
 
 class PosthogExceptionPayload(PosthogEventPayload):
-    exception_name: str = with_consent(ConsentLevel.ERROR_REPORTING, description="The name of the raised exception.")
-    exception_value: str = with_consent(ConsentLevel.ERROR_REPORTING, description="The value of the raised exception.")
+    exception_name: str = with_consent(
+        ConsentLevel.ERROR_REPORTING, description="The name of the raised exception."
+    )
+    exception_value: str = with_consent(
+        ConsentLevel.ERROR_REPORTING, description="The value of the raised exception."
+    )
     exception_traceback: str | None = with_consent(
-        ConsentLevel.ERROR_REPORTING, description="Formatted traceback of the raised exception."
+        ConsentLevel.ERROR_REPORTING,
+        description="Formatted traceback of the raised exception.",
     )
     message: str | None = with_consent(
-        ConsentLevel.ERROR_REPORTING, description="The message that accompanies the raised exception."
+        ConsentLevel.ERROR_REPORTING,
+        description="The message that accompanies the raised exception.",
     )
 
 
 def get_exception_payload(
-    exception: BaseException, message: str | None = None, include_traceback: bool = False
+    exception: BaseException,
+    message: str | None = None,
+    include_traceback: bool = False,
 ) -> PosthogExceptionPayload:
-    formatted_traceback = "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+    formatted_traceback = "".join(
+        traceback.format_exception(type(exception), exception, exception.__traceback__)
+    )
     return PosthogExceptionPayload(
         exception_name=type(exception).__name__,
         exception_value=str(exception),
@@ -725,7 +779,9 @@ def send_exception_to_posthog(
         )
     )
 
-    inject_exception_and_log(exception, message or "", priority=ExceptionPriority.LOW_PRIORITY)
+    inject_exception_and_log(
+        exception, message or "", priority=ExceptionPriority.LOW_PRIORITY
+    )
 
 
 def flush_sentry_and_exit_program(exit_code: int, final_message: str) -> None:
@@ -745,14 +801,20 @@ def mirror_exception_to_posthog(event: Event, hint: Hint) -> Event:
     When this is wired up to the before_send hook in Sentry, it will send a correctly-shaped event to PostHog, and annotate the Sentry event with the PostHog user id.
     """
     # Only mirror error events
-    if event.get("level") in ("warning", "error", "fatal") and hint and hint.get("exc_info"):
+    if (
+        event.get("level") in ("warning", "error", "fatal")
+        and hint
+        and hint.get("exc_info")
+    ):
         logger.info("We are going to mirror this exception to posthog")
         _, exc_value, _ = hint["exc_info"]
         # Attach useful Sentry context as PostHog properties
         props = {
             "$exception_level": event.get("level"),
             "sentry_event_id": event.get("event_id"),
-            "sentry_issue_id": event.get("contexts", {}).get("trace", {}).get("trace_id"),
+            "sentry_issue_id": event.get("contexts", {})
+            .get("trace", {})
+            .get("trace_id"),
             "tags": event.get("tags"),
             "release": event.get("release"),
             "environment": event.get("environment"),
@@ -780,11 +842,15 @@ def mirror_exception_to_posthog(event: Event, hint: Hint) -> Event:
 
                 event["extra"]["posthog_user_id"] = (user_config.user_id,)
 
-                posthog_app_domain = user_posthog_instance.posthog_instance.host.replace(
-                    ".i.posthog.com", ".posthog.com"
+                posthog_app_domain = (
+                    user_posthog_instance.posthog_instance.host.replace(
+                        ".i.posthog.com", ".posthog.com"
+                    )
                 )
 
-                event["extra"]["posthog_user_link"] = f"{posthog_app_domain}/persons/{user_config.user_id}"
+                event["extra"][
+                    "posthog_user_link"
+                ] = f"{posthog_app_domain}/persons/{user_config.user_id}"
 
             except Exception as e:
                 # We don't want to trigger an infinite loop of exceptions if PostHog is down. We're sending a message to

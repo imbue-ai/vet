@@ -17,13 +17,19 @@ from imbue_core.data_types import IssueCode
 from imbue_core.frozen_utils import FrozenDict
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
+from imbue_tools.get_conversation_history.input_data_types import (
+    IdentifierInputsMissingError,
+)
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -59,7 +65,8 @@ def make_identifier() -> IssueIdentifier:
     harness = SinglePromptHarness()
     identifier = harness.make_issue_identifier(
         identification_guides=tuple(
-            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK
+            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
+            for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK
         )
     )
     return identifier
@@ -75,7 +82,10 @@ def test_to_required_inputs() -> None:
 
     # Should support inputs where the commit message and diff are present
     combined_inputs = IdentifierInputs(
-        maybe_goal="test", maybe_diff="test", maybe_files=("test.py",), maybe_conversation_history=()
+        maybe_goal="test",
+        maybe_diff="test",
+        maybe_files=("test.py",),
+        maybe_conversation_history=(),
     )
     cmi = identifier.to_required_inputs(combined_inputs)
     assert isinstance(cmi, CommitInputs)
@@ -89,7 +99,9 @@ def test_to_required_inputs() -> None:
         identifier.to_required_inputs(no_inputs)
 
     # Should not support inputs where only one of the commit message and diff are present
-    commit_message_inputs = IdentifierInputs(maybe_goal="test", maybe_conversation_history=())
+    commit_message_inputs = IdentifierInputs(
+        maybe_goal="test", maybe_conversation_history=()
+    )
     with pytest.raises(IdentifierInputsMissingError):
         identifier.to_required_inputs(commit_message_inputs)
     diff_inputs = IdentifierInputs(maybe_diff="test")
@@ -104,7 +116,8 @@ def test_get_prompt_structure() -> None:
         cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
     )
     commit_inputs = CommitInputs(
-        maybe_goal="Add hello world function", maybe_diff="+def hello():\n+    print('hello')"
+        maybe_goal="Add hello world function",
+        maybe_diff="+def hello():\n+    print('hello')",
     )
     config = ImbueVerifyConfig()
 
@@ -147,13 +160,19 @@ def test_identify_issues_integration() -> None:
             file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
             cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context",
         )
-        commit_inputs = IdentifierInputs(maybe_goal="Add hello function", maybe_diff="+print('hello')")
+        commit_inputs = IdentifierInputs(
+            maybe_goal="Add hello function", maybe_diff="+print('hello')"
+        )
         config = ImbueVerifyConfig()
 
         inputs = identifier.to_required_inputs(commit_inputs)
-        raw_issues_generator = identifier.identify_issues(inputs, project_context, config)
+        raw_issues_generator = identifier.identify_issues(
+            inputs, project_context, config
+        )
         raw_issues = []
-        raw_issues_generator_with_capture = ReturnCapturingGenerator(raw_issues_generator)
+        raw_issues_generator_with_capture = ReturnCapturingGenerator(
+            raw_issues_generator
+        )
         for raw_issue in raw_issues_generator_with_capture:
             raw_issues.append(raw_issue)
         llm_responses = raw_issues_generator_with_capture.return_value.llm_responses

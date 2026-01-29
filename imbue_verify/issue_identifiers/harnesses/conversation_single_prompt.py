@@ -18,7 +18,9 @@ from imbue_core.data_types import IssueIdentificationDebugInfo
 from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import LLMResponse
 from imbue_core.itertools import only
-from imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
+from imbue_tools.get_conversation_history.get_conversation_history import (
+    format_conversation_history_for_prompt,
+)
 from imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
@@ -26,11 +28,17 @@ from imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEM
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_costed_response
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    extract_invocation_info_from_costed_response,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
 from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 
 PROMPT_TEMPLATE = (
     CONVERSATION_PREFIX_TEMPLATE
@@ -62,7 +70,9 @@ Respond with valid JSON that matches this exact schema:
 class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInputs]):
     _identification_guides: tuple[IssueIdentificationGuide, ...]
 
-    def __init__(self, identification_guides: tuple[IssueIdentificationGuide, ...]) -> None:
+    def __init__(
+        self, identification_guides: tuple[IssueIdentificationGuide, ...]
+    ) -> None:
         self._identification_guides = identification_guides
 
     @cached_property
@@ -76,9 +86,12 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
         identifier_inputs: ConversationInputs,
     ) -> str:
         # Sort the guides by issue code to ensure prompt caching (and snapshotting in tests) works.
-        sorted_guides = sorted(self._identification_guides, key=lambda guide: guide.issue_code)
+        sorted_guides = sorted(
+            self._identification_guides, key=lambda guide: guide.issue_code
+        )
         formatted_guides = {
-            guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
+            guide.issue_code: format_issue_identification_guide_for_llm(guide)
+            for guide in sorted_guides
         }
 
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -86,7 +99,9 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
         return jinja_template.render(
             cached_prompt_prefix=project_context.cached_prompt_prefix,
             cache_full_prompt=config.cache_full_prompt,
-            conversation_history=format_conversation_history_for_prompt(identifier_inputs.conversation_history),
+            conversation_history=format_conversation_history_for_prompt(
+                identifier_inputs.conversation_history
+            ),
             # pyre-fixme[16]: SubrepoContext need not have a formatted_repo_context, and instruction_context can be None
             instruction_context=project_context.instruction_context.formatted_repo_context,
             response_schema=self._response_schema,
@@ -94,9 +109,14 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
         )
 
     def identify_issues(
-        self, identifier_inputs: ConversationInputs, project_context: ProjectContext, config: ImbueVerifyConfig
+        self,
+        identifier_inputs: ConversationInputs,
+        project_context: ProjectContext,
+        config: ImbueVerifyConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
-        language_model = build_language_model_from_config(config.language_model_generation_config)
+        language_model = build_language_model_from_config(
+            config.language_model_generation_config
+        )
         language_model_params = LanguageModelGenerationParams(
             temperature=config.temperature,
             max_tokens=config.max_output_tokens,
@@ -113,7 +133,9 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
 
         llm_responses = (
             LLMResponse(
-                metadata=IssueIdentificationLLMResponseMetadata(agentic_phase=AgenticPhase.ISSUE_IDENTIFICATION),
+                metadata=IssueIdentificationLLMResponseMetadata(
+                    agentic_phase=AgenticPhase.ISSUE_IDENTIFICATION
+                ),
                 raw_response=(response.text,),
                 invocation_info=invocation_info,
             ),
@@ -139,4 +161,6 @@ class ConversationSinglePromptHarness(IssueIdentifierHarness[ConversationInputs]
     def make_issue_identifier(
         self, identification_guides: tuple[IssueIdentificationGuide, ...]
     ) -> IssueIdentifier[ConversationInputs]:
-        return _ConversationSinglePromptIssueIdentifier(identification_guides=identification_guides)
+        return _ConversationSinglePromptIssueIdentifier(
+            identification_guides=identification_guides
+        )

@@ -16,10 +16,16 @@ from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_costed_response
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
+from imbue_verify.issue_identifiers.common import (
+    extract_invocation_info_from_costed_response,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
 from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 DEDUPLICATION_PROMPT_TEMPLATE = """[ROLE=USER]
@@ -73,7 +79,9 @@ def _get_deduplication_prompt(
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
+        code: format_issue_identification_guide_for_llm(
+            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
+        )
         for code in sorted_issue_codes
     }
 
@@ -90,7 +98,9 @@ def _get_deduplication_prompt(
     return prompt
 
 
-def _convert_parsed_issues_to_combined_string(all_parsed_issues: Iterable[GeneratedIssueSchema]) -> str:
+def _convert_parsed_issues_to_combined_string(
+    all_parsed_issues: Iterable[GeneratedIssueSchema],
+) -> str:
     """Convert all parsed issues from all issue types to a combined string for the deduplication prompt."""
     combined_issues = []
 
@@ -102,7 +112,9 @@ def _convert_parsed_issues_to_combined_string(all_parsed_issues: Iterable[Genera
 
 
 def deduplicate_issues(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     config: ImbueVerifyConfig,
     enabled_issue_codes: Iterable[IssueCode],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
@@ -134,8 +146,12 @@ def deduplicate_issues(
     #   - We deduplicate only over issues that pass filtration.
     #     (The resulting deduplicated issues will implicitly be set to have passed filtration as well, as per default value of _passes_filtration)
     #   - Issues that didn't pass filtration will be yielded out unchanged.
-    issues_passing_filtration = [issue for issue in all_issues if issue.passes_filtration]
-    issues_not_passing_filtration = [issue for issue in all_issues if not issue.passes_filtration]
+    issues_passing_filtration = [
+        issue for issue in all_issues if issue.passes_filtration
+    ]
+    issues_not_passing_filtration = [
+        issue for issue in all_issues if not issue.passes_filtration
+    ]
 
     if len(issues_passing_filtration) <= 1:
         # None or one issues that pass filtration: nothing to deduplicate, return early
@@ -143,15 +159,21 @@ def deduplicate_issues(
             yield issue
         return issue_generator_debug_info
 
-    language_model = build_language_model_from_config(config.language_model_generation_config)
+    language_model = build_language_model_from_config(
+        config.language_model_generation_config
+    )
 
     # As per above TODO, only deduplicate over issues that passed filtration
-    combined_issues_string = _convert_parsed_issues_to_combined_string(issues_passing_filtration)
+    combined_issues_string = _convert_parsed_issues_to_combined_string(
+        issues_passing_filtration
+    )
     prompt = _get_deduplication_prompt(enabled_issue_codes, combined_issues_string)
 
     costed_response = language_model.complete_with_usage_sync(
         prompt,
-        params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
+        params=LanguageModelGenerationParams(
+            temperature=0.0, max_tokens=config.max_output_tokens
+        ),
         is_caching_enabled=language_model.cache_path is not None,
     )
 
@@ -176,7 +198,8 @@ def deduplicate_issues(
     )
 
     augmented_debug_info = IssueIdentificationDebugInfo(
-        llm_responses=issue_generator_debug_info.llm_responses + deduplication_llm_responses
+        llm_responses=issue_generator_debug_info.llm_responses
+        + deduplication_llm_responses
     )
 
     return augmented_debug_info

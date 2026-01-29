@@ -99,22 +99,42 @@ class TogetherAIModelName(enum.StrEnum):
     GOOGLE_GEMMA_2_9B_IT = "together/google/gemma-2-9b-it"
     GOOGLE_GEMMA_2B_IT = "together/google/gemma-2b-it"
     META_LLAMA_3_2_3B_INSTRUCT_TURBO = "together/meta-llama/Llama-3.2-3B-Instruct-Turbo"
-    META_LLAMA_3_3_70B_INSTRUCT_TURBO = "together/meta-llama/Llama-3.3-70B-Instruct-Turbo"
+    META_LLAMA_3_3_70B_INSTRUCT_TURBO = (
+        "together/meta-llama/Llama-3.3-70B-Instruct-Turbo"
+    )
     META_LLAMA_3_70B_CHAT_HF = "together/meta-llama/Llama-3-70b-chat-hf"
     META_LLAMA_3_8B_CHAT_HF = "together/meta-llama/Llama-3-8b-chat-hf"
-    META_LLAMA_3_1_405B_INSTRUCT_TURBO = "together/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
-    META_LLAMA_3_1_70B_INSTRUCT_TURBO = "together/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
-    META_LLAMA_3_1_8B_INSTRUCT_TURBO = "together/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
-    META_LLAMA_3_70B_INSTRUCT_LITE = "together/meta-llama/Meta-Llama-3-70B-Instruct-Lite"
-    META_LLAMA_3_70B_INSTRUCT_TURBO = "together/meta-llama/Meta-Llama-3-70B-Instruct-Turbo"
+    META_LLAMA_3_1_405B_INSTRUCT_TURBO = (
+        "together/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
+    )
+    META_LLAMA_3_1_70B_INSTRUCT_TURBO = (
+        "together/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"
+    )
+    META_LLAMA_3_1_8B_INSTRUCT_TURBO = (
+        "together/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+    )
+    META_LLAMA_3_70B_INSTRUCT_LITE = (
+        "together/meta-llama/Meta-Llama-3-70B-Instruct-Lite"
+    )
+    META_LLAMA_3_70B_INSTRUCT_TURBO = (
+        "together/meta-llama/Meta-Llama-3-70B-Instruct-Turbo"
+    )
     META_LLAMA_3_8B_INSTRUCT_LITE = "together/meta-llama/Meta-Llama-3-8B-Instruct-Lite"
-    META_LLAMA_3_8B_INSTRUCT_TURBO = "together/meta-llama/Meta-Llama-3-8B-Instruct-Turbo"
+    META_LLAMA_3_8B_INSTRUCT_TURBO = (
+        "together/meta-llama/Meta-Llama-3-8B-Instruct-Turbo"
+    )
     MISTRALAI_MISTRAL_7B_INSTRUCT_V0_1 = "together/mistralai/Mistral-7B-Instruct-v0.1"
     MISTRALAI_MISTRAL_7B_INSTRUCT_V0_2 = "together/mistralai/Mistral-7B-Instruct-v0.2"
     MISTRALAI_MISTRAL_7B_INSTRUCT_V0_3 = "together/mistralai/Mistral-7B-Instruct-v0.3"
-    MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1 = "together/mistralai/Mixtral-8x22B-Instruct-v0.1"
-    MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1 = "together/mistralai/Mixtral-8x7B-Instruct-v0.1"
-    NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO = "together/NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO"
+    MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1 = (
+        "together/mistralai/Mixtral-8x22B-Instruct-v0.1"
+    )
+    MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1 = (
+        "together/mistralai/Mixtral-8x7B-Instruct-v0.1"
+    )
+    NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO = (
+        "together/NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO"
+    )
     DEEPSEEK_R1 = "together/deepseek-ai/DeepSeek-R1"
     OPENAI_GPT_OSS_20B = "together/openai/gpt-oss-20b"
     OPENAI_GPT_OSS_120B = "together/openai/gpt-oss-120b"
@@ -126,195 +146,203 @@ class TogetherAIModelName(enum.StrEnum):
 # Reference: https://docs.together.ai/docs/rate-limits
 # Using Tier 5 rate limits (6,000 RPM)
 
-TOGETHERAI_MODEL_INFO_BY_NAME: FrozenMapping[TogetherAIModelName, ModelInfo] = FrozenDict(
-    {
-        # ref https://docs.together.ai/docs/chat-models
-        # pricing ref https://www.together.ai/pricing
-        TogetherAIModelName.GOOGLE_GEMMA_2_27B_IT: ModelInfo(
-            model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2_27B_IT),
-            cost_per_input_token=0.8 / 1_000_000,
-            cost_per_output_token=0.8 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.GOOGLE_GEMMA_2_9B_IT: ModelInfo(
-            model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2_9B_IT),
-            cost_per_input_token=0.3 / 1_000_000,
-            cost_per_output_token=0.3 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.GOOGLE_GEMMA_2B_IT: ModelInfo(
-            model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2B_IT),
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.1 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_2_3B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_2_3B_INSTRUCT_TURBO),
-            cost_per_input_token=0.06 / 1_000_000,
-            cost_per_output_token=0.06 / 1_000_000,
-            max_input_tokens=131072,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_3_70B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_3_70B_INSTRUCT_TURBO),
-            cost_per_input_token=0.88 / 1_000_000,
-            cost_per_output_token=0.88 / 1_000_000,
-            max_input_tokens=131072,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_70B_CHAT_HF: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_70B_CHAT_HF),
-            cost_per_input_token=0.88 / 1_000_000,
-            cost_per_output_token=0.88 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF),
-            cost_per_input_token=0.2 / 1_000_000,
-            cost_per_output_token=0.2 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_1_405B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_1_405B_INSTRUCT_TURBO),
-            cost_per_input_token=3.5 / 1_000_000,
-            cost_per_output_token=3.5 / 1_000_000,
-            max_input_tokens=130815,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_1_70B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_1_70B_INSTRUCT_TURBO),
-            cost_per_input_token=0.88 / 1_000_000,
-            cost_per_output_token=0.88 / 1_000_000,
-            max_input_tokens=131072,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO),
-            cost_per_input_token=0.18 / 1_000_000,
-            cost_per_output_token=0.18 / 1_000_000,
-            max_input_tokens=131072,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_LITE: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_LITE),
-            cost_per_input_token=0.54 / 1_000_000,
-            cost_per_output_token=0.54 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_TURBO),
-            cost_per_input_token=0.88 / 1_000_000,
-            cost_per_output_token=0.88 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_LITE: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_LITE),
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.1 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_TURBO: ModelInfo(
-            model_name=str(TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_TURBO),
-            cost_per_input_token=0.18 / 1_000_000,
-            cost_per_output_token=0.18 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_1: ModelInfo(
-            model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_1),
-            cost_per_input_token=0.2 / 1_000_000,
-            cost_per_output_token=0.2 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_2: ModelInfo(
-            model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_2),
-            cost_per_input_token=0.2 / 1_000_000,
-            cost_per_output_token=0.2 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_3: ModelInfo(
-            model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_3),
-            cost_per_input_token=0.2 / 1_000_000,
-            cost_per_output_token=0.2 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1: ModelInfo(
-            model_name=str(TogetherAIModelName.MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1),
-            cost_per_input_token=1.2 / 1_000_000,
-            cost_per_output_token=1.2 / 1_000_000,
-            max_input_tokens=65536,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1: ModelInfo(
-            model_name=str(TogetherAIModelName.MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1),
-            cost_per_input_token=0.6 / 1_000_000,
-            cost_per_output_token=0.6 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO: ModelInfo(
-            model_name=str(TogetherAIModelName.NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO),
-            cost_per_input_token=0.6 / 1_000_000,
-            cost_per_output_token=0.6 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.DEEPSEEK_R1: ModelInfo(
-            model_name=str(TogetherAIModelName.DEEPSEEK_R1),
-            cost_per_input_token=3.0 / 1_000_000,
-            cost_per_output_token=7.0 / 1_000_000,
-            max_input_tokens=32768,
-            max_output_tokens=None,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.OPENAI_GPT_OSS_20B: ModelInfo(
-            model_name=str(TogetherAIModelName.OPENAI_GPT_OSS_20B),
-            cost_per_input_token=0.00 / 1_000_000,
-            cost_per_output_token=0.00 / 1_000_000,
-            max_input_tokens=131_072,
-            max_output_tokens=131_072,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-        TogetherAIModelName.OPENAI_GPT_OSS_120B: ModelInfo(
-            model_name=str(TogetherAIModelName.OPENAI_GPT_OSS_120B),
-            cost_per_input_token=0.00 / 1_000_000,
-            cost_per_output_token=0.00 / 1_000_000,
-            max_input_tokens=131_072,
-            max_output_tokens=131_072,
-            rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
-        ),
-    }
+TOGETHERAI_MODEL_INFO_BY_NAME: FrozenMapping[TogetherAIModelName, ModelInfo] = (
+    FrozenDict(
+        {
+            # ref https://docs.together.ai/docs/chat-models
+            # pricing ref https://www.together.ai/pricing
+            TogetherAIModelName.GOOGLE_GEMMA_2_27B_IT: ModelInfo(
+                model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2_27B_IT),
+                cost_per_input_token=0.8 / 1_000_000,
+                cost_per_output_token=0.8 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.GOOGLE_GEMMA_2_9B_IT: ModelInfo(
+                model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2_9B_IT),
+                cost_per_input_token=0.3 / 1_000_000,
+                cost_per_output_token=0.3 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.GOOGLE_GEMMA_2B_IT: ModelInfo(
+                model_name=str(TogetherAIModelName.GOOGLE_GEMMA_2B_IT),
+                cost_per_input_token=0.1 / 1_000_000,
+                cost_per_output_token=0.1 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_2_3B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_2_3B_INSTRUCT_TURBO),
+                cost_per_input_token=0.06 / 1_000_000,
+                cost_per_output_token=0.06 / 1_000_000,
+                max_input_tokens=131072,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_3_70B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_3_70B_INSTRUCT_TURBO),
+                cost_per_input_token=0.88 / 1_000_000,
+                cost_per_output_token=0.88 / 1_000_000,
+                max_input_tokens=131072,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_70B_CHAT_HF: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_70B_CHAT_HF),
+                cost_per_input_token=0.88 / 1_000_000,
+                cost_per_output_token=0.88 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_8B_CHAT_HF),
+                cost_per_input_token=0.2 / 1_000_000,
+                cost_per_output_token=0.2 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_1_405B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_1_405B_INSTRUCT_TURBO),
+                cost_per_input_token=3.5 / 1_000_000,
+                cost_per_output_token=3.5 / 1_000_000,
+                max_input_tokens=130815,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_1_70B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_1_70B_INSTRUCT_TURBO),
+                cost_per_input_token=0.88 / 1_000_000,
+                cost_per_output_token=0.88 / 1_000_000,
+                max_input_tokens=131072,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO),
+                cost_per_input_token=0.18 / 1_000_000,
+                cost_per_output_token=0.18 / 1_000_000,
+                max_input_tokens=131072,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_LITE: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_LITE),
+                cost_per_input_token=0.54 / 1_000_000,
+                cost_per_output_token=0.54 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_70B_INSTRUCT_TURBO),
+                cost_per_input_token=0.88 / 1_000_000,
+                cost_per_output_token=0.88 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_LITE: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_LITE),
+                cost_per_input_token=0.1 / 1_000_000,
+                cost_per_output_token=0.1 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_TURBO: ModelInfo(
+                model_name=str(TogetherAIModelName.META_LLAMA_3_8B_INSTRUCT_TURBO),
+                cost_per_input_token=0.18 / 1_000_000,
+                cost_per_output_token=0.18 / 1_000_000,
+                max_input_tokens=8192,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_1: ModelInfo(
+                model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_1),
+                cost_per_input_token=0.2 / 1_000_000,
+                cost_per_output_token=0.2 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_2: ModelInfo(
+                model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_2),
+                cost_per_input_token=0.2 / 1_000_000,
+                cost_per_output_token=0.2 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_3: ModelInfo(
+                model_name=str(TogetherAIModelName.MISTRALAI_MISTRAL_7B_INSTRUCT_V0_3),
+                cost_per_input_token=0.2 / 1_000_000,
+                cost_per_output_token=0.2 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1: ModelInfo(
+                model_name=str(
+                    TogetherAIModelName.MISTRALAI_MIXTRAL_8X22B_INSTRUCT_V0_1
+                ),
+                cost_per_input_token=1.2 / 1_000_000,
+                cost_per_output_token=1.2 / 1_000_000,
+                max_input_tokens=65536,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1: ModelInfo(
+                model_name=str(
+                    TogetherAIModelName.MISTRALAI_MIXTRAL_8X7B_INSTRUCT_V0_1
+                ),
+                cost_per_input_token=0.6 / 1_000_000,
+                cost_per_output_token=0.6 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO: ModelInfo(
+                model_name=str(
+                    TogetherAIModelName.NOUSRESEARCH_NOUS_HERMES_2_MIXTRAL_8X7B_DPO
+                ),
+                cost_per_input_token=0.6 / 1_000_000,
+                cost_per_output_token=0.6 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.DEEPSEEK_R1: ModelInfo(
+                model_name=str(TogetherAIModelName.DEEPSEEK_R1),
+                cost_per_input_token=3.0 / 1_000_000,
+                cost_per_output_token=7.0 / 1_000_000,
+                max_input_tokens=32768,
+                max_output_tokens=None,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.OPENAI_GPT_OSS_20B: ModelInfo(
+                model_name=str(TogetherAIModelName.OPENAI_GPT_OSS_20B),
+                cost_per_input_token=0.00 / 1_000_000,
+                cost_per_output_token=0.00 / 1_000_000,
+                max_input_tokens=131_072,
+                max_output_tokens=131_072,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+            TogetherAIModelName.OPENAI_GPT_OSS_120B: ModelInfo(
+                model_name=str(TogetherAIModelName.OPENAI_GPT_OSS_120B),
+                cost_per_input_token=0.00 / 1_000_000,
+                cost_per_output_token=0.00 / 1_000_000,
+                max_input_tokens=131_072,
+                max_output_tokens=131_072,
+                rate_limit_req=6000 / 60,  # 6000 RPM = 100.00 RPS
+            ),
+        }
+    )
 )
 
 
@@ -322,7 +350,9 @@ def _default_capacity_semaphor() -> asyncio.Semaphore:
     return asyncio.Semaphore(100)
 
 
-_CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[str, asyncio.Semaphore] = defaultdict(_default_capacity_semaphor)
+_CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[str, asyncio.Semaphore] = defaultdict(
+    _default_capacity_semaphor
+)
 
 
 _ROLE_TO_TOGETHERAI_ROLE: Final[FrozenMapping] = FrozenDict(
@@ -337,7 +367,9 @@ _ROLE_TO_TOGETHERAI_ROLE: Final[FrozenMapping] = FrozenDict(
 )
 
 # ref: https://github.com/togethercomputer/together-python/blob/main/src/together/types/common.py#L13
-_TOGETHERAI_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopReason]] = FrozenDict(
+_TOGETHERAI_STOP_REASON_TO_STOP_REASON: Final[
+    FrozenMapping[str, ResponseStopReason]
+] = FrozenDict(
     {
         "length": ResponseStopReason.MAX_TOKENS,
         # This is a little sketchy, we treat them the same since we don't know which models emit stop sequence reasons
@@ -354,7 +386,9 @@ _TOGETHERAI_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopRea
 
 def convert_prompt_to_together_messages(prompt: str) -> list[dict[str, str]]:
     prompt = prompt.lstrip()
-    assert prompt.endswith("\n[ROLE=ASSISTANT]\n"), "prompt must end with [ROLE=ASSISTANT], prompt=\n" + prompt
+    assert prompt.endswith("\n[ROLE=ASSISTANT]\n"), (
+        "prompt must end with [ROLE=ASSISTANT], prompt=\n" + prompt
+    )
     prompt = "".join(prompt.rsplit("\n[ROLE=ASSISTANT]\n", 1))
     assert prompt.startswith("[ROLE=")
     prompt = prompt.replace("[ROLE=", "", 1)
@@ -374,7 +408,9 @@ def convert_prompt_to_together_messages(prompt: str) -> list[dict[str, str]]:
         lines.pop(0)
         if len(messages) > 0:
             messages[-1]["content"] = messages[-1]["content"] + "\n"
-        messages.append({"role": _ROLE_TO_TOGETHERAI_ROLE[role], "content": "\n".join(lines)})
+        messages.append(
+            {"role": _ROLE_TO_TOGETHERAI_ROLE[role], "content": "\n".join(lines)}
+        )
     return messages
 
 
@@ -408,7 +444,9 @@ def _together_exception_manager() -> Iterator[None]:
 
 
 class TogetherAPI(LanguageModelAPI):
-    model_name: TogetherAIModelName = TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO
+    model_name: TogetherAIModelName = (
+        TogetherAIModelName.META_LLAMA_3_1_8B_INSTRUCT_TURBO
+    )
     is_conversational: bool = True
     presence_penalty: float = 0.0
     # this shouldn't really ever even be used, but just in case
@@ -418,7 +456,9 @@ class TogetherAPI(LanguageModelAPI):
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         if v not in TOGETHERAI_MODEL_INFO_BY_NAME:
-            raise LanguageModelInvalidModelNameError(v, cls.__name__, list(TOGETHERAI_MODEL_INFO_BY_NAME))
+            raise LanguageModelInvalidModelNameError(
+                v, cls.__name__, list(TOGETHERAI_MODEL_INFO_BY_NAME)
+            )
         return v
 
     @property
@@ -494,14 +534,22 @@ class TogetherAPI(LanguageModelAPI):
             ]
 
             if data.finish_reason:
-                stop_reason = _TOGETHERAI_STOP_REASON_TO_STOP_REASON[data.finish_reason.value]
+                stop_reason = _TOGETHERAI_STOP_REASON_TO_STOP_REASON[
+                    data.finish_reason.value
+                ]
             else:
                 stop_reason = ResponseStopReason.NONE
             stop = params.stop
             if stop is not None and stop_reason == ResponseStopReason.END_TURN:
                 text += stop
                 token_probabilities.append(
-                    (TokenProbability(token=stop, log_probability=self.stop_token_log_probability, is_stop=True),)
+                    (
+                        TokenProbability(
+                            token=stop,
+                            log_probability=self.stop_token_log_probability,
+                            is_stop=True,
+                        ),
+                    )
                 )
             result = LanguageModelResponseWithLogits(
                 text=text,
@@ -576,7 +624,9 @@ class TogetherAPI(LanguageModelAPI):
 
                 chunk_choices = chunk.choices
                 if chunk_choices:
-                    assert len(chunk_choices) == 1, "Currently only count=1 supported for streaming API."
+                    assert (
+                        len(chunk_choices) == 1
+                    ), "Currently only count=1 supported for streaming API."
                     delta = only(chunk_choices).delta
                     if delta and delta.content:
                         yield LanguageModelStreamDeltaEvent(delta=delta.content)

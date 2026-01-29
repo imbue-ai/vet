@@ -36,7 +36,11 @@ class LanguageModelStreamEndEvent(SerializableModel):
     stop_reason: ResponseStopReason
 
 
-LanguageModelStreamEvent = LanguageModelStreamStartEvent | LanguageModelStreamDeltaEvent | LanguageModelStreamEndEvent
+LanguageModelStreamEvent = (
+    LanguageModelStreamStartEvent
+    | LanguageModelStreamDeltaEvent
+    | LanguageModelStreamEndEvent
+)
 
 
 class LanguageModelStreamCallback(abc.ABC, SerializableModel):
@@ -52,7 +56,10 @@ class UpdateCacheCallback(LanguageModelStreamCallback):
     async def __call__(self, response: CostedLanguageModelResponse) -> None:
         async with self.cache:
             await self.cache.set(
-                self.key, CachedCostedLanguageModelResponse(response=response, inputs=self.api_inputs)
+                self.key,
+                CachedCostedLanguageModelResponse(
+                    response=response, inputs=self.api_inputs
+                ),
             )
 
 
@@ -89,7 +96,9 @@ async def get_cached_response_stream(
     """
     yield LanguageModelStreamStartEvent()
     yield LanguageModelStreamDeltaEvent(delta=response.responses[0].text)
-    yield LanguageModelStreamEndEvent(usage=response.usage, stop_reason=response.responses[0].stop_reason)
+    yield LanguageModelStreamEndEvent(
+        usage=response.usage, stop_reason=response.responses[0].stop_reason
+    )
 
 
 class StreamedLanguageModelResponse(ModelResponse):
@@ -128,14 +137,20 @@ class StreamedLanguageModelResponse(ModelResponse):
                 if isinstance(event, LanguageModelStreamStartEvent):
                     # Need nested if statement here for outer if-elif-else to correctly filter for unknown event types
                     if len(deltas) > 0 or self._final_message_snapshot is not None:
-                        raise RuntimeError("Start event should be the first event in stream.")
+                        raise RuntimeError(
+                            "Start event should be the first event in stream."
+                        )
                 elif isinstance(event, LanguageModelStreamDeltaEvent):
                     deltas.append(event.delta)
                 elif isinstance(event, LanguageModelStreamEndEvent):
                     self.stop_reason = event.stop_reason
                     self._final_message_snapshot = LanguageModelResponse(
                         text="".join(deltas),
-                        token_count=0 if event.usage is None else event.usage.completion_tokens_used,
+                        token_count=(
+                            0
+                            if event.usage is None
+                            else event.usage.completion_tokens_used
+                        ),
                         stop_reason=event.stop_reason,
                         network_failure_count=self._network_failure_count,
                     )
@@ -143,9 +158,16 @@ class StreamedLanguageModelResponse(ModelResponse):
                         costed_response = CostedLanguageModelResponse(
                             usage=event.usage, responses=(self._final_message_snapshot,)
                         )
-                        await asyncio.gather(*[callback(costed_response) for callback in self._completion_callbacks])
+                        await asyncio.gather(
+                            *[
+                                callback(costed_response)
+                                for callback in self._completion_callbacks
+                            ]
+                        )
                 else:
-                    raise ValueError(f"Unknown or Unexpected StreamEvent type {type(event)}.")
+                    raise ValueError(
+                        f"Unknown or Unexpected StreamEvent type {type(event)}."
+                    )
 
                 yield event
 

@@ -36,7 +36,9 @@ class PromptTooLongError(CachedException):
         return cls(int(prompt_len), int(max_prompt_len))
 
     def to_string(self) -> str:
-        string = SPLIT_TOKEN.join([self.__class__.__name__, str(self.prompt_len), str(self.max_prompt_len)])
+        string = SPLIT_TOKEN.join(
+            [self.__class__.__name__, str(self.prompt_len), str(self.max_prompt_len)]
+        )
         return string
 
     @property
@@ -100,12 +102,12 @@ class LanguageModelRetryLimitError(Exception):
 class LanguageModelInvalidModelNameError(ValueError):
     """Exception raised when an invalid model name is provided to a language model API."""
 
-    def __init__(self, model_name: str, api_class_name: str, available_models: list[str]) -> None:
+    def __init__(
+        self, model_name: str, api_class_name: str, available_models: list[str]
+    ) -> None:
         self.model_name = model_name
         self.api_class_name = api_class_name
         self.available_models = available_models
 
-        message = (
-            f"Model with name={model_name} not available for {api_class_name}. Available models: {available_models}."
-        )
+        message = f"Model with name={model_name} not available for {api_class_name}. Available models: {available_models}."
         super().__init__(message)

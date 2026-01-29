@@ -77,7 +77,9 @@ class LanguageModelResponse(Serializable, ModelResponse):
     stop_reason: ResponseStopReason
     network_failure_count: int
 
-    def get_token_probability_sequence(self) -> tuple[tuple[TokenProbability, ...], ...] | None:
+    def get_token_probability_sequence(
+        self,
+    ) -> tuple[tuple[TokenProbability, ...], ...] | None:
         return None
 
 
@@ -92,7 +94,9 @@ class LanguageModelResponseWithLogits(LanguageModelResponse):
     # the inner sequence are *not* guaranteed to be the same length, nor are they guaranteed to be sorted
     token_probabilities: tuple[tuple[TokenProbability, ...], ...]
 
-    def get_token_probability_sequence(self) -> tuple[tuple[TokenProbability, ...], ...] | None:
+    def get_token_probability_sequence(
+        self,
+    ) -> tuple[tuple[TokenProbability, ...], ...] | None:
         return self.token_probabilities
 
 
@@ -194,12 +198,17 @@ class CachedCostedModelResponse(Serializable, Generic[InputsT, ModelResponseT]):
 
 
 class CachedCostedLanguageModelResponse(
-    CachedCostedModelResponse[LanguageModelCompleteInputs | LanguageModelStreamInputs, CostedLanguageModelResponse]
+    CachedCostedModelResponse[
+        LanguageModelCompleteInputs | LanguageModelStreamInputs,
+        CostedLanguageModelResponse,
+    ]
 ):
     pass
 
 
-class CachedCountTokensResponse(CachedCostedModelResponse[CountTokensInputs, CountTokensResponse]):
+class CachedCountTokensResponse(
+    CachedCostedModelResponse[CountTokensInputs, CountTokensResponse]
+):
     pass
 
 

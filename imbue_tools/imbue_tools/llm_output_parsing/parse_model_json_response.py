@@ -28,7 +28,9 @@ class ResponseParsingError(Exception):
     pass
 
 
-def parse_model_json_response(response_text: str, result_type: type[ResponseSchema]) -> ResponseSchema:
+def parse_model_json_response(
+    response_text: str, result_type: type[ResponseSchema]
+) -> ResponseSchema:
     """Parse a JSON response from the LLM into a Pydantic model."""
     cleaned_response = parse_json_block_from_response_text(response_text)
     try:

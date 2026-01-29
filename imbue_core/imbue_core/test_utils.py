@@ -33,7 +33,9 @@ def create_temp_dir(root_dir: Path) -> Generator[Path, None, None]:
         shutil.rmtree(temp_dir)
 
 
-def wait_until(condition: Callable[[], bool], timeout: float = 5.0, interval: float = 0.5) -> None:
+def wait_until(
+    condition: Callable[[], bool], timeout: float = 5.0, interval: float = 0.5
+) -> None:
     start_time = time.monotonic()
     while True:
         if condition():
@@ -61,7 +63,9 @@ async def make_llm_cache_with_snapshot_core(
                 await preload_llm_cache(json_cache_file, cache_context)
 
         yield cache_path
-        info_if_not_quiet(quiet, "Finished with llm_cache_pathfixture, updating cache if needed.")
+        info_if_not_quiet(
+            quiet, "Finished with llm_cache_pathfixture, updating cache if needed."
+        )
 
         if snapshot.session.update_snapshots:
             await record_llm_responses_in_cache(cache_context, json_cache_file)
@@ -70,7 +74,9 @@ async def make_llm_cache_with_snapshot_core(
         info_if_not_quiet(quiet, "Finished with llm_cache_pathfixture, checking cache.")
 
 
-async def make_llm_cache_with_snapshot(snapshot: SnapshotAssertion, quiet: bool = True) -> AsyncGenerator[Path, None]:
+async def make_llm_cache_with_snapshot(
+    snapshot: SnapshotAssertion, quiet: bool = True
+) -> AsyncGenerator[Path, None]:
     json_cache_file = get_cache_file_from_snapshot(snapshot)
     async for path in make_llm_cache_with_snapshot_core(
         snapshot, json_cache_file, CachedCostedLanguageModelResponse, quiet

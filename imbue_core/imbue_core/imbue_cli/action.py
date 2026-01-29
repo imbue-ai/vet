@@ -64,8 +64,12 @@ ActionOutputUnion = Annotated[
 
 
 class ActionOutput(SerializableModel):
-    command: str = Field(description="The command that was executed to produce the output.")
-    outputs: tuple[ActionOutputUnion, ...] = Field(description="The structured output data from the action.")
+    command: str = Field(
+        description="The command that was executed to produce the output."
+    )
+    outputs: tuple[ActionOutputUnion, ...] = Field(
+        description="The structured output data from the action."
+    )
     user_display: UserDisplayOutputUnion = Field(
         description="The user display output from the action. This can be used by consumers to display a user-friendly version of the action output."
     )

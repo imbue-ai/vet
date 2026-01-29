@@ -21,7 +21,9 @@ from imbue_tools.repo_utils.context_prefix import create_context_prompt_prefix
 from imbue_tools.repo_utils.context_prefix import get_repo_context
 from imbue_tools.repo_utils.context_retrieval import RepoContextManager
 from imbue_tools.repo_utils.file_system import InMemoryFileSystem
-from imbue_tools.repo_utils.subrepo_formatting import REPO_CONTEXT_TEMPLATE_WITH_NO_MENTION_OF_DIFF
+from imbue_tools.repo_utils.subrepo_formatting import (
+    REPO_CONTEXT_TEMPLATE_WITH_NO_MENTION_OF_DIFF,
+)
 
 
 @lru_cache
@@ -57,7 +59,9 @@ class BaseProjectContext(SerializableModel):
     def get_file_contents(self, file_path: str) -> str | None:
         return self.file_contents_by_path.get(file_path)
 
-    def get_computed_contexts(self) -> tuple[SubrepoContext | None, SubrepoContext | None]:
+    def get_computed_contexts(
+        self,
+    ) -> tuple[SubrepoContext | None, SubrepoContext | None]:
         """To match usage for LazyProjectContext; all fields are always computed because this isn't lazy"""
         return self.subrepo_context, self.instruction_context
 
@@ -115,14 +119,18 @@ class LazyProjectContext(SerializableModel):
     @computed_field
     @cached_property
     def original_content_by_path(self) -> InMemoryFileSystem:
-        original_content_by_path = sync(self.repo_context_manager.get_full_repo_contents_at_commit)(self.base_commit)
+        original_content_by_path = sync(
+            self.repo_context_manager.get_full_repo_contents_at_commit
+        )(self.base_commit)
         return original_content_by_path
 
     @computed_field
     @cached_property
     def content_by_path(self) -> InMemoryFileSystem:
         if self.diff:
-            return sync(self.repo_context_manager.get_full_repo_contents_at_repo_state)(self.base_commit, self.diff)
+            return sync(self.repo_context_manager.get_full_repo_contents_at_repo_state)(
+                self.base_commit, self.diff
+            )
         else:
             return self.original_content_by_path
 
@@ -147,7 +155,9 @@ class LazyProjectContext(SerializableModel):
     def modified_file_paths(self) -> frozenset[str]:
         modified_file_paths = []
         for file_path in self.content_by_path.files.keys():
-            if self.content_by_path.get(file_path) != self.original_content_by_path.get(file_path):
+            if self.content_by_path.get(file_path) != self.original_content_by_path.get(
+                file_path
+            ):
                 modified_file_paths.append(file_path)
         return frozenset(modified_file_paths)
 
@@ -213,11 +223,18 @@ class LazyProjectContext(SerializableModel):
 
     def get_computed_contexts(
         self,
-    ) -> tuple[SubrepoContextWithFormattedContext | None, SubrepoContextWithFormattedContext | None]:
+    ) -> tuple[
+        SubrepoContextWithFormattedContext | None,
+        SubrepoContextWithFormattedContext | None,
+    ]:
         """Returns subrepo context and instruction context, but only if they have already been computed; those that haven't been computed are None"""
         # checking for presence in __dict__ does not trigger computation
-        subrepo_context = self.subrepo_context if "subrepo_context" in self.__dict__ else None
-        instruction_context = self.instruction_context if "instruction_context" in self.__dict__ else None
+        subrepo_context = (
+            self.subrepo_context if "subrepo_context" in self.__dict__ else None
+        )
+        instruction_context = (
+            self.instruction_context if "instruction_context" in self.__dict__ else None
+        )
         return subrepo_context, instruction_context
 
 

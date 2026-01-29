@@ -34,9 +34,15 @@ from imbue_core.computing_environment.computing_environment import get_head_hash
 from imbue_core.computing_environment.computing_environment import git_add
 from imbue_core.computing_environment.computing_environment import is_repo_dirty
 from imbue_core.computing_environment.computing_environment import make_commit
-from imbue_core.computing_environment.computing_environment import restore_all_staged_files
-from imbue_core.computing_environment.computing_environment import restore_all_unstaged_changes
-from imbue_core.computing_environment.computing_environment import run_command_with_retry_on_git_lock_error
+from imbue_core.computing_environment.computing_environment import (
+    restore_all_staged_files,
+)
+from imbue_core.computing_environment.computing_environment import (
+    restore_all_unstaged_changes,
+)
+from imbue_core.computing_environment.computing_environment import (
+    run_command_with_retry_on_git_lock_error,
+)
 from imbue_core.computing_environment.data_types import AnyPath
 from imbue_core.computing_environment.data_types import RunCommandError
 
@@ -136,7 +142,9 @@ class LocalGitRepo:
         # This lock was removed since it was within global state, a dangerous pattern, and wasn't preventing other users from interacting with the git repo.
         command = ["git"] + list(command)
         if not retry_on_git_lock_error:
-            result = await self.run_command(command, check=check, is_error_logged=is_error_logged, cwd=cwd)
+            result = await self.run_command(
+                command, check=check, is_error_logged=is_error_logged, cwd=cwd
+            )
         else:
             result = await run_command_with_retry_on_git_lock_error(
                 self, command, check=check, is_error_logged=is_error_logged, cwd=cwd
@@ -240,12 +248,18 @@ class LocalGitRepo:
             await self.delete_file(relative_path, cwd=cwd)
             return
 
-        async with self._open_file(relative_path, cwd=cwd, mode=mode, mkdir_if_missing=mkdir_if_missing) as f:
-            logger.trace("writing to file {} in cwd {} with mode {}", relative_path, cwd, mode)
+        async with self._open_file(
+            relative_path, cwd=cwd, mode=mode, mkdir_if_missing=mkdir_if_missing
+        ) as f:
+            logger.trace(
+                "writing to file {} in cwd {} with mode {}", relative_path, cwd, mode
+            )
             # pyre-fixme[6]: content can be bytes
             await f.write(content)
 
-    async def delete_file(self, relative_path: AnyPath, cwd: AnyPath | None = None) -> None:
+    async def delete_file(
+        self, relative_path: AnyPath, cwd: AnyPath | None = None
+    ) -> None:
         logger.trace("deleting the file {} in cwd {}", relative_path, cwd)
         if cwd is not None:
             sb_file_path = str(Path(cwd) / relative_path)
@@ -260,8 +274,12 @@ class LocalGitRepo:
         mode: OpenTextModeReading | OpenBinaryModeReading = "r",
         mkdir_if_missing: bool = True,
     ) -> str | bytes:
-        async with self._open_file(relative_path, cwd=cwd, mode=mode, mkdir_if_missing=mkdir_if_missing) as f:
-            logger.trace("reading file {} in cwd {} with mode {}", relative_path, cwd, mode)
+        async with self._open_file(
+            relative_path, cwd=cwd, mode=mode, mkdir_if_missing=mkdir_if_missing
+        ) as f:
+            logger.trace(
+                "reading file {} in cwd {} with mode {}", relative_path, cwd, mode
+            )
             content = await f.read()
             assert isinstance(content, str) or isinstance(content, bytes)
             return content
@@ -311,10 +329,15 @@ class LocalGitRepo:
 
     @asynccontextmanager
     async def temporary_commit(
-        self, tag_prefix: str, commit_message: str, raise_on_head_hash_change: bool = False
+        self,
+        tag_prefix: str,
+        commit_message: str,
+        raise_on_head_hash_change: bool = False,
     ) -> AsyncIterator[str]:
         """Context manager to make a temporary commit and tag in the repo."""
-        await self.run_git(("commit", "-am", commit_message, "--allow-empty", "--no-verify"))
+        await self.run_git(
+            ("commit", "-am", commit_message, "--allow-empty", "--no-verify")
+        )
         head_hash = await self.head_hash()
         tag = f"{tag_prefix}/{head_hash}"
         await self.run_git(("tag", "--force", tag))
@@ -334,7 +357,9 @@ class LocalGitRepo:
 
     sync_temporary_commit = sync_contextmanager_func(temporary_commit)
 
-    async def copy_repo(self, new_repo_path: Path, exists_ok: bool = True) -> "LocalGitRepo":
+    async def copy_repo(
+        self, new_repo_path: Path, exists_ok: bool = True
+    ) -> "LocalGitRepo":
         """Make a full copy of this repo in a new directory.
 
         Note, this will copy all the files in the repo into a new local directory, but will not handle
@@ -383,7 +408,9 @@ class LocalGitRepo:
 
     sync_safely_read_file_from_repo = sync(safely_read_file_from_repo)
 
-    async def get_all_files_by_extension(self, extension: str = PYTHON_EXTENSION) -> tuple[Path, ...]:
+    async def get_all_files_by_extension(
+        self, extension: str = PYTHON_EXTENSION
+    ) -> tuple[Path, ...]:
         """Get absolute path of all files in the repo with given extension."""
         paths: list[Path] = []
         async for path in anyio.Path(self.base_path).rglob(f"*{extension}"):
@@ -413,16 +440,24 @@ class WritableLocalGitRepo(LocalGitRepo):
         init_hash = await repo.head_hash()
         if await is_repo_dirty(repo):
             await repo.run_git(("add", "."))
-            stash_hash = await make_commit(repo, "stashing uncommited and untracked changes")
+            stash_hash = await make_commit(
+                repo, "stashing uncommited and untracked changes"
+            )
         else:
             stash_hash = None
 
-        return cls(base_path=repo.base_path, initial_git_hash=init_hash, stash_git_hash=stash_hash)
+        return cls(
+            base_path=repo.base_path,
+            initial_git_hash=init_hash,
+            stash_git_hash=stash_hash,
+        )
 
     async def _setup(self) -> None:
         init_hash = await self.head_hash()
         expected_hash = self.stash_git_hash or self.initial_git_hash
-        assert init_hash == expected_hash, "git repo is not currently at expected commit"
+        assert (
+            init_hash == expected_hash
+        ), "git repo is not currently at expected commit"
         assert await self.is_git_repo(), f"{self.base_path} is not a git repo"
         await self.assert_clean()
 
@@ -443,12 +478,14 @@ class WritableLocalGitRepo(LocalGitRepo):
             await self.run_git(("checkout", self.initial_git_hash))
 
         current_git_hash = await self.head_hash()
-        assert current_git_hash == self.initial_git_hash, (
-            f"base branch changed, current git hash ({current_git_hash}) != initial git hash ({self.initial_git_hash})"
-        )
+        assert (
+            current_git_hash == self.initial_git_hash
+        ), f"base branch changed, current git hash ({current_git_hash}) != initial git hash ({self.initial_git_hash})"
         await self.assert_clean()
 
-    async def apply_change_to_file(self, file_path: str | Path, new_contents: str) -> None:
+    async def apply_change_to_file(
+        self, file_path: str | Path, new_contents: str
+    ) -> None:
         """Apply change to a single file."""
         path = await self._get_file_path(file_path)
         assert await self.is_path_in_repo(path), f"File {path} is not in repo."
@@ -483,7 +520,9 @@ async def copy_files_from_one_repo_to_another(
 def get_repo_url_from_folder(repo_path: Path) -> str:
     try:
         repo_url = subprocess.check_output(
-            ["git", "remote", "get-url", "origin"], cwd=repo_path, universal_newlines=True
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo_path,
+            universal_newlines=True,
         ).strip()
     except subprocess.CalledProcessError:
         raise
@@ -506,7 +545,9 @@ def get_repo_base_path() -> Path:
     working_directory = Path(__file__).parent
     try:
         return Path(
-            _run_command_and_capture_output(["git", "rev-parse", "--show-toplevel"], cwd=working_directory).strip()
+            _run_command_and_capture_output(
+                ["git", "rev-parse", "--show-toplevel"], cwd=working_directory
+            ).strip()
         )
     except subprocess.CalledProcessError as e:
         try:
@@ -515,14 +556,20 @@ def get_repo_base_path() -> Path:
             raise UnableToFindRepoBase() from e
 
 
-def _run_command_and_capture_output(args: Sequence[str], cwd: Path | None = None) -> str:
+def _run_command_and_capture_output(
+    args: Sequence[str], cwd: Path | None = None
+) -> str:
     arg_str = " ".join(shlex.quote(arg) for arg in args)
     print(f"Running command: {arg_str}", file=sys.stderr)
-    with subprocess.Popen(args, text=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as proc:
+    with subprocess.Popen(
+        args, text=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    ) as proc:
         with StringIO() as output:
             _handle_output(proc, output, sys.stderr)
             if proc.wait() != 0:
-                raise subprocess.CalledProcessError(proc.returncode, cmd=args, output=output.getvalue())
+                raise subprocess.CalledProcessError(
+                    proc.returncode, cmd=args, output=output.getvalue()
+                )
             return output.getvalue()
 
 
@@ -561,12 +608,16 @@ def is_diffs_without_index_equal(diff_1: str, diff_2: str) -> bool:
 
 
 # Copy-pasted from imbue to avoid moving the whole hammers machinery over to imbue-core.
-async def get_lines_from_process(shell_command: str, is_exit_code_validated: bool = True, **kwargs: Any) -> list[str]:
-    p = await asyncio.create_subprocess_shell(shell_command, stdin=PIPE, stdout=PIPE, stderr=STDOUT, **kwargs)
+async def get_lines_from_process(
+    shell_command: str, is_exit_code_validated: bool = True, **kwargs: Any
+) -> list[str]:
+    p = await asyncio.create_subprocess_shell(
+        shell_command, stdin=PIPE, stdout=PIPE, stderr=STDOUT, **kwargs
+    )
     lines = [x.decode("UTF-8") for x in (await p.communicate())[0].splitlines()]
     if is_exit_code_validated:
         joined_lines = "\n".join(lines)
-        assert p.returncode == 0, (
-            f"command failed: {shell_command}\nwith output:\n{joined_lines} with exit code {p.returncode}"
-        )
+        assert (
+            p.returncode == 0
+        ), f"command failed: {shell_command}\nwith output:\n{joined_lines} with exit code {p.returncode}"
     return lines

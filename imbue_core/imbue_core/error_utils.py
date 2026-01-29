@@ -73,7 +73,9 @@ class ExceptionKey(FrozenModel):
             return cls(
                 exception_type=type(exception),
                 # FIXME: we may grab things with references here unnecessarily. Let's store only the hash here and stringified representation.
-                exception_args=tuple(arg for arg in exception.args if isinstance(arg, Hashable)),
+                exception_args=tuple(
+                    arg for arg in exception.args if isinstance(arg, Hashable)
+                ),
             )
 
 
@@ -137,7 +139,9 @@ class _SentryEventRateLimiter(MutableModel):
     """
 
     # these exception will never be rate limited
-    pass_thru_exception_types: Collection[type[BaseException]] = Field(default_factory=set)
+    pass_thru_exception_types: Collection[type[BaseException]] = Field(
+        default_factory=set
+    )
     # the number of initial reports to allow before starting to apply rate limiting
     initial_reports_without_rate_limiting: int = 2
     # the time (in seconds) that must pass since the last report of a given exception before allowing
@@ -151,12 +155,17 @@ class _SentryEventRateLimiter(MutableModel):
     # we should not be called in parallel, but better safe than sorry
     # this lock protects access to _exception_history, its contents, and the total counters
     _lock: threading.Lock = PrivateAttr(default_factory=threading.Lock)
-    _exception_history: MutableMapping[ExceptionKey, ExceptionHistory] = PrivateAttr(default_factory=dict)
+    _exception_history: MutableMapping[ExceptionKey, ExceptionHistory] = PrivateAttr(
+        default_factory=dict
+    )
     _total_throttled: int = PrivateAttr(default=0)
     _total_sent: int = PrivateAttr(default=0)
 
     def _annotate_event(
-        self, event: Event, reason_to_allow: _ReasonToAllowSendingEvent, past_history: ExceptionHistory | None = None
+        self,
+        event: Event,
+        reason_to_allow: _ReasonToAllowSendingEvent,
+        past_history: ExceptionHistory | None = None,
     ) -> Event:
         logger.trace("Annotating event with rate limiter: {}", reason_to_allow)
 
@@ -202,7 +211,9 @@ class _SentryEventRateLimiter(MutableModel):
         if "exc_info" in hint:
             exception_type, exception, _ = hint["exc_info"]
 
-        if (exception_type is not None) and (exception_type in self.pass_thru_exception_types):
+        if (exception_type is not None) and (
+            exception_type in self.pass_thru_exception_types
+        ):
             return self._annotate_event(event, _ReasonToAllowSendingEvent.PASS_THRU)
 
         first_line = _first_line_of_log_message(event)
@@ -214,15 +225,26 @@ class _SentryEventRateLimiter(MutableModel):
 
         if not (log_fingerprint or exception):
             # nothing to rate limit on
-            return self._annotate_event(event, _ReasonToAllowSendingEvent.NO_RATE_LIMIT_INFO)
+            return self._annotate_event(
+                event, _ReasonToAllowSendingEvent.NO_RATE_LIMIT_INFO
+            )
 
-        key = ExceptionKey.build_from_exception_or_fingerprint(exception, log_fingerprint)
+        key = ExceptionKey.build_from_exception_or_fingerprint(
+            exception, log_fingerprint
+        )
         with self._lock:
             if key not in self._exception_history:
                 # we could LRU but if we got to this point, there's something else to figure out, like bad keying
-                if len(self._exception_history) >= self.max_tracked_rate_limited_exceptions:
-                    return self._annotate_event(event, _ReasonToAllowSendingEvent.TOO_MANY_TRACKED_EXCEPTIONS)
-                history = ExceptionHistory(last_reported_at=time.monotonic(), total_sent=1)
+                if (
+                    len(self._exception_history)
+                    >= self.max_tracked_rate_limited_exceptions
+                ):
+                    return self._annotate_event(
+                        event, _ReasonToAllowSendingEvent.TOO_MANY_TRACKED_EXCEPTIONS
+                    )
+                history = ExceptionHistory(
+                    last_reported_at=time.monotonic(), total_sent=1
+                )
                 self._exception_history[key] = history
                 return self._annotate_event(event, _ReasonToAllowSendingEvent.INITIAL)
 
@@ -232,14 +254,19 @@ class _SentryEventRateLimiter(MutableModel):
                 reason_to_allow = _ReasonToAllowSendingEvent.INITIAL_GRACE_PERIOD
             else:
                 current_timeout = self.timeout_factor * max(
-                    1, history.total_sent - self.initial_reports_without_rate_limiting + 1
+                    1,
+                    history.total_sent - self.initial_reports_without_rate_limiting + 1,
                 )
                 if history.since_last_report >= current_timeout:
-                    logger.trace("Timeout elapsed for event: {}, {}", key, current_timeout)
+                    logger.trace(
+                        "Timeout elapsed for event: {}, {}", key, current_timeout
+                    )
                     reason_to_allow = _ReasonToAllowSendingEvent.TIMEOUT_ELAPSED
 
             if reason_to_allow:
-                event = self._annotate_event(event, reason_to_allow=reason_to_allow, past_history=history)
+                event = self._annotate_event(
+                    event, reason_to_allow=reason_to_allow, past_history=history
+                )
                 history.log_reported()
                 return event
             history.log_throttled()
@@ -343,7 +370,11 @@ class ImbueSentryHttpTransport(HttpTransport):
             for item in envelope_items:
                 if item.data_category == "attachment":
                     payload = item.payload
-                    payload_bytes_len = len(payload.get_bytes() if not isinstance(payload, (bytes, str)) else payload)
+                    payload_bytes_len = len(
+                        payload.get_bytes()
+                        if not isinstance(payload, (bytes, str))
+                        else payload
+                    )
                     item_headers = item.headers
                     assert item_headers is not None
                     attachment_sizes[item_headers["filename"]] = payload_bytes_len
@@ -355,13 +386,22 @@ class ImbueSentryHttpTransport(HttpTransport):
             extra: dict[str, str | int] = {
                 "uncompressed_attachment_sizes": str(attachment_sizes),
                 "original_compressed_request_body_size": len(body),
-                "uncompressed_stripped_envelope_size": len(serialized_stripped_envelope),
+                "uncompressed_stripped_envelope_size": len(
+                    serialized_stripped_envelope
+                ),
             }
 
             # send stripped envelope to S3 -- is preceding code now overkill?
-            upload_name = upload_to_s3("stripped_envelope", ".txt", serialized_stripped_envelope)
+            upload_name = upload_to_s3(
+                "stripped_envelope", ".txt", serialized_stripped_envelope
+            )
 
-            log_error_inside_sentry(e, msg, extra=extra, additional_s3_uploads=(upload_name,) if upload_name else None)
+            log_error_inside_sentry(
+                e,
+                msg,
+                extra=extra,
+                additional_s3_uploads=(upload_name,) if upload_name else None,
+            )
 
 
 def get_traceback_with_vars(exception: BaseException | None = None) -> str:
@@ -382,12 +422,18 @@ def get_traceback_with_vars(exception: BaseException | None = None) -> str:
         return f"got exception while formatting traceback with `traceback_with_variables`: {traceback.format_exception(e)}"
 
 
-def _default_sentry_add_extra_info_hook(event: Event, hint: Hint) -> tuple[Event, Hint, tuple[Callable, ...]]:
+def _default_sentry_add_extra_info_hook(
+    event: Event, hint: Hint
+) -> tuple[Event, Hint, tuple[Callable, ...]]:
     """Add traceback with variables to the event as an attachment."""
     # TODO: We just use sentry attachments here; we could also upload to S3, but figure this hook is itself a fallback, so leaving it for now?
     expected_attachments = []
-    tb_with_vars = truncate_string(get_traceback_with_vars(), MAX_SENTRY_ATTACHMENT_SIZE)
-    hint["attachments"].append(Attachment(tb_with_vars.encode(), filename="traceback_with_variables.txt"))
+    tb_with_vars = truncate_string(
+        get_traceback_with_vars(), MAX_SENTRY_ATTACHMENT_SIZE
+    )
+    hint["attachments"].append(
+        Attachment(tb_with_vars.encode(), filename="traceback_with_variables.txt")
+    )
     expected_attachments.append("traceback_with_variables.txt")
     # record the names of the expected attachments just in case there's any weirdness about attachments not showing up
     event.setdefault("extra", {})["expected_attachments"] = str(expected_attachments)
@@ -446,7 +492,9 @@ def setup_sentry(
     global_user_context: Mapping[str, str] | None = None,
     integrations: tuple[Any, ...] = (),
     before_send: BeforeSendType | None = None,
-    add_extra_info_hook: Callable[[Event, Hint], tuple[Event, Hint, tuple[Callable, ...]]] | None = None,
+    add_extra_info_hook: (
+        Callable[[Event, Hint], tuple[Event, Hint, tuple[Callable, ...]]] | None
+    ) = None,
     environment: str | None = None,
 ) -> None:
     """Sets up the main Sentry instance for this process.
@@ -459,9 +507,9 @@ def setup_sentry(
         add_extra_info_hook: If provided, this function will be called with the event at Handle time.
         before_send: If provided, this function (or list of functions) will be called in order to handle and mutate the event before sending to Sentry.
     """
-    assert "SENTRY_DSN" not in os.environ, (
-        "Please `unset SENTRY_DSN` in your environment. Set the DSN via the server settings FRONTEND_SENTRY_DSN and BACKEND_SENTRY_DSN instead."
-    )
+    assert (
+        "SENTRY_DSN" not in os.environ
+    ), "Please `unset SENTRY_DSN` in your environment. Set the DSN via the server settings FRONTEND_SENTRY_DSN and BACKEND_SENTRY_DSN instead."
 
     before_send_unrolled = []
 

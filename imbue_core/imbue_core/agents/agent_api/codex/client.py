@@ -32,7 +32,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
 
     def process_query(self, prompt: str) -> Iterator[AgentMessage]:
         logger.trace(
-            "{client_name}: calling agent with prompt={prompt}", client_name=type(self).__name__, prompt=prompt
+            "{client_name}: calling agent with prompt={prompt}",
+            client_name=type(self).__name__,
+            prompt=prompt,
         )
 
         # NOTE: (2025-11-20) Codex CLI does not support streaming inputs, and only supports using codex CLI via
@@ -40,9 +42,14 @@ class CodexClient(RealAgentClient[CodexOptions]):
         # So here we just create a new transport for each call, and handle things like resuming the session as
         # needed.
         options = self._options
-        if self._session_id is not None and self._session_id != self._options.resume_session_id:
+        if (
+            self._session_id is not None
+            and self._session_id != self._options.resume_session_id
+        ):
             # Inject the current session id into the options before building the command
-            options = self._options.model_copy(update={"resume_session_id": self._session_id})
+            options = self._options.model_copy(
+                update={"resume_session_id": self._session_id}
+            )
         cmd = self._build_cli_cmd(options)
         with AgentSubprocessCLITransport.build(
             AgentSubprocessCLITransportOptions(cmd=[*cmd, prompt], cwd=options.cwd)
@@ -52,7 +59,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
             thread_id: str | None = None
             for data in transport.receive_messages():
                 logger.trace(
-                    "{client_name}: received raw JSON message={data}", client_name=type(self).__name__, data=data
+                    "{client_name}: received raw JSON message={data}",
+                    client_name=type(self).__name__,
+                    data=data,
                 )
 
                 message = parse_codex_event(data, thread_id)
@@ -123,7 +132,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
             # in this case, the cmd should never be used
             cmd = ["CACHED_CODEX_EXEC_PLACEHOLDER"]
             return cmd
-        cli_path = str(options.cli_path) if options.cli_path is not None else cls._find_cli()
+        cli_path = (
+            str(options.cli_path) if options.cli_path is not None else cls._find_cli()
+        )
         cmd = [cli_path, "exec"]
         cmd.extend(cls._build_cli_args(options))
         return cmd

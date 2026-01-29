@@ -56,7 +56,9 @@ class SentryLoguruLoggingLevels(enum.IntEnum):
     # Additional loguru levels for sentry hot-wiring that we also present with custom colors in the console.
     # The mapping to sentry levels for both breadcrumbs and reporting is done in map_to_sentry_name()
     LOW_PRIORITY = LOW_PRIORITY_LEVEL  # pyre-ignore[8]: pyre doesn't understand enums
-    MEDIUM_PRIORITY = MEDIUM_PRIORITY_LEVEL  # pyre-ignore[8]: pyre doesn't understand enums
+    MEDIUM_PRIORITY = (
+        MEDIUM_PRIORITY_LEVEL  # pyre-ignore[8]: pyre doesn't understand enums
+    )
     HIGH_PRIORITY = HIGH_PRIORITY_LEVEL  # pyre-ignore[8]: pyre doesn't understand enums
     ERROR = 40
     CRITICAL = 50
@@ -70,9 +72,15 @@ class SentryLoguruLoggingLevels(enum.IntEnum):
                 return "info"
             case SentryLoguruLoggingLevels.LOW_PRIORITY:
                 return "info"
-            case SentryLoguruLoggingLevels.MEDIUM_PRIORITY | SentryLoguruLoggingLevels.WARNING:
+            case (
+                SentryLoguruLoggingLevels.MEDIUM_PRIORITY
+                | SentryLoguruLoggingLevels.WARNING
+            ):
                 return "warning"
-            case SentryLoguruLoggingLevels.HIGH_PRIORITY | SentryLoguruLoggingLevels.ERROR:
+            case (
+                SentryLoguruLoggingLevels.HIGH_PRIORITY
+                | SentryLoguruLoggingLevels.ERROR
+            ):
                 return "error"
             case SentryLoguruLoggingLevels.CRITICAL:
                 return "critical"
@@ -122,7 +130,8 @@ class _BaseHandler(logging.Handler):
         return {
             k: v
             for k, v in vars(record).items()
-            if k not in self.COMMON_RECORD_ATTRS and (not isinstance(k, str) or not k.startswith("_"))
+            if k not in self.COMMON_RECORD_ATTRS
+            and (not isinstance(k, str) or not k.startswith("_"))
         }
 
     def _logging_to_event_level(self, record: logging.LogRecord) -> str:
@@ -145,7 +154,9 @@ class SentryEventHandler(_BaseHandler):
     def __init__(
         self,
         level: int = logging.NOTSET,
-        add_extra_info_hook: Callable[[Event, Hint], tuple[Event, Hint, tuple[Callable, ...]]] | None = None,
+        add_extra_info_hook: (
+            Callable[[Event, Hint], tuple[Event, Hint, tuple[Callable, ...]]] | None
+        ) = None,
     ) -> None:
         super().__init__(level=level)
         self.add_extra_info_hook = add_extra_info_hook
@@ -160,7 +171,9 @@ class SentryEventHandler(_BaseHandler):
     def schedule_callbacks(self, callbacks: Sequence[Callable]) -> None:
         executor = self._executor
         if executor is not None:
-            logger.info(f"Sentry event handler registered {len(callbacks)} callbacks with an executor")
+            logger.info(
+                f"Sentry event handler registered {len(callbacks)} callbacks with an executor"
+            )
             for callback in callbacks:
                 future = executor.submit(lambda c=callback: _wrap_callback(c))
                 self._futures.append(future)
@@ -212,7 +225,9 @@ class SentryEventHandler(_BaseHandler):
                 "values": [
                     {
                         "stacktrace": current_stacktrace(
-                            include_local_variables=client_options["include_local_variables"],
+                            include_local_variables=client_options[
+                                "include_local_variables"
+                            ],
                             max_value_length=client_options["max_value_length"],
                         ),
                         "crashed": False,
@@ -234,7 +249,9 @@ class SentryEventHandler(_BaseHandler):
         event["logger"] = record.name
 
         # Log records from `warnings` module as separate issues
-        record_captured_from_warnings_module = record.name == "py.warnings" and record.msg == "%s"
+        record_captured_from_warnings_module = (
+            record.name == "py.warnings" and record.msg == "%s"
+        )
         if record_captured_from_warnings_module:
             # use the actual message and not "%s" as the message
             # this prevents grouping all warnings under one "%s" issue
@@ -255,7 +272,9 @@ class SentryEventHandler(_BaseHandler):
         event["extra"] = self._extra_from_record(record)
 
         if self.add_extra_info_hook:
-            event, hint, callbacks = self.add_extra_with_watchdog(event, hint, timeout=1)
+            event, hint, callbacks = self.add_extra_with_watchdog(
+                event, hint, timeout=1
+            )
             self.schedule_callbacks(callbacks)
 
         sentry_sdk.capture_event(event, hint)
@@ -316,7 +335,9 @@ class SentryBreadcrumbHandler(_BaseHandler):
         if not self._can_record(record):
             return
 
-        sentry_sdk.add_breadcrumb(self._breadcrumb_from_record(record), hint={"log_record": record})
+        sentry_sdk.add_breadcrumb(
+            self._breadcrumb_from_record(record), hint={"log_record": record}
+        )
 
     def _breadcrumb_from_record(self, record: logging.LogRecord) -> dict[str, Any]:
         return {
@@ -346,7 +367,9 @@ def log_error_inside_sentry(
     with new_scope() as scope:
         scope.clear()
         event, hint = event_from_exception(
-            exception, client_options=client.options, mechanism={"type": "watchdog", "handled": True}
+            exception,
+            client_options=client.options,
+            mechanism={"type": "watchdog", "handled": True},
         )
         event["message"] = message
         if extra is not None:
@@ -357,7 +380,9 @@ def log_error_inside_sentry(
 
         # record any other files uploaded to s3
         if additional_s3_uploads is not None:
-            event["extra"][EXTRAS_UPLOADED_FILES_KEY + "_erred"] = str(list(additional_s3_uploads))
+            event["extra"][EXTRAS_UPLOADED_FILES_KEY + "_erred"] = str(
+                list(additional_s3_uploads)
+            )
 
         # Note that new_scope() gives a new "current scope" but doesn't affect the global or isolation scope,
         # which is where most info is actually stored. Typically all 3 scopes are merged before logging the event.

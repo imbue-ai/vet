@@ -12,9 +12,7 @@ from psycopg.sql import SQL
 from imbue_core.pydantic_serialization import SerializableModel
 
 IMBUE_AUTOMATIC_TESTING_ORGANIZATION_ID = "imbue-automatic-testing"
-NEON_PROJECT_ID = (
-    "holy-butterfly-05886102"  # This is the ID of the crafty project in neon.tech. TODO: reuse this for now
-)
+NEON_PROJECT_ID = "holy-butterfly-05886102"  # This is the ID of the crafty project in neon.tech. TODO: reuse this for now
 
 
 # TODO: this should be shared with `sculptor` but there's not a great shared module right now.
@@ -41,7 +39,10 @@ class SculptorDataTables(StrEnum):
 
 def build_product_feature_data_query_args(
     user_id: str | None = None,
-    creation_bounds: tuple[datetime.datetime | None, datetime.datetime | None] = (None, None),
+    creation_bounds: tuple[datetime.datetime | None, datetime.datetime | None] = (
+        None,
+        None,
+    ),
     ids: Iterable[str] | None = None,
     filter_test_users: bool = False,
 ) -> tuple[Any, tuple[Any, ...]]:
@@ -61,7 +62,9 @@ def build_product_feature_data_query_args(
         where_clause = SQL("{} AND {}").format(where_clause, SQL("id = ANY(%s)"))
         where_args += (ids,)
     if filter_test_users:
-        where_clause = SQL("{} AND NOT {}").format(where_clause, SQL("organization_id = %s"))
+        where_clause = SQL("{} AND NOT {}").format(
+            where_clause, SQL("organization_id = %s")
+        )
         where_args += (IMBUE_AUTOMATIC_TESTING_ORGANIZATION_ID,)
     return where_clause, where_args
 
@@ -71,7 +74,9 @@ UNKNOWN_USER_NAME = "unknown"
 
 def get_current_user_name() -> str:
     try:
-        possible_username = subprocess.check_output(["git", "config", "user.name"], universal_newlines=True).strip()
+        possible_username = subprocess.check_output(
+            ["git", "config", "user.name"], universal_newlines=True
+        ).strip()
         assert possible_username != ""
         return possible_username
     except subprocess.CalledProcessError:

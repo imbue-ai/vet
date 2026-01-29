@@ -57,7 +57,9 @@ class CommandType(StrEnum):
 
 
 # TODO this is WEIRD
-EVENT_BY_LOGGED_FEATURE_TYPE: dict[LoggedFeatureType, Callable[[], type["CapabilitiesLoggedEvent"]]] = {
+EVENT_BY_LOGGED_FEATURE_TYPE: dict[
+    LoggedFeatureType, Callable[[], type["CapabilitiesLoggedEvent"]]
+] = {
     LoggedFeatureType.VERIFY_EXCEPTION: lambda: ImbueVerifyEvent,
     LoggedFeatureType.COMMAND_RUN: lambda: ImbueVerifyEvent,
     LoggedFeatureType.ISSUE_FEEDBACK: lambda: IssueFeedbackReport,
@@ -210,7 +212,9 @@ class ImbueVerifyEvent(CapabilitiesLoggedEvent):
     # should simplify by providing it at construction time rather than using evolver
     def build_new_event_with_outputs(
         self,
-        outputs: tuple[tuple[IdentifiedVerifyIssue, ...], tuple[LLMResponse, ...], str | None],
+        outputs: tuple[
+            tuple[IdentifiedVerifyIssue, ...], tuple[LLMResponse, ...], str | None
+        ],
     ) -> Self:
         issues, llm_responses, git_url = outputs
         event_evolver = evolver(self)
@@ -241,7 +245,9 @@ class IssueFeedbackReport(CapabilitiesLoggedEvent):
     @model_validator(mode="after")
     def has_some_feedback(self) -> Self:
         if self.feedback_rating is None and self.feedback_text is None:
-            raise ValueError("At least one of feedback_rating or feedback_text must be set")
+            raise ValueError(
+                "At least one of feedback_rating or feedback_text must be set"
+            )
         return self
 
     @classmethod

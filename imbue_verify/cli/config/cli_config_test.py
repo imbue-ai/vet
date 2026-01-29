@@ -97,7 +97,9 @@ def test_parse_cli_config_from_dict_handles_all_fields() -> None:
 
 def test_merge_presets_override_takes_precedence() -> None:
     base = CliConfigPreset(confidence_threshold=0.8, max_workers=2, model="base-model")
-    override = CliConfigPreset(confidence_threshold=0.9, max_workers=None, model="override-model")
+    override = CliConfigPreset(
+        confidence_threshold=0.9, max_workers=None, model="override-model"
+    )
 
     result = merge_presets(base, override)
 
@@ -180,7 +182,8 @@ def test_get_cli_config_file_paths_finds_git_root(tmp_path: Path) -> None:
 
 def test_load_cli_config_file_loads_valid_toml(tmp_path: Path) -> None:
     config_file = tmp_path / "config.toml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 [ci]
 confidence_threshold = 0.9
 max_workers = 4
@@ -189,7 +192,8 @@ quiet = true
 [strict]
 confidence_threshold = 0.6
 model = "claude-4-sonnet"
-""")
+"""
+    )
 
     result = _load_cli_config_file(config_file)
 
@@ -213,10 +217,12 @@ def test_load_cli_config_file_raises_on_invalid_toml(tmp_path: Path) -> None:
 
 def test_load_cli_config_file_raises_on_invalid_schema(tmp_path: Path) -> None:
     config_file = tmp_path / "config.toml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 [ci]
 confidence_threshold = "not-a-float"
-""")
+"""
+    )
 
     with pytest.raises(ConfigLoadError) as exc_info:
         _load_cli_config_file(config_file)
@@ -226,10 +232,12 @@ confidence_threshold = "not-a-float"
 
 def test_load_cli_config_file_raises_on_unknown_field(tmp_path: Path) -> None:
     config_file = tmp_path / "config.toml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 [ci]
 unknown_field = "value"
-""")
+"""
+    )
 
     with pytest.raises(ConfigLoadError) as exc_info:
         _load_cli_config_file(config_file)
@@ -248,10 +256,12 @@ def test_load_cli_config_loads_single_file(tmp_path: Path) -> None:
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
     config_file = repo_path / "imbue-verify.toml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 [ci]
 confidence_threshold = 0.9
-""")
+"""
+    )
 
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path / "nonexistent")}):
         result = load_cli_config(repo_path=repo_path)
@@ -264,25 +274,29 @@ def test_load_cli_config_merges_global_and_project(tmp_path: Path) -> None:
     xdg_config = tmp_path / "xdg"
     (xdg_config / "imbue-verify").mkdir(parents=True)
     global_config = xdg_config / "imbue-verify" / "config.toml"
-    global_config.write_text("""
+    global_config.write_text(
+        """
 [ci]
 confidence_threshold = 0.8
 max_workers = 2
 
 [global-only]
 model = "global-model"
-""")
+"""
+    )
 
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
     project_config = repo_path / "imbue-verify.toml"
-    project_config.write_text("""
+    project_config.write_text(
+        """
 [ci]
 confidence_threshold = 0.9
 
 [project-only]
 model = "project-model"
-""")
+"""
+    )
 
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
         result = load_cli_config(repo_path=repo_path)

@@ -119,7 +119,9 @@ class ResourceLimits:
         if warn_fraction is None:
             # TODO: is it DEFAULT_WARN_FRACTION or DEFAULT_HAMMER_WARN_FRACTION?
             if "DEFAULT_WARN_FRACTION" in os.environ:
-                warn_fraction = _float_or_none(os.getenv("DEFAULT_HAMMER_WARN_FRACTION"))
+                warn_fraction = _float_or_none(
+                    os.getenv("DEFAULT_HAMMER_WARN_FRACTION")
+                )
                 assert warn_fraction is not None
             else:
                 warn_fraction = 0.25
@@ -157,17 +159,25 @@ class ResourceLimits:
         dollars_per_hour: float | None = None,
     ) -> "ResourceLimits":
         if max_dollars is not None:
-            assert hard_cap_dollars is None, "Cannot specify both max_dollars and hard_cap_dollars"
+            assert (
+                hard_cap_dollars is None
+            ), "Cannot specify both max_dollars and hard_cap_dollars"
             hard_cap_dollars = max_dollars
             if warn_fraction is not None:
-                assert warn_cap_dollars is None, "Cannot specify both warn_fraction and warn_cap_dollars"
+                assert (
+                    warn_cap_dollars is None
+                ), "Cannot specify both warn_fraction and warn_cap_dollars"
                 warn_cap_dollars = max_dollars * warn_fraction
 
         if max_seconds is not None:
-            assert hard_cap_seconds is None, "Cannot specify both max_seconds and hard_cap_seconds"
+            assert (
+                hard_cap_seconds is None
+            ), "Cannot specify both max_seconds and hard_cap_seconds"
             hard_cap_seconds = max_seconds
             if warn_fraction is not None:
-                assert warn_cap_seconds is None, "Cannot specify both warn_fraction and warn_cap_seconds"
+                assert (
+                    warn_cap_seconds is None
+                ), "Cannot specify both warn_fraction and warn_cap_seconds"
                 warn_cap_seconds = max_seconds * warn_fraction
 
         if hard_cap_dollars is not None:
@@ -189,7 +199,9 @@ class ResourceLimits:
             parent_limits=self,
         )
 
-    def _get_excessive_spend_message(self, dollars: float, debug_info: Any = None) -> str:
+    def _get_excessive_spend_message(
+        self, dollars: float, debug_info: Any = None
+    ) -> str:
         msg = f"Tried to spend {dollars} but only {self.hard_cap_dollars - self.dollars_spent} left (of {self.hard_cap_dollars})."
         if self.hard_cap_dollars == 0:
             msg += " You might want to set DEFAULT_MAX_HAMMER_DOLLARS to something non-zero"
@@ -197,7 +209,9 @@ class ResourceLimits:
             msg += f"\nDebug info: {debug_info}"
         return msg
 
-    async def authorize_spend(self, dollars: float, debug_info: Any | None = None) -> PaymentAuthorization:
+    async def authorize_spend(
+        self, dollars: float, debug_info: Any | None = None
+    ) -> PaymentAuthorization:
         # note that we purposefully lock here, even though we are potentially waiting inside the loop below.
         # the reason for this is that otherwise a large transaction could be starved by a series of smaller transactions
         # this is annoying to reason about, so this makes it FIFO instead (though potentially at the cost of having to
@@ -206,10 +220,14 @@ class ResourceLimits:
             await self._clear_old_authorizations()
 
             if self.dollars_spent + dollars > self.hard_cap_dollars:
-                raise DollarLimitExceeded(self._get_excessive_spend_message(dollars, debug_info))
+                raise DollarLimitExceeded(
+                    self._get_excessive_spend_message(dollars, debug_info)
+                )
 
             # if we have outstanding authorizations that mean that this transaction would put us over the limit, wait
-            while (await self.get_dollars_authorized_and_spent()) + dollars > self.hard_cap_dollars and (
+            while (
+                await self.get_dollars_authorized_and_spent()
+            ) + dollars > self.hard_cap_dollars and (
                 await self.get_dollars_currently_authorized()
             ) > 0:
                 await self.next_settlement_event.wait()
@@ -226,35 +244,54 @@ class ResourceLimits:
                     )
 
                 # wait until the spend rate is low enough
-                while (await self.get_dollars_authorized_and_spent_in_the_last_hour()) + dollars > dollars_per_hour:
-                    oldest_event = first(sorted([x for x in self.recent_spend_events], key=lambda x: x.authorized_at))
+                while (
+                    await self.get_dollars_authorized_and_spent_in_the_last_hour()
+                ) + dollars > dollars_per_hour:
+                    oldest_event = first(
+                        sorted(
+                            [x for x in self.recent_spend_events],
+                            key=lambda x: x.authorized_at,
+                        )
+                    )
                     if oldest_event is None:
                         break
-                    time_since_oldest_event = (get_current_time() - oldest_event.authorized_at).total_seconds()
-                    time_until_next_event_expires = _ONE_HOUR_IN_SECONDS - time_since_oldest_event
+                    time_since_oldest_event = (
+                        get_current_time() - oldest_event.authorized_at
+                    ).total_seconds()
+                    time_until_next_event_expires = (
+                        _ONE_HOUR_IN_SECONDS - time_since_oldest_event
+                    )
                     logger.debug(
                         f"Waiting until spend rate has subsided (currently at {(await self.get_dollars_authorized_and_spent_in_the_last_hour())} / hr)"
                     )
                     waiting_task = asyncio.create_task(self._wait_until_updated())
                     try:
-                        await asyncio.wait_for(waiting_task, timeout=time_until_next_event_expires + 0.01)
+                        await asyncio.wait_for(
+                            waiting_task, timeout=time_until_next_event_expires + 0.01
+                        )
                     except TimeoutError:
                         pass
                     await self._clear_old_authorizations()
 
-                assert (await self.get_dollars_authorized_and_spent_in_the_last_hour()) + dollars <= dollars_per_hour
+                assert (
+                    await self.get_dollars_authorized_and_spent_in_the_last_hour()
+                ) + dollars <= dollars_per_hour
 
             async with self.state_lock:
                 if self.parent_limits is None:
                     auth = PaymentAuthorization(
-                        dollars=dollars, authorization_id=uuid4().hex, authorized_at=get_current_time()
+                        dollars=dollars,
+                        authorization_id=uuid4().hex,
+                        authorized_at=get_current_time(),
                     )
                 else:
                     auth = await self.parent_limits.authorize_spend(dollars)
                 self.open_authorizations[auth.authorization_id] = auth
                 return auth
 
-    async def settle_spend(self, authorization: PaymentAuthorization, dollars: float) -> None:
+    async def settle_spend(
+        self, authorization: PaymentAuthorization, dollars: float
+    ) -> None:
         async with self.state_lock:
             await self._clear_old_authorizations(_is_already_locked=True)
 
@@ -262,7 +299,9 @@ class ResourceLimits:
                 await self.parent_limits.settle_spend(authorization, dollars)
 
             is_threshold_exceeded_by_this_transaction = (
-                self.dollars_spent < self.warn_cap_dollars <= self.dollars_spent + dollars
+                self.dollars_spent
+                < self.warn_cap_dollars
+                <= self.dollars_spent + dollars
             )
 
             if authorization.authorization_id not in self.open_authorizations:
@@ -272,17 +311,25 @@ class ResourceLimits:
             del self.open_authorizations[authorization.authorization_id]
             self.recent_spend_events.append(authorization)
             self.dollars_spent += dollars
-            assert self.save_spend_callback is not None, "Should have been initialized by now"
+            assert (
+                self.save_spend_callback is not None
+            ), "Should have been initialized by now"
             await self.save_spend_callback(self.dollars_spent)
 
             # notify anything waiting on the next settlement
             self.next_settlement_event.set()
             self.next_settlement_event.clear()
 
-            logger.trace("Settled spend of {}, remaining: {}", dollars, self.hard_cap_dollars - self.dollars_spent)
+            logger.trace(
+                "Settled spend of {}, remaining: {}",
+                dollars,
+                self.hard_cap_dollars - self.dollars_spent,
+            )
 
         if is_threshold_exceeded_by_this_transaction:
-            await self._warn(f"Spent ${self.dollars_spent} already (will be stopped at ${self.hard_cap_dollars})")
+            await self._warn(
+                f"Spent ${self.dollars_spent} already (will be stopped at ${self.hard_cap_dollars})"
+            )
 
     # TODO: make a more configurable warning system, right now just logs
     async def _warn(self, message: str) -> None:
@@ -296,10 +343,13 @@ class ResourceLimits:
             self.open_authorizations = {
                 k: v
                 for k, v in self.open_authorizations.items()
-                if (now - v.authorized_at).total_seconds() < _AUTH_PAYMENT_TIMEOUT_SECONDS
+                if (now - v.authorized_at).total_seconds()
+                < _AUTH_PAYMENT_TIMEOUT_SECONDS
             }
             self.recent_spend_events = [
-                x for x in self.recent_spend_events if (now - x.authorized_at).total_seconds() < _ONE_HOUR_IN_SECONDS
+                x
+                for x in self.recent_spend_events
+                if (now - x.authorized_at).total_seconds() < _ONE_HOUR_IN_SECONDS
             ]
         finally:
             if not _is_already_locked:
@@ -311,13 +361,19 @@ class ResourceLimits:
 
     async def get_dollars_authorized_and_spent(self) -> float:
         async with self.state_lock:
-            dollars_currently_authorized = float(sum(x.dollars for x in self.open_authorizations.values()))
+            dollars_currently_authorized = float(
+                sum(x.dollars for x in self.open_authorizations.values())
+            )
             return dollars_currently_authorized + self.dollars_spent
 
     async def get_dollars_authorized_and_spent_in_the_last_hour(self) -> float:
         async with self.state_lock:
-            dollars_currently_authorized = float(sum(x.dollars for x in self.open_authorizations.values()))
-            return dollars_currently_authorized + sum(x.dollars for x in self.recent_spend_events)
+            dollars_currently_authorized = float(
+                sum(x.dollars for x in self.open_authorizations.values())
+            )
+            return dollars_currently_authorized + sum(
+                x.dollars for x in self.recent_spend_events
+            )
 
     async def bump_limits(self, limits: ResourceLimitState) -> ResourceLimitState:
         """
@@ -327,7 +383,9 @@ class ResourceLimits:
         conditions at the end of the wait loop in authorize_spend as well.
         """
         if self.parent_limits is None:
-            assert limits.hard_cap_dollars < float("inf"), "Cannot unlimit spend for the top-level hammer"
+            assert limits.hard_cap_dollars < float(
+                "inf"
+            ), "Cannot unlimit spend for the top-level hammer"
 
         async with self.state_lock:
             self.hard_cap_dollars = max(self.hard_cap_dollars, limits.hard_cap_dollars)
@@ -337,7 +395,10 @@ class ResourceLimits:
             if self.dollars_per_hour is None:
                 self.dollars_per_hour = limits.dollars_per_hour
             else:
-                if limits.dollars_per_hour is not None and limits.dollars_per_hour > self.dollars_per_hour:
+                if (
+                    limits.dollars_per_hour is not None
+                    and limits.dollars_per_hour > self.dollars_per_hour
+                ):
                     self.dollars_per_hour = limits.dollars_per_hour
 
                     # notify anything waiting in case we just bumped what they were waiting on
@@ -382,13 +443,18 @@ class HammerTimer:
         self, task_group: TaskGroup, callback: Callable[[], Coroutine[Any, Any, None]]
     ) -> None:
         seconds_ago = (get_current_time() - self.timer_started_at).total_seconds()
-        possible_wait_times = [x - seconds_ago for x in [self.limits.hard_cap_seconds, self.limits.warn_cap_seconds]]
+        possible_wait_times = [
+            x - seconds_ago
+            for x in [self.limits.hard_cap_seconds, self.limits.warn_cap_seconds]
+        ]
         positive_wait_times = [x for x in possible_wait_times if x > 0]
         if len(positive_wait_times) == 0:
             await callback()
             return
         time_until_limit_check = min(positive_wait_times)
-        self.timer_task = task_group.create_task(self._timeout_after(time_until_limit_check, callback))
+        self.timer_task = task_group.create_task(
+            self._timeout_after(time_until_limit_check, callback)
+        )
 
     async def on_hammer_stopped(self) -> None:
         # cancel the timer (if still running
@@ -401,15 +467,22 @@ class HammerTimer:
                 pass
             self.timer_task = None
 
-    async def _timeout_after(self, seconds: float, callback: Callable[[], Coroutine[Any, Any, None]]) -> None:
+    async def _timeout_after(
+        self, seconds: float, callback: Callable[[], Coroutine[Any, Any, None]]
+    ) -> None:
         while True:
             await asyncio.sleep(seconds)
 
             # re-schedule ourselves for the next check if the limits have been updated, or we were just here for a warning
-            time_since_started = (get_current_time() - self.timer_started_at).total_seconds()
+            time_since_started = (
+                get_current_time() - self.timer_started_at
+            ).total_seconds()
             if time_since_started < self.limits.hard_cap_seconds:
                 # emit a warning if necessary
-                if time_since_started > self.limits.warn_cap_seconds and not self.is_timeout_warning_issued:
+                if (
+                    time_since_started > self.limits.warn_cap_seconds
+                    and not self.is_timeout_warning_issued
+                ):
                     self.is_timeout_warning_issued = True
                     await self.limits._warn(
                         f"Taking longer than expected ({seconds} sec so far, will be killed at {self.limits.hard_cap_seconds}"

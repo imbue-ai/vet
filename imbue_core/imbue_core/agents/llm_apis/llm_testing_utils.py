@@ -9,12 +9,18 @@ from imbue_core.caching import AsyncCache
 from imbue_core.frozen_utils import FrozenMapping
 
 
-async def check_llm_responses_in_cache(snapshot: SnapshotAssertion, temp_cache: AsyncCache, suffix: str = "") -> None:
+async def check_llm_responses_in_cache(
+    snapshot: SnapshotAssertion, temp_cache: AsyncCache, suffix: str = ""
+) -> None:
     """Runs as the test fixture completes to check that the LLM inputs and outputs stay the same, in a human-readable format."""
 
     async with temp_cache as cache:
-        all_keys: tuple[str, ...] = await cache.get_all_keys()  # Contains both the streaming and non-streaming keys?
-        value_by_key: FrozenMapping[str, CachedCostedModelResponse | None] = await cache.get_all(all_keys)
+        all_keys: tuple[str, ...] = (
+            await cache.get_all_keys()
+        )  # Contains both the streaming and non-streaming keys?
+        value_by_key: FrozenMapping[str, CachedCostedModelResponse | None] = (
+            await cache.get_all(all_keys)
+        )
 
     cache_items: list[tuple[str, CachedCostedModelResponse]] = [
         (k, v) for k, v in value_by_key.items() if v is not None
@@ -42,11 +48,20 @@ async def check_llm_responses_in_cache(snapshot: SnapshotAssertion, temp_cache: 
         if cached_response.response is not None:
             match cached_response.response:
                 case CostedLanguageModelResponse():
-                    joined_responses = "".join([r.text for r in cached_response.response.responses]).encode("utf-8")
-                    for response_index, response in enumerate(cached_response.response.responses):
+                    joined_responses = "".join(
+                        [r.text for r in cached_response.response.responses]
+                    ).encode("utf-8")
+                    for response_index, response in enumerate(
+                        cached_response.response.responses
+                    ):
                         metadata_lines.append(f"response[{response_index}] metadata:")
-                        for field, field_value in cached_response.response.__dict__.items():
-                            if field != "responses":  # already printed the responses above
+                        for (
+                            field,
+                            field_value,
+                        ) in cached_response.response.__dict__.items():
+                            if (
+                                field != "responses"
+                            ):  # already printed the responses above
                                 metadata_lines.append(f"    {field}: {field_value}")
                 case CountTokensResponse():
                     metadata_lines.append("response metadata:")
@@ -54,28 +69,30 @@ async def check_llm_responses_in_cache(snapshot: SnapshotAssertion, temp_cache: 
                         metadata_lines.append(f"    {field}: {field_value}")
 
         snapshotted_prompt = snapshot(
-            extension_class=SingleFileSnapshotExtension, name=f"{cache_index:03d}_inputs{suffix}"
+            extension_class=SingleFileSnapshotExtension,
+            name=f"{cache_index:03d}_inputs{suffix}",
         )
 
         # TODO nasty syrupy hacking
         snapshot_contents, _ = snapshotted_prompt._recall_data(snapshotted_prompt.index)
 
-        assert snapshotted_prompt == prompt, (
-            f"Your prompt changed, did you mean for this to happen?\nExpected prompt: {snapshot_contents!r}\nPrompt: {prompt!r}"
-        )
+        assert (
+            snapshotted_prompt == prompt
+        ), f"Your prompt changed, did you mean for this to happen?\nExpected prompt: {snapshot_contents!r}\nPrompt: {prompt!r}"
 
         snapshotted_response = snapshot(
             extension_class=SingleFileSnapshotExtension,
             name=f"{cache_index:03d}_response{suffix}",
         )
 
-        assert snapshotted_response == joined_responses, (
-            "Your response changed; maybe you aren't actually hitting the cache?"
-        )
+        assert (
+            snapshotted_response == joined_responses
+        ), "Your response changed; maybe you aren't actually hitting the cache?"
 
         snapshotted_metadata = snapshot(
-            extension_class=SingleFileAmberSnapshotExtension, name=f"{cache_index:03d}_metadata{suffix}"
+            extension_class=SingleFileAmberSnapshotExtension,
+            name=f"{cache_index:03d}_metadata{suffix}",
         )
-        assert snapshotted_metadata == "\n".join(metadata_lines), (
-            "Metadata changed; maybe you aren't actually hitting the cache?"
-        )
+        assert snapshotted_metadata == "\n".join(
+            metadata_lines
+        ), "Metadata changed; maybe you aren't actually hitting the cache?"

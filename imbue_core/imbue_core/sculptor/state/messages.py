@@ -66,13 +66,17 @@ class Message(SerializableModel):
     # roughly when the message was created, in UTC.
     # note that this is approximate due to clock skew -- these messages are created on different machines.
     # you should *not* sort by this field -- instead, rely on the order in which the messages are received.
-    approximate_creation_time: datetime.datetime = Field(default_factory=get_current_time)
+    approximate_creation_time: datetime.datetime = Field(
+        default_factory=get_current_time
+    )
 
     # if the message is ephemeral, it will be logged but not saved to the database
     # if it is persistent, it will be logged AND saved to the database
     @property
     def is_ephemeral(self) -> bool:
-        raise NotImplementedError("All messages must be subclassed off of PersistentMessage or EphemeralMessage")
+        raise NotImplementedError(
+            "All messages must be subclassed off of PersistentMessage or EphemeralMessage"
+        )
 
 
 class PersistentMessage(Message):
@@ -94,7 +98,9 @@ class PersistentUserMessage(PersistentMessage, PosthogEventPayload):
     # that is overkill and requires lots of annotations of irrelevant classes.
     #
     # TODO (mjr): We should really have `PersistentHoggableMessage` and `EphemeralHoggableMessage` or something
-    object_type: str = without_consent(description="Type discriminator for user messages")
+    object_type: str = without_consent(
+        description="Type discriminator for user messages"
+    )
     message_id: AgentMessageID = without_consent(
         default_factory=AgentMessageID,
         description="Unique identifier for the user message",
@@ -108,9 +114,13 @@ class PersistentUserMessage(PersistentMessage, PosthogEventPayload):
 
 class ChatInputUserMessage(PersistentUserMessage):
     object_type: str = without_consent(default="ChatInputUserMessage")
-    text: str = with_consent(ConsentLevel.LLM_LOGS, description="User input text content")
+    text: str = with_consent(
+        ConsentLevel.LLM_LOGS, description="User input text content"
+    )
     model_name: LLMModel = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=None, description="Selected LLM model for the chat request"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=None,
+        description="Selected LLM model for the chat request",
     )
     files: list[str] = with_consent(
         ConsentLevel.LLM_LOGS,

@@ -78,5 +78,8 @@ def parse_cli_config_from_dict(data: dict) -> dict[str, CliConfigPreset]:
 def merge_presets(base: CliConfigPreset, override: CliConfigPreset) -> CliConfigPreset:
     base_dict = base.model_dump()
     override_dict = override.model_dump()
-    merged = {k: override_dict[k] if override_dict.get(k) is not None else base_dict[k] for k in base_dict}
+    merged = {
+        k: override_dict[k] if override_dict.get(k) is not None else base_dict[k]
+        for k in base_dict
+    }
     return CliConfigPreset.model_validate(merged)

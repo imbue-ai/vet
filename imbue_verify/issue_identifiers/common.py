@@ -33,12 +33,16 @@ from imbue_core.data_types import IssueLocation
 from imbue_core.data_types import LineRange
 from imbue_core.data_types import SeverityScore
 from imbue_core.pydantic_serialization import SerializableModel
-from imbue_core.sculptor.telemetry import send_exception_to_posthog
-from imbue_core.sculptor.telemetry_constants import SculptorPosthogEvent
-from imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -46,12 +50,22 @@ class GeneratedIssueSchema(SerializableModel):
     """Individual issue from LLM response."""
 
     issue_code: str = Field(description="Category of the issue")
-    description: str = Field(description="Specific explanation of what's wrong and why it's incorrect")
-    location: str | None = Field(default=None, description="File path where the issue occurs")
-    code_part: str | None = Field(default=None, description="Specific code snippet that has the issue")
+    description: str = Field(
+        description="Specific explanation of what's wrong and why it's incorrect"
+    )
+    location: str | None = Field(
+        default=None, description="File path where the issue occurs"
+    )
+    code_part: str | None = Field(
+        default=None, description="Specific code snippet that has the issue"
+    )
     # pyre doesn't like the way ints/floats implement ge/le
-    severity: int = Field(description="Integer 1-5 (1=minor issue, 5=critical bug)", ge=1, le=5)  # pyre-ignore[6]
-    confidence: float = Field(description="Confidence in this assessment", ge=0.0, le=1.0)  # pyre-ignore[6]
+    severity: int = Field(
+        description="Integer 1-5 (1=minor issue, 5=critical bug)", ge=1, le=5
+    )  # pyre-ignore[6]
+    confidence: float = Field(
+        description="Confidence in this assessment", ge=0.0, le=1.0
+    )  # pyre-ignore[6]
 
     # ----------------------------------------------------------------
     # Internal mutable fields used by the post-identification pipeline for tagging.
@@ -77,27 +91,31 @@ class GeneratedIssueSchema(SerializableModel):
 class GeneratedResponseSchema(SerializableModel):
     """Complete response structure for issue identification."""
 
-    issues: list[GeneratedIssueSchema] = Field(default_factory=list, description="List of identified issues")
+    issues: list[GeneratedIssueSchema] = Field(
+        default_factory=list, description="List of identified issues"
+    )
 
 
-def generate_issues_from_response_texts(response_texts: Iterable[str]) -> Generator[GeneratedIssueSchema, None, None]:
+def generate_issues_from_response_texts(
+    response_texts: Iterable[str],
+) -> Generator[GeneratedIssueSchema, None, None]:
     """Generate IssueIdentifierResult objects from LLM response text."""
     for response_text in response_texts:
         try:
-            parsed_data = parse_model_json_response(response_text, GeneratedResponseSchema)
-        except ResponseParsingError as e:
-            send_exception_to_posthog(
-                SculptorPosthogEvent.FAILED_TO_PARSE_LLM_RESPONSE_WHEN_GENERATING_ISSUES,
-                e,
-                message=f"Failed to parse response text: {response_text}",
+            parsed_data = parse_model_json_response(
+                response_text, GeneratedResponseSchema
             )
+        except ResponseParsingError:
+            logger.warning(f"Failed to parse response text: {response_text}")
             continue
 
         for raw_issue in parsed_data.issues:
             yield raw_issue
 
 
-def line_ranges_to_issue_locations(line_ranges: Iterable[LineRange], file_path: str) -> tuple[IssueLocation, ...]:
+def line_ranges_to_issue_locations(
+    line_ranges: Iterable[LineRange], file_path: str
+) -> tuple[IssueLocation, ...]:
     """Convert LineRange objects to IssueLocation objects."""
     return tuple(
         IssueLocation(
@@ -130,22 +148,26 @@ def convert_generated_issue_to_identified_issue(
         issue_location = issue_data.location
         try:
             issue_location_path = Path(issue_location) if issue_location else None
-            if project_context.repo_path and issue_location_path and issue_location_path.is_absolute():
+            if (
+                project_context.repo_path
+                and issue_location_path
+                and issue_location_path.is_absolute()
+            ):
                 # Make absolute path relative.
                 # This will raise ValueError if issue_location_path is not under repo_path.
                 repo_path = project_context.repo_path
                 assert repo_path is not None
                 issue_location_path = issue_location_path.relative_to(repo_path)
-        except ValueError as e:
+        except ValueError:
             issue_location_path = None
-            send_exception_to_posthog(
-                SculptorPosthogEvent.INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION,
-                e,
-                message=f"Invalid location '{issue_location}', skipping line range detection.",
+            logger.warning(
+                f"Invalid location '{issue_location}', skipping line range detection."
             )
         issue_code_part = issue_data.code_part
         if issue_location_path and issue_code_part:
-            contents = project_context.file_contents_by_path.get(issue_location_path.as_posix())
+            contents = project_context.file_contents_by_path.get(
+                issue_location_path.as_posix()
+            )
             if contents is not None:
                 line_ranges = LineRange.build_from_substring(contents, issue_code_part)
                 if not line_ranges:
@@ -155,10 +177,8 @@ def convert_generated_issue_to_identified_issue(
                         code_part_repr=repr(issue_code_part),
                     )
             else:
-                send_exception_to_posthog(
-                    SculptorPosthogEvent.INVALID_FILE_PATH_FROM_LLM_IN_ISSUE_LOCATION,
-                    KeyError(issue_location),
-                    message=f"Unknown location '{issue_location}', skipping line range detection.",
+                logger.warning(
+                    f"Unknown location '{issue_location}', skipping line range detection."
                 )
 
         # Convert severity (1-5) to normalized score (0-1)
@@ -169,8 +189,12 @@ def convert_generated_issue_to_identified_issue(
         return IdentifiedVerifyIssue(
             code=IssueCode(issue_data.issue_code),
             description=issue_data.description,
-            severity_score=SeverityScore(raw=issue_data.severity, normalized=severity_normalized),
-            confidence_score=ConfidenceScore(raw=issue_data.confidence, normalized=issue_data.confidence),
+            severity_score=SeverityScore(
+                raw=issue_data.severity, normalized=severity_normalized
+            ),
+            confidence_score=ConfidenceScore(
+                raw=issue_data.confidence, normalized=issue_data.confidence
+            ),
             location=locations,
         )
 
@@ -193,10 +217,14 @@ def convert_to_issue_identifier_result(
     generator_with_capture = ReturnCapturingGenerator(generator)
     for issue_data in generator_with_capture:
         issue = convert_generated_issue_to_identified_issue(
-            issue_data=issue_data, project_context=project_context, enabled_issue_codes=enabled_issue_codes
+            issue_data=issue_data,
+            project_context=project_context,
+            enabled_issue_codes=enabled_issue_codes,
         )
         if issue:
-            yield IssueIdentifierResult(issue=issue, passes_filtration=issue_data.passes_filtration)
+            yield IssueIdentifierResult(
+                issue=issue, passes_filtration=issue_data.passes_filtration
+            )
 
     return generator_with_capture.return_value
 
@@ -259,7 +287,8 @@ def extract_invocation_info_from_costed_response(
         if caching_info.provider_specific_data is not None:
             if isinstance(caching_info.provider_specific_data, AnthropicCachingInfo):
                 cache_creation_tokens = (
-                    caching_info.provider_specific_data.written_5m + caching_info.provider_specific_data.written_1h
+                    caching_info.provider_specific_data.written_5m
+                    + caching_info.provider_specific_data.written_1h
                 )
             else:
                 logger.info(
@@ -277,7 +306,9 @@ def extract_invocation_info_from_costed_response(
     )
 
 
-def extract_invocation_info_from_messages(messages: list[AgentMessage]) -> InvocationInfo:
+def extract_invocation_info_from_messages(
+    messages: list[AgentMessage],
+) -> InvocationInfo:
     """Extract invocation information from Agent messages."""
     for message in messages:
         if isinstance(message, AgentResultMessage):

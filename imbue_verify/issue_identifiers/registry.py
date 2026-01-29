@@ -18,22 +18,36 @@ from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import IssueIdentifierResult
 from imbue_core.data_types import IssueIdentifierType
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
+from imbue_tools.get_conversation_history.input_data_types import (
+    IdentifierInputsMissingError,
+)
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_tools.types.imbue_verify_config import get_enabled_issue_codes
-from imbue_verify.issue_identifiers.agentic_issue_collation import collate_issues_with_agent
+from imbue_verify.issue_identifiers.agentic_issue_collation import (
+    collate_issues_with_agent,
+)
 from imbue_verify.issue_identifiers.base import IssueIdentifier
 from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
 from imbue_verify.issue_identifiers.common import convert_to_issue_identifier_result
 from imbue_verify.issue_identifiers.harnesses.agentic import AgenticHarness
 from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import ConversationSinglePromptHarness
+from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import (
+    ConversationSinglePromptHarness,
+)
 from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.issue_identifiers.issue_deduplication import deduplicate_issues
 from imbue_verify.issue_identifiers.issue_evaluation import filter_issues
 from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
@@ -47,7 +61,9 @@ from imbue_verify.issue_identifiers.utils import multiplex_generators
 SINGLE_PROMPT_HARNESS = SinglePromptHarness()
 CONVERSATION_SINGLE_PROMPT_HARNESS = ConversationSinglePromptHarness()
 AGENTIC_HARNESS = AgenticHarness()
-HARNESS_PRESETS: Final[list[tuple[IssueIdentifierType, IssueIdentifierHarness, tuple[IssueCode, ...]]]] = [
+HARNESS_PRESETS: Final[
+    list[tuple[IssueIdentifierType, IssueIdentifierHarness, tuple[IssueCode, ...]]]
+] = [
     (
         IssueIdentifierType.AGENTIC_ISSUE_IDENTIFIER,
         AGENTIC_HARNESS,
@@ -84,15 +100,23 @@ def _convert_all_to_enum(
     results = []
     for enum_str in enum_strs:
         if enum_str not in all_enum_strs:
-            raise ValueError(f"Bad config: unknown {enum_type.__name__} name: {enum_str}")
+            raise ValueError(
+                f"Bad config: unknown {enum_type.__name__} name: {enum_str}"
+            )
         results.append(enum_type(enum_str))
     return tuple(results)
 
 
-def _get_enabled_identifier_names(config: ImbueVerifyConfig) -> set[IssueIdentifierType]:
+def _get_enabled_identifier_names(
+    config: ImbueVerifyConfig,
+) -> set[IssueIdentifierType]:
     all_names = get_all_valid_identifier_names()
-    explicitly_enabled = _convert_all_to_enum(config.enabled_identifiers or tuple(), all_names, IssueIdentifierType)
-    explicitly_disabled = _convert_all_to_enum(config.disabled_identifiers or tuple(), all_names, IssueIdentifierType)
+    explicitly_enabled = _convert_all_to_enum(
+        config.enabled_identifiers or tuple(), all_names, IssueIdentifierType
+    )
+    explicitly_disabled = _convert_all_to_enum(
+        config.disabled_identifiers or tuple(), all_names, IssueIdentifierType
+    )
     enabled = set(explicitly_enabled) if len(explicitly_enabled) > 0 else all_names
     if len(explicitly_disabled) > 0:
         enabled = set(enabled) - set(explicitly_disabled)
@@ -103,14 +127,22 @@ def _build_identifiers(
     identifiers_to_build: set[IssueIdentifierType], enabled_issue_codes: set[IssueCode]
 ) -> list[tuple[str, IssueIdentifier]]:
     # Merge the enabled issue codes for each harness
-    enabled_issue_codes_per_harness: defaultdict[IssueIdentifierHarness, set[IssueCode]] = defaultdict(set)
-    combined_name_per_harness: defaultdict[IssueIdentifierHarness, list[str]] = defaultdict(list)
+    enabled_issue_codes_per_harness: defaultdict[
+        IssueIdentifierHarness, set[IssueCode]
+    ] = defaultdict(set)
+    combined_name_per_harness: defaultdict[IssueIdentifierHarness, list[str]] = (
+        defaultdict(list)
+    )
 
     for name, harness, default_issue_codes in HARNESS_PRESETS:
         if name in identifiers_to_build:
-            enabled_issue_codes_for_harness = enabled_issue_codes & set(default_issue_codes)
+            enabled_issue_codes_for_harness = enabled_issue_codes & set(
+                default_issue_codes
+            )
             if enabled_issue_codes_for_harness:
-                enabled_issue_codes_per_harness[harness].update(enabled_issue_codes_for_harness)
+                enabled_issue_codes_per_harness[harness].update(
+                    enabled_issue_codes_for_harness
+                )
                 combined_name_per_harness[harness].append(name.value)
 
     identifiers: list[tuple[str, IssueIdentifier]] = []
@@ -121,7 +153,8 @@ def _build_identifiers(
                 combined_name,
                 harness.make_issue_identifier(
                     identification_guides=tuple(
-                        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in issue_codes
+                        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
+                        for code in issue_codes
                     )
                 ),
             )
@@ -131,7 +164,8 @@ def _build_identifiers(
 
 
 def _generate_with_name_in_debug_info(
-    name: str, generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]
+    name: str,
+    generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
 ) -> Generator[GeneratedIssueSchema, None, tuple[str, IssueIdentificationDebugInfo]]:
     generator_with_capture = ReturnCapturingGenerator(generator)
     for result in generator_with_capture:
@@ -140,15 +174,21 @@ def _generate_with_name_in_debug_info(
 
 
 def _combine_issue_generator_debug_info(
-    generator: Generator[GeneratedIssueSchema, None, tuple[tuple[str, IssueIdentificationDebugInfo], ...]],
+    generator: Generator[
+        GeneratedIssueSchema, None, tuple[tuple[str, IssueIdentificationDebugInfo], ...]
+    ],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
-    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = yield from generator
+    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = (
+        yield from generator
+    )
 
     updated_llm_responses = []
     for identifier_name, debug_info in collected_debug_info:
         for response in debug_info.llm_responses:
             assert isinstance(response.metadata, IssueIdentificationLLMResponseMetadata)
-            updated_response = response.evolve(response.ref().metadata.identifier_name, identifier_name)
+            updated_response = response.evolve(
+                response.ref().metadata.identifier_name, identifier_name
+            )
             updated_llm_responses.append(updated_response)
 
     return IssueIdentificationDebugInfo(llm_responses=tuple(updated_llm_responses))
@@ -163,10 +203,14 @@ def run(
     Run all the registered and configured issue identifiers on the given inputs.
     """
     enabled_issue_codes = get_enabled_issue_codes(config)
-    identifiers = _build_identifiers(_get_enabled_identifier_names(config), enabled_issue_codes)
+    identifiers = _build_identifiers(
+        _get_enabled_identifier_names(config), enabled_issue_codes
+    )
     ensure_global_resource_limits(max_dollars=config.max_identifier_spend_dollars)
 
-    issue_generators: list[Generator[GeneratedIssueSchema, None, tuple[str, IssueIdentificationDebugInfo]]] = []
+    issue_generators: list[
+        Generator[GeneratedIssueSchema, None, tuple[str, IssueIdentificationDebugInfo]]
+    ] = []
     compatible_enabled_identifier_names: list[str] = []
     # The set of issue codes that can be detected by the compatible identifiers. A subset of enabled_issue_codes.
     detectable_issue_codes: set[IssueCode] = set()
@@ -174,11 +218,17 @@ def run(
         # 1. Identification
         try:
             inputs = identifier.to_required_inputs(identifier_inputs)
-            identified_issues_generator = identifier.identify_issues(inputs, project_context, config)
+            identified_issues_generator = identifier.identify_issues(
+                inputs, project_context, config
+            )
             compatible_enabled_identifier_names.append(identifier_name)
             detectable_issue_codes.update(identifier.enabled_issue_codes)
         except IdentifierInputsMissingError as e:
-            logger.debug("skipping identifier {} because of missing inputs: {}", identifier_name, e)
+            logger.debug(
+                "skipping identifier {} because of missing inputs: {}",
+                identifier_name,
+                e,
+            )
             continue
 
         # 2. Collation for agentic identifiers
@@ -192,7 +242,10 @@ def run(
                     identifier.enabled_issue_codes,
                 )
             except IdentifierInputsMissingError as e:
-                logger.warning("collate_issues_with_agent requires commit message and diff, skipping: {}", e)
+                logger.warning(
+                    "collate_issues_with_agent requires commit message and diff, skipping: {}",
+                    e,
+                )
                 continue
         else:
             collated_issues_generator = identified_issues_generator
@@ -209,20 +262,30 @@ def run(
         else:
             filtered_results_generator = collated_issues_generator
 
-        issue_generators.append(_generate_with_name_in_debug_info(identifier_name, filtered_results_generator))
+        issue_generators.append(
+            _generate_with_name_in_debug_info(
+                identifier_name, filtered_results_generator
+            )
+        )
 
     logger.info(
         "Using the following issue identifiers compatible with the input: {}",
         ", ".join([n for n in compatible_enabled_identifier_names]),
     )
 
-    multiplexed_generators = multiplex_generators(issue_generators, max_workers=config.max_identify_workers)
-    multiplexed_generators_with_combined_debug_info = _combine_issue_generator_debug_info(multiplexed_generators)
+    multiplexed_generators = multiplex_generators(
+        issue_generators, max_workers=config.max_identify_workers
+    )
+    multiplexed_generators_with_combined_debug_info = (
+        _combine_issue_generator_debug_info(multiplexed_generators)
+    )
 
     # 4. Deduplicate issues across all identifiers
     if config.enable_deduplication:
         deduplicated_generator = deduplicate_issues(
-            multiplexed_generators_with_combined_debug_info, config, tuple(detectable_issue_codes)
+            multiplexed_generators_with_combined_debug_info,
+            config,
+            tuple(detectable_issue_codes),
         )
     else:
         deduplicated_generator = multiplexed_generators_with_combined_debug_info

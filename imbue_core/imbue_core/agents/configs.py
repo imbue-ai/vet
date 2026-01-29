@@ -102,7 +102,10 @@ def create_safe_llm_config(
         case LanguageModelMode.OFFLINE:
             assert cache_path is not None
             language_model_config = LanguageModelGenerationConfig(
-                model_name=llm_name, is_running_offline=True, is_caching_inputs=True, cache_path=cache_path
+                model_name=llm_name,
+                is_running_offline=True,
+                is_caching_inputs=True,
+                cache_path=cache_path,
             )
         case LanguageModelMode.UPDATE_SNAPSHOT:
             assert cache_path is not None

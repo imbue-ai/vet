@@ -38,7 +38,9 @@ from imbue_core.agents.llm_apis.errors import PromptTooLongError
 from imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from imbue_core.agents.llm_apis.models import ModelInfo
 from imbue_core.agents.llm_apis.openai_compatible_api import OpenAICompatibleAPI
-from imbue_core.agents.llm_apis.openai_compatible_api import _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON
+from imbue_core.agents.llm_apis.openai_compatible_api import (
+    _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON,
+)
 from imbue_core.agents.llm_apis.openai_data_types import OpenAICachingInfo
 from imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent
@@ -267,13 +269,15 @@ def get_model_info(model_name: OpenAIModelName) -> ModelInfo:
     return OPENAI_MODEL_INFO_BY_NAME[model_name]
 
 
-_CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[OpenAIModelName, asyncio.Semaphore] = defaultdict(
-    lambda: asyncio.Semaphore(20),
-    {
-        OpenAIModelName.GPT_3_5_TURBO: asyncio.Semaphore(100),
-        OpenAIModelName.GPT_4_0613: asyncio.Semaphore(60),
-        OpenAIModelName.GPT_4_1_NANO_2025_04_14: asyncio.Semaphore(80),
-    },
+_CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[OpenAIModelName, asyncio.Semaphore] = (
+    defaultdict(
+        lambda: asyncio.Semaphore(20),
+        {
+            OpenAIModelName.GPT_3_5_TURBO: asyncio.Semaphore(100),
+            OpenAIModelName.GPT_4_0613: asyncio.Semaphore(60),
+            OpenAIModelName.GPT_4_1_NANO_2025_04_14: asyncio.Semaphore(80),
+        },
+    )
 )
 
 
@@ -299,9 +303,9 @@ def is_openai_reasoning_model(model_name: str) -> bool:
 
 
 def is_fine_tuned_openai_model(model_name: OpenAIModelName) -> bool:
-    return model_name.value.startswith(FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX) or model_name.value.startswith(
-        FINE_TUNED_GPT4O_2024_08_06_PREFIX
-    )
+    return model_name.value.startswith(
+        FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX
+    ) or model_name.value.startswith(FINE_TUNED_GPT4O_2024_08_06_PREFIX)
 
 
 _OPENAI_COMPLETION_ERROR_PATTERN = re.compile(
@@ -377,7 +381,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         if v not in OPENAI_MODEL_INFO_BY_NAME:
-            raise LanguageModelInvalidModelNameError(v, cls.__name__, list(OPENAI_MODEL_INFO_BY_NAME))
+            raise LanguageModelInvalidModelNameError(
+                v, cls.__name__, list(OPENAI_MODEL_INFO_BY_NAME)
+            )
         return v
 
     @property
@@ -406,12 +412,16 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
             top_logprobs: NotGiven | int
             if self.is_using_logprobs:
-                assert not is_reasoning_model, "Logprobs are not supported for reasoning models."
+                assert (
+                    not is_reasoning_model
+                ), "Logprobs are not supported for reasoning models."
                 top_logprobs = 5
             else:
                 top_logprobs = NOT_GIVEN
 
-            temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            temperature: NotGiven | float = (
+                NOT_GIVEN if is_reasoning_model else params.temperature
+            )
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -434,7 +444,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 completion_tokens = usage.completion_tokens
                 prompt_tokens = usage.prompt_tokens
                 cached_tokens = (
-                    usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details is not None else 0
+                    usage.prompt_tokens_details.cached_tokens
+                    if usage.prompt_tokens_details is not None
+                    else 0
                 ) or 0
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
@@ -485,7 +497,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
             client = self._get_client()
 
             is_reasoning_model = is_openai_reasoning_model(self.model_name)
-            temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            temperature: NotGiven | float = (
+                NOT_GIVEN if is_reasoning_model else params.temperature
+            )
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -515,7 +529,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                     continue
 
                 if chunk.choices:
-                    assert len(chunk.choices) == 1, "Currently only count=1 supported for streaming API."
+                    assert (
+                        len(chunk.choices) == 1
+                    ), "Currently only count=1 supported for streaming API."
                     data = only(chunk.choices)
                     delta = data.delta.content
                     if delta is not None:
@@ -534,7 +550,10 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 prompt_tokens = usage.prompt_tokens
                 dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
                 cached_tokens = usage.prompt_tokens_details.cached_tokens
-                logger.trace("Used this many cached read tokens: {cached_tokens}", cached_tokens=cached_tokens)
+                logger.trace(
+                    "Used this many cached read tokens: {cached_tokens}",
+                    cached_tokens=cached_tokens,
+                )
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
                     provider_specific_data=OpenAICachingInfo(),
@@ -606,7 +625,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 top_logprobs = logprob_token_entry.top_logprobs
                 top_entries = [
                     TokenProbability(
-                        token=top_logprob_obj.token, log_probability=top_logprob_obj.logprob, is_stop=False
+                        token=top_logprob_obj.token,
+                        log_probability=top_logprob_obj.logprob,
+                        is_stop=False,
                     )
                     for top_logprob_obj in top_logprobs
                 ]
@@ -627,7 +648,13 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 text += stop
                 token_probabilities.append(
                     tuple(
-                        [TokenProbability(token=stop, log_probability=self.stop_token_log_probability, is_stop=True)]
+                        [
+                            TokenProbability(
+                                token=stop,
+                                log_probability=self.stop_token_log_probability,
+                                is_stop=True,
+                            )
+                        ]
                     )
                 )
             result = LanguageModelResponseWithLogits(

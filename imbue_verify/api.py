@@ -11,7 +11,9 @@ from loguru import logger
 from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import IssueIdentificationDebugInfo
 from imbue_core.sculptor.state.messages import ConversationMessageUnion
-from imbue_tools.get_conversation_history.get_conversation_history import ConversationLoadingError
+from imbue_tools.get_conversation_history.get_conversation_history import (
+    ConversationLoadingError,
+)
 from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from imbue_tools.repo_utils.project_context import LazyProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext
@@ -31,14 +33,18 @@ def get_issues_with_raw_responses(
     config: ImbueVerifyConfig,
     repo_path: Path,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
-) -> tuple[tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext]:
+) -> tuple[
+    tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext
+]:
     if not goal or not goal.strip():
         logger.info("No goal was provided, generating one from conversation history")
         # should be not None and not empty
         if conversation_history:
             try:
                 # TODO: we use the imbue verify config here, but we may want to configure this separately
-                goal = get_goal_from_conversation(conversation_history, config.language_model_generation_config)
+                goal = get_goal_from_conversation(
+                    conversation_history, config.language_model_generation_config
+                )
                 logger.info("Generated goal from conversation history: {}", goal)
             except Exception as e:
                 raise ConversationLoadingError(
@@ -46,7 +52,9 @@ def get_issues_with_raw_responses(
                 )
         else:
             # TODO: Consider which CLI options we should show this for (quiet, normal, verbose).
-            logger.info("No goal or conversation history provided, only goal-independent identifiers will run")
+            logger.info(
+                "No goal or conversation history provided, only goal-independent identifiers will run"
+            )
             goal = ""
 
     lm_config = config.language_model_generation_config
@@ -61,7 +69,9 @@ def get_issues_with_raw_responses(
         language_model_name=lm_config.model_name,
         repo_path=repo_path,
         # This needs to account for the imbue_verify prompt, as well as the max_tokens output tokens.
-        tokens_to_reserve=IMBUE_VERIFY_MAX_PROMPT_TOKENS + diff_no_binary_tokens + config.max_output_tokens,
+        tokens_to_reserve=IMBUE_VERIFY_MAX_PROMPT_TOKENS
+        + diff_no_binary_tokens
+        + config.max_output_tokens,
         context_window=lm_config.get_max_context_length(),
         is_custom_model=lm_config.is_custom_model(),
     )

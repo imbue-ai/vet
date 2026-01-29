@@ -32,7 +32,9 @@ from imbue_tools.repo_utils.subrepo_formatting import SubrepoContextMatchers
 from imbue_tools.repo_utils.subrepo_formatting import UnionFilenamePattern
 from imbue_tools.repo_utils.subrepo_formatting import compute_file_context_format_styles
 from imbue_tools.repo_utils.subrepo_formatting import format_subrepo_context
-from imbue_tools.repo_utils.subrepo_formatting import parse_subrepo_context_matchers_from_toml
+from imbue_tools.repo_utils.subrepo_formatting import (
+    parse_subrepo_context_matchers_from_toml,
+)
 
 
 class SubrepoContext(SerializableModel):
@@ -58,7 +60,11 @@ def get_immediate_first_party_import_paths_for_python_file(
     try:
         global_imports = get_global_imports(file_contents)
     except SyntaxError as e:
-        log_exception(e, "Failed to parse imports for {current_file_path}", current_file_path=current_file_path)
+        log_exception(
+            e,
+            "Failed to parse imports for {current_file_path}",
+            current_file_path=current_file_path,
+        )
         return None
 
     parent_names: set[QualifiedName] = set()
@@ -69,7 +75,9 @@ def get_immediate_first_party_import_paths_for_python_file(
     imported_file_paths = set()
     all_file_paths = [Path(x) for x in full_repo_contents_map.text_files.keys()]
     for parent_name in parent_names:
-        other_file_path = maybe_get_file_path_from_qualified_name(parent_name, all_file_paths)
+        other_file_path = maybe_get_file_path_from_qualified_name(
+            parent_name, all_file_paths
+        )
         # if this doesn't exist it's likely not a first party import so we can ignore it
         if not other_file_path or is_qualified_name_from_stdlib(parent_name):
             continue
@@ -80,7 +88,9 @@ def get_immediate_first_party_import_paths_for_python_file(
 
 FULL_REPO_PATHSPEC = BaseFilenamePattern.from_lines(["/**"])
 DOC_FILE_EXTENSIONS = [".md", ".txt"]
-DOC_PATHSPEC = BaseFilenamePattern.from_lines([f"**/*{ext}" for ext in DOC_FILE_EXTENSIONS])
+DOC_PATHSPEC = BaseFilenamePattern.from_lines(
+    [f"**/*{ext}" for ext in DOC_FILE_EXTENSIONS]
+)
 
 # Common files that we want to exclude since they can be large and are of low signal for issue identification.
 EXCLUSIONS_PATHSPEC = BaseFilenamePattern.from_lines(["uv.lock", "**/__snapshots__/**"])
@@ -121,11 +131,19 @@ def first_level_files_along_paths(file_paths: Iterable[str]) -> FilenamePattern:
     for file_path in sorted_file_paths:
         for parent in Path(file_path).parents:
             escaped_parent = Path(escape_gitignore_pattern(str(parent)))
-            match_all = BaseFilenamePattern.from_lines([str("/" / escaped_parent / "*")])
-            match_except_subdirectories = NegatedFilenamePattern.build_from_positive_pattern(
-                BaseFilenamePattern.from_lines([str("/" / escaped_parent / "*/*")])
+            match_all = BaseFilenamePattern.from_lines(
+                [str("/" / escaped_parent / "*")]
             )
-            file_patterns.append(IntersectionFilenamePattern(specs=(match_all, match_except_subdirectories)))
+            match_except_subdirectories = (
+                NegatedFilenamePattern.build_from_positive_pattern(
+                    BaseFilenamePattern.from_lines([str("/" / escaped_parent / "*/*")])
+                )
+            )
+            file_patterns.append(
+                IntersectionFilenamePattern(
+                    specs=(match_all, match_except_subdirectories)
+                )
+            )
     return UnionFilenamePattern(specs=tuple(file_patterns))
 
 
@@ -135,10 +153,14 @@ def make_docs_pathspec_along_paths(file_paths: frozenset[str]) -> FilenamePatter
     """
     Create a pathspec that matches documentation files (.md, .txt) along each parent folder of the given file paths.
     """
-    return IntersectionFilenamePattern(specs=(DOC_PATHSPEC, first_level_files_along_paths(file_paths=file_paths)))
+    return IntersectionFilenamePattern(
+        specs=(DOC_PATHSPEC, first_level_files_along_paths(file_paths=file_paths))
+    )
 
 
-INSTRUCTIONS_PATHSPEC = BaseFilenamePattern.from_lines(["**/.claude.md", "**/CLAUDE.md", "**/AGENTS.md"])
+INSTRUCTIONS_PATHSPEC = BaseFilenamePattern.from_lines(
+    ["**/.claude.md", "**/CLAUDE.md", "**/AGENTS.md"]
+)
 
 
 @functools.lru_cache(maxsize=5)
@@ -151,14 +173,19 @@ def make_relevant_files_pathspec(file_paths: frozenset[str]) -> FilenamePattern:
 
 # cache this since it's reused across strategies
 @functools.lru_cache(maxsize=5)
-def make_instructions_pathspec_along_paths(file_paths: frozenset[str]) -> FilenamePattern:
+def make_instructions_pathspec_along_paths(
+    file_paths: frozenset[str],
+) -> FilenamePattern:
     """
     Create a pathspec that matches instruction files (e.g. .claude.md, CLAUDE.md, AGENTS.md) along each parent folder of the given file paths.
 
     Should match a strict subset of make_docs_pathspec_along_paths.
     """
     return IntersectionFilenamePattern(
-        specs=(INSTRUCTIONS_PATHSPEC, first_level_files_along_paths(file_paths=file_paths))
+        specs=(
+            INSTRUCTIONS_PATHSPEC,
+            first_level_files_along_paths(file_paths=file_paths),
+        )
     )
 
 
@@ -196,22 +223,26 @@ class SubrepoContextStrategy(BaseModel):
 class SubrepoContextStrategyType(StrEnum):
     # defaults if we have relevant files
     FULL_REPO_CONTENTS = "full repo contents"
-    RELEVANT_WHOLE_FILES_IMPORTS_DOCS_AND_ELSEWHERE_FILENAME = (
-        "relevant files + immediate imports + docs along relevant paths + filenames elsewhere"
+    RELEVANT_WHOLE_FILES_IMPORTS_DOCS_AND_ELSEWHERE_FILENAME = "relevant files + immediate imports + docs along relevant paths + filenames elsewhere"
+    RELEVANT_WHOLE_FILES_IMPORTS_DOCS = (
+        "relevant files + immediate imports + docs along relevant paths"
     )
-    RELEVANT_WHOLE_FILES_IMPORTS_DOCS = "relevant files + immediate imports + docs along relevant paths"
     RELEVANT_WHOLE_FILES_AND_RELEVANT_STUBBIFIED_IMPORTS_DOCS = (
         "relevant files + stubbified imports + docs along relevant paths"
     )
     RELEVANT_WHOLE_FILES_DOCS = "relevant files + docs along relevant paths"
-    RELEVANT_WHOLE_FILES_INSTRUCTIONS = "relevant files + agent instructions along relevant paths"
+    RELEVANT_WHOLE_FILES_INSTRUCTIONS = (
+        "relevant files + agent instructions along relevant paths"
+    )
     RELEVANT_WHOLE_FILES = "relevant files"
     RELEVANT_STUBBIFIED_FILES = "relevant stubbified files"
     NOTHING = "nothing"
 
     # defaults if we don't have relevant files (missing FULL_REPO_CONTENTS and NOTHING because they're already listed for if we do have relevant files)
     WHOLE_DOCS_AND_OTHERWISE_FILENAMES = "docs + filenames elsewhere"
-    WHOLE_INSTRUCTIONS_AND_OTHERWISE_FILENAMES = "agent instructions + filenames elsewhere"
+    WHOLE_INSTRUCTIONS_AND_OTHERWISE_FILENAMES = (
+        "agent instructions + filenames elsewhere"
+    )
     WHOLE_INSTRUCTIONS = "agent instructions"
 
     # defaults for providing instruction files if we have relevant files
@@ -234,7 +265,9 @@ class AvailableInfoMode(StrEnum):
     NO_FILES = "no_files"
 
 
-DEFAULT_STRATEGY_TYPES: dict[tuple[StrategyMode, AvailableInfoMode], tuple[SubrepoContextStrategyType, ...]] = {
+DEFAULT_STRATEGY_TYPES: dict[
+    tuple[StrategyMode, AvailableInfoMode], tuple[SubrepoContextStrategyType, ...]
+] = {
     (StrategyMode.REGULAR, AvailableInfoMode.YES_FILES): (
         SubrepoContextStrategyType.FULL_REPO_CONTENTS,
         SubrepoContextStrategyType.RELEVANT_WHOLE_FILES_IMPORTS_DOCS_AND_ELSEWHERE_FILENAME,
@@ -279,16 +312,26 @@ def build_strategy(
                 label=s,
                 matchers=((ContextFormatStyle.FULL_FILE, FULL_REPO_PATHSPEC),),
             )
-        case SubrepoContextStrategyType.RELEVANT_WHOLE_FILES_IMPORTS_DOCS_AND_ELSEWHERE_FILENAME as s:
+        case (
+            SubrepoContextStrategyType.RELEVANT_WHOLE_FILES_IMPORTS_DOCS_AND_ELSEWHERE_FILENAME as s
+        ):
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
                     (
                         ContextFormatStyle.FULL_FILE,
-                        make_imports_pathspec_for_paths(relevant_file_paths, full_repo_contents),
+                        make_relevant_files_pathspec(relevant_file_paths),
                     ),
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_imports_pathspec_for_paths(
+                            relevant_file_paths, full_repo_contents
+                        ),
+                    ),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.FILENAME_ONLY, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -296,25 +339,43 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
                     (
                         ContextFormatStyle.FULL_FILE,
-                        make_imports_pathspec_for_paths(relevant_file_paths, full_repo_contents),
+                        make_relevant_files_pathspec(relevant_file_paths),
                     ),
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_imports_pathspec_for_paths(
+                            relevant_file_paths, full_repo_contents
+                        ),
+                    ),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
-        case SubrepoContextStrategyType.RELEVANT_WHOLE_FILES_AND_RELEVANT_STUBBIFIED_IMPORTS_DOCS as s:
+        case (
+            SubrepoContextStrategyType.RELEVANT_WHOLE_FILES_AND_RELEVANT_STUBBIFIED_IMPORTS_DOCS as s
+        ):
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_relevant_files_pathspec(relevant_file_paths),
+                    ),
                     (
                         ContextFormatStyle.STUB,
-                        make_imports_pathspec_for_paths(relevant_file_paths, full_repo_contents),
+                        make_imports_pathspec_for_paths(
+                            relevant_file_paths, full_repo_contents
+                        ),
                     ),
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -322,8 +383,14 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_relevant_files_pathspec(relevant_file_paths),
+                    ),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -331,8 +398,14 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
-                    (ContextFormatStyle.FULL_FILE, make_instructions_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_relevant_files_pathspec(relevant_file_paths),
+                    ),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_instructions_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -340,7 +413,10 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_relevant_files_pathspec(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_relevant_files_pathspec(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -348,7 +424,10 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.STUB, make_relevant_files_pathspec(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.STUB,
+                        make_relevant_files_pathspec(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -396,7 +475,10 @@ def build_strategy(
                 label=s,
                 matchers=(
                     (ContextFormatStyle.FULL_FILE, INSTRUCTIONS_PATHSPEC),
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -404,7 +486,10 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_docs_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_docs_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -412,7 +497,10 @@ def build_strategy(
             return SubrepoContextStrategy(
                 label=s,
                 matchers=(
-                    (ContextFormatStyle.FULL_FILE, make_instructions_pathspec_along_paths(relevant_file_paths)),
+                    (
+                        ContextFormatStyle.FULL_FILE,
+                        make_instructions_pathspec_along_paths(relevant_file_paths),
+                    ),
                     (ContextFormatStyle.HIDDEN, FULL_REPO_PATHSPEC),
                 ),
             )
@@ -425,7 +513,11 @@ def generate_subrepo_strategies(
     full_repo_contents: InMemoryFileSystem,
     relevant_file_paths: frozenset[str] | None = None,
 ) -> list[SubrepoContextStrategy]:
-    available_info = AvailableInfoMode.YES_FILES if relevant_file_paths else AvailableInfoMode.NO_FILES
+    available_info = (
+        AvailableInfoMode.YES_FILES
+        if relevant_file_paths
+        else AvailableInfoMode.NO_FILES
+    )
     return [
         build_strategy(strategy_type, full_repo_contents, relevant_file_paths)
         for strategy_type in DEFAULT_STRATEGY_TYPES[(mode, available_info)]
@@ -437,27 +529,44 @@ def select_desired_subrepo_strategies(
     relevant_file_paths: frozenset[str] | None = None,
     subrepo_context_config: str | None = None,
     strategy_types_to_try: tuple[SubrepoContextStrategyType] | None = None,
-    strategy_mode: StrategyMode | None = None,  # if no config option is set, defaults to StrategyMode.REGULAR
+    strategy_mode: (
+        StrategyMode | None
+    ) = None,  # if no config option is set, defaults to StrategyMode.REGULAR
 ) -> list[SubrepoContextStrategy]:
     num_ways_config_was_set = sum(
-        1 for v in [subrepo_context_config, strategy_types_to_try, strategy_mode] if v is not None
+        1
+        for v in [subrepo_context_config, strategy_types_to_try, strategy_mode]
+        if v is not None
     )
     if num_ways_config_was_set > 1:
-        assert False, "Can only specify one of subrepo_context_config, strategy_types_to_try, and strategy_mode"
+        assert (
+            False
+        ), "Can only specify one of subrepo_context_config, strategy_types_to_try, and strategy_mode"
 
     if subrepo_context_config is not None:
         # An explicit subrepo context config was provided. Use it exclusively.
-        subrepo_context_matchers = parse_subrepo_context_matchers_from_toml(subrepo_context_config)
-        return [SubrepoContextStrategy(label=SubrepoContextStrategyType.CUSTOM, matchers=subrepo_context_matchers)]
+        subrepo_context_matchers = parse_subrepo_context_matchers_from_toml(
+            subrepo_context_config
+        )
+        return [
+            SubrepoContextStrategy(
+                label=SubrepoContextStrategyType.CUSTOM,
+                matchers=subrepo_context_matchers,
+            )
+        ]
     elif strategy_types_to_try is not None:
         return [
             build_strategy(strategy_type, full_repo_contents, relevant_file_paths)
             for strategy_type in strategy_types_to_try
         ]
     else:
-        strategy_mode_to_use = strategy_mode if strategy_mode is not None else StrategyMode.REGULAR
+        strategy_mode_to_use = (
+            strategy_mode if strategy_mode is not None else StrategyMode.REGULAR
+        )
         return generate_subrepo_strategies(
-            strategy_mode_to_use, full_repo_contents=full_repo_contents, relevant_file_paths=relevant_file_paths
+            strategy_mode_to_use,
+            full_repo_contents=full_repo_contents,
+            relevant_file_paths=relevant_file_paths,
         )
 
 
@@ -472,7 +581,9 @@ def get_repo_context(
     relevant_file_paths: frozenset[str] | None = None,
     subrepo_context_config: str | None = None,
     strategy_types_to_try: tuple[SubrepoContextStrategyType] | None = None,
-    strategy_mode: StrategyMode | None = None,  # if no config option is set, defaults to StrategyMode.REGULAR
+    strategy_mode: (
+        StrategyMode | None
+    ) = None,  # if no config option is set, defaults to StrategyMode.REGULAR
     template: str = REPO_CONTEXT_TEMPLATE,
 ) -> SubrepoContextWithFormattedContext:
     """
@@ -502,11 +613,15 @@ def get_repo_context(
                 tokens_to_reserve=tokens_to_reserve,
                 template=template,
             )
-            logger.info("Selected subrepo context strategy: {}", subrepo_context_strategy.label)
+            logger.info(
+                "Selected subrepo context strategy: {}", subrepo_context_strategy.label
+            )
 
             if subrepo_context_strategy.label == SubrepoContextStrategyType.NOTHING:
                 # log an error if we have to use the NOTHING strategy, but still proceed with the call
-                logger.error("Selected NOTHING subrepo context strategy; hopefully this doesn't happen too often!")
+                logger.error(
+                    "Selected NOTHING subrepo context strategy; hopefully this doesn't happen too often!"
+                )
 
             return SubrepoContextWithFormattedContext(
                 formatted_repo_context=repo_context_str,

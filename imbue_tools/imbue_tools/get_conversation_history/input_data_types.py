@@ -54,7 +54,9 @@ class ConversationInputs(IdentifierInputs):
     @model_validator(mode="after")
     def validate_conversation_history_not_none(self) -> Self:
         if self.maybe_conversation_history is None:
-            raise IdentifierInputsMissingError("conversation_history is required for conversation inputs")
+            raise IdentifierInputsMissingError(
+                "conversation_history is required for conversation inputs"
+            )
         return self
 
     @property
@@ -63,7 +65,9 @@ class ConversationInputs(IdentifierInputs):
         return self.maybe_conversation_history
 
 
-SpecificIdentifierInputsType = TypeVar("SpecificIdentifierInputsType", bound=IdentifierInputs)
+SpecificIdentifierInputsType = TypeVar(
+    "SpecificIdentifierInputsType", bound=IdentifierInputs
+)
 
 
 def to_specific_inputs_type(

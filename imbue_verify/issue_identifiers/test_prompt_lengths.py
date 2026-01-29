@@ -5,10 +5,14 @@ from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
 from imbue_verify.issue_identifiers import registry
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+)
 from imbue_verify.repo_utils import IMBUE_VERIFY_MAX_PROMPT_TOKENS
 
-EMPTY_PROJECT_CONTEXT = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="")
+EMPTY_PROJECT_CONTEXT = BaseProjectContext(
+    file_contents_by_path=FrozenDict(), cached_prompt_prefix=""
+)
 DEFAULT_IMBUE_VERIFY_CONFIG = ImbueVerifyConfig()
 
 
@@ -46,13 +50,15 @@ def test_prompt_lengths() -> None:
     for identifier_name, extract_prompt in PROMPT_EXTRACTOR_FUNCTIONS.items():
         identifier = first(
             [
-                harness.make_issue_identifier(tuple(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[c] for c in codes))
+                harness.make_issue_identifier(
+                    tuple(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[c] for c in codes)
+                )
                 for name, harness, codes in registry.HARNESS_PRESETS
                 if name == identifier_name
             ]
         )
         prompt = extract_prompt(identifier)
         num_tokens = _estimate_tokens(prompt)
-        assert num_tokens <= IMBUE_VERIFY_MAX_PROMPT_TOKENS, (
-            f"Prompt for {identifier_name} exceeds IMBUE_VERIFY_MAX_PROMPT_TOKENS. Consider increasing IMBUE_VERIFY_MAX_PROMPT_TOKENS or shortening the prompt. "
-        )
+        assert (
+            num_tokens <= IMBUE_VERIFY_MAX_PROMPT_TOKENS
+        ), f"Prompt for {identifier_name} exceeds IMBUE_VERIFY_MAX_PROMPT_TOKENS. Consider increasing IMBUE_VERIFY_MAX_PROMPT_TOKENS or shortening the prompt. "

@@ -44,23 +44,39 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         cmd = cls._build_cli_cmd(options)
         with AgentSubprocessCLITransport.build(
             AgentSubprocessCLITransportOptions(
-                cmd=cmd, cwd=options.cwd, extra_env_vars={"CLAUDE_CODE_ENTRYPOINT": "sdk-py"}
+                cmd=cmd,
+                cwd=options.cwd,
+                extra_env_vars={"CLAUDE_CODE_ENTRYPOINT": "sdk-py"},
             )
         ) as transport:
             yield cls(options=options, transport=transport)
 
     def process_query(self, prompt: str) -> Iterator[AgentMessage]:
         logger.trace(
-            "{client_name}: calling agent with prompt={prompt}", client_name=type(self).__name__, prompt=prompt
+            "{client_name}: calling agent with prompt={prompt}",
+            client_name=type(self).__name__,
+            prompt=prompt,
         )
         # Claude code expects "User message" objects as inputs
         self._transport.send_request(
-            [{"type": "user", "message": {"role": "user", "content": [{"type": "text", "text": prompt}]}}],
+            [
+                {
+                    "type": "user",
+                    "message": {
+                        "role": "user",
+                        "content": [{"type": "text", "text": prompt}],
+                    },
+                }
+            ],
             self._options,
         )
 
         for data in self._transport.receive_messages():
-            logger.trace("{client_name}: received raw JSON message={data}", client_name=type(self).__name__, data=data)
+            logger.trace(
+                "{client_name}: received raw JSON message={data}",
+                client_name=type(self).__name__,
+                data=data,
+            )
 
             message = parse_claude_message(data)
             if message:
@@ -128,8 +144,17 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
             # in this case, the cmd should never be used
             cmd = ["CACHED_CLAUDE_CODE_EXEC_PLACEHOLDER"]
             return cmd
-        cli_path = str(options.cli_path) if options.cli_path is not None else cls._find_cli()
-        cmd = [cli_path, "--output-format", "stream-json", "--input-format", "stream-json", "--verbose"]
+        cli_path = (
+            str(options.cli_path) if options.cli_path is not None else cls._find_cli()
+        )
+        cmd = [
+            cli_path,
+            "--output-format",
+            "stream-json",
+            "--input-format",
+            "stream-json",
+            "--verbose",
+        ]
         cmd.extend(cls._build_cli_args(options))
         return cmd
 
@@ -146,7 +171,9 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
             args.extend(["--model", options.model])
 
         if options.permission_prompt_tool_name:
-            args.extend(["--permission-prompt-tool", options.permission_prompt_tool_name])
+            args.extend(
+                ["--permission-prompt-tool", options.permission_prompt_tool_name]
+            )
 
         if options.permission_mode:
             args.extend(["--permission-mode", options.permission_mode])
@@ -160,7 +187,13 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         if options.mcp_servers:
             mcp_config_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
             mcp_config_file.write(
-                json.dumps({"mcpServers": {k: v.model_dump() for k, v in options.mcp_servers.items()}}).encode("utf-8")
+                json.dumps(
+                    {
+                        "mcpServers": {
+                            k: v.model_dump() for k, v in options.mcp_servers.items()
+                        }
+                    }
+                ).encode("utf-8")
             )
             args.extend(["--mcp-config", mcp_config_file.name])
 

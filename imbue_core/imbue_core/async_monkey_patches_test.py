@@ -19,7 +19,9 @@ class IncorrectErrorsLoggedDuringTesting(Exception):
 def check_logged_errors(check_func: Callable[[list[str]], None]) -> Iterator[None]:
     """Context manager that monkey patches logger._log to accumulate error messages instead of logging them.
     Then it runs the check function on the accumulated errors."""
-    original_log_func = logger._log  # pyre-fixme[16]: pyre doesn't know that _log exists
+    original_log_func = (
+        logger._log
+    )  # pyre-fixme[16]: pyre doesn't know that _log exists
     accumulated_errors: list[str] = []
 
     error_level_names = (
@@ -29,11 +31,16 @@ def check_logged_errors(check_func: Callable[[list[str]], None]) -> Iterator[Non
         ExceptionPriority.HIGH_PRIORITY.value,
     )
 
-    logger._log = (
-        lambda level, flag, options, message, args, kwargs: (
+    logger._log = lambda level, flag, options, message, args, kwargs: (
+        (
             accumulated_errors.append(message) is None
             and original_log_func(
-                "INFO", flag, options, "CAUGHT ERROR LOG: " + message.splitlines()[0][:100], args, kwargs
+                "INFO",
+                flag,
+                options,
+                "CAUGHT ERROR LOG: " + message.splitlines()[0][:100],
+                args,
+                kwargs,
             )
         )
         if level in error_level_names
@@ -60,7 +67,9 @@ def at_least_check_maker(expected_errors_set: set[str]) -> Callable[[list[str]],
                 if expected_error in accumulated_error:
                     break
             else:
-                raise IncorrectErrorsLoggedDuringTesting(f"{expected_error=} is not in {accumulated_errors=}")
+                raise IncorrectErrorsLoggedDuringTesting(
+                    f"{expected_error=} is not in {accumulated_errors=}"
+                )
 
     return check_func
 
@@ -68,7 +77,8 @@ def at_least_check_maker(expected_errors_set: set[str]) -> Callable[[list[str]],
 @contextmanager
 def expect_at_least_logged_errors(expected_errors: set[str]) -> Iterator[None]:
     """Context manager that monkey patches logger._log to accumulate error messages instead of logging them.
-    Checks that all expected errors are in the accumulated errors, in no particular order."""
+    Checks that all expected errors are in the accumulated errors, in no particular order.
+    """
     check_func = at_least_check_maker(expected_errors)
     with check_logged_errors(check_func):
         yield
@@ -117,7 +127,9 @@ def test_log_exception_with_priority() -> None:
         try:
             x = 1 / 0
         except Exception as e:
-            log_exception(e, "Test log_exception", priority=ExceptionPriority.LOW_PRIORITY)
+            log_exception(
+                e, "Test log_exception", priority=ExceptionPriority.LOW_PRIORITY
+            )
             assert True  # If we reach here, the test passes
         else:
             assert False, "log_exception did not raise an exception"
@@ -126,10 +138,19 @@ def test_log_exception_with_priority() -> None:
 @pytest.fixture
 def explode_on_error() -> Generator[None, None, None]:
     """Fixture to explode on error."""
-    original_log_func = logger._log  # pyre-fixme[16]: pyre doesn't know that _log exists
+    original_log_func = (
+        logger._log
+    )  # pyre-fixme[16]: pyre doesn't know that _log exists
     accumulated_errors: list[str] = []
 
-    def _log_wrapper(level: str, flag: int, options: tuple[int, ...], message: str, args: tuple, kwargs: dict) -> Any:
+    def _log_wrapper(
+        level: str,
+        flag: int,
+        options: tuple[int, ...],
+        message: str,
+        args: tuple,
+        kwargs: dict,
+    ) -> Any:
         if level == "ERROR":
             accumulated_errors.append(message)
         new_options = list(options)
@@ -144,7 +165,9 @@ def explode_on_error() -> Generator[None, None, None]:
         raise
     else:
         if len(accumulated_errors) > 0:
-            raise IncorrectErrorsLoggedDuringTesting(f"Errors logged during testing: {accumulated_errors}")
+            raise IncorrectErrorsLoggedDuringTesting(
+                f"Errors logged during testing: {accumulated_errors}"
+            )
     finally:
         logger._log = original_log_func
 
@@ -169,5 +192,7 @@ def test_log_error_at_least(explode_on_error: Any) -> None:
         logger.error("Something else bad happened")
 
     with pytest.raises(IncorrectErrorsLoggedDuringTesting):
-        with expect_at_least_logged_errors({"Something bad happened", "Something else bad happened"}):
+        with expect_at_least_logged_errors(
+            {"Something bad happened", "Something else bad happened"}
+        ):
             logger.error("Something bad happened")

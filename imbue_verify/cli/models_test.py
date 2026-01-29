@@ -20,8 +20,12 @@ SAMPLE_USER_CONFIG = ModelsConfig(
             base_url="http://localhost:8080/v1",
             api_key_env="CUSTOM_KEY",
             models={
-                "my-custom-model": ModelConfig(context_window=128000, max_output_tokens=16384),
-                "another-model": ModelConfig(context_window=128000, max_output_tokens=16384),
+                "my-custom-model": ModelConfig(
+                    context_window=128000, max_output_tokens=16384
+                ),
+                "another-model": ModelConfig(
+                    context_window=128000, max_output_tokens=16384
+                ),
             },
         )
     }
@@ -59,7 +63,9 @@ def test_get_all_model_ids_includes_user_defined_models() -> None:
         ("my-custom-model", SAMPLE_USER_CONFIG, True),
     ],
 )
-def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
+def test_is_valid_model_id(
+    model_id: str, user_config: ModelsConfig | None, expected: bool
+) -> None:
     assert is_valid_model_id(model_id, user_config) is expected
 
 
@@ -71,7 +77,9 @@ def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expe
         (DEFAULT_MODEL_ID, SAMPLE_USER_CONFIG, False),
     ],
 )
-def test_is_user_defined_model(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
+def test_is_user_defined_model(
+    model_id: str, user_config: ModelsConfig | None, expected: bool
+) -> None:
     assert is_user_defined_model(model_id, user_config) is expected
 
 
@@ -94,7 +102,11 @@ def test_validate_model_id_validates_user_defined_model() -> None:
             "custom": ProviderConfig(
                 base_url="http://localhost:8080/v1",
                 api_key_env="CUSTOM_KEY",
-                models={"my-custom-model": ModelConfig(context_window=128000, max_output_tokens=16384)},
+                models={
+                    "my-custom-model": ModelConfig(
+                        context_window=128000, max_output_tokens=16384
+                    )
+                },
             )
         }
     )
@@ -118,7 +130,9 @@ def test_get_builtin_models_by_provider_all_values_are_lists_of_strings() -> Non
 
     for provider_name, models in providers.items():
         assert isinstance(models, list), f"{provider_name} should have a list of models"
-        assert all(isinstance(m, str) for m in models), f"{provider_name} models should all be strings"
+        assert all(
+            isinstance(m, str) for m in models
+        ), f"{provider_name} models should all be strings"
 
 
 def test_get_models_by_provider_returns_builtin_providers_when_no_config() -> None:
@@ -136,8 +150,12 @@ def test_get_models_by_provider_includes_user_defined_providers() -> None:
                 base_url="http://localhost:11434/v1",
                 api_key_env="OLLAMA_KEY",
                 models={
-                    "llama3.2:latest": ModelConfig(context_window=128000, max_output_tokens=16384),
-                    "qwen:7b": ModelConfig(context_window=32768, max_output_tokens=8192),
+                    "llama3.2:latest": ModelConfig(
+                        context_window=128000, max_output_tokens=16384
+                    ),
+                    "qwen:7b": ModelConfig(
+                        context_window=32768, max_output_tokens=8192
+                    ),
                 },
             )
         }
@@ -151,14 +169,20 @@ def test_get_models_by_provider_includes_user_defined_providers() -> None:
     assert "openai" in providers
 
 
-def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name() -> None:
+def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name() -> (
+    None
+):
     user_config = ModelsConfig(
         providers={
             "custom": ProviderConfig(
                 name="anthropic",
                 base_url="http://localhost:8080/v1",
                 api_key_env="CUSTOM_KEY",
-                models={"custom-model": ModelConfig(context_window=128000, max_output_tokens=16384)},
+                models={
+                    "custom-model": ModelConfig(
+                        context_window=128000, max_output_tokens=16384
+                    )
+                },
             )
         }
     )

@@ -4,7 +4,9 @@ from pathlib import Path
 
 from imbue_core.pydantic_serialization import SerializableModel
 
-STANDARD_LIBRARIES: frozenset[str] = sys.stdlib_module_names | frozenset(sys.builtin_module_names)
+STANDARD_LIBRARIES: frozenset[str] = sys.stdlib_module_names | frozenset(
+    sys.builtin_module_names
+)
 
 
 class QualifiedName(SerializableModel):
@@ -100,7 +102,9 @@ def _collect_global_imports(node: ast.AST, imports: list[Import]) -> None:
                 )
 
     # Don't recurse into function or class definitions - imports there are not global
-    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+    if isinstance(
+        node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
+    ):
         return
 
     # Recurse into child nodes

@@ -55,7 +55,9 @@ def sync(func: Callable[P, Awaitable[R]]) -> Callable[P, R]:
     return wrapper
 
 
-def sync_generator(func: Callable[P, AsyncGenerator[R, None]]) -> Callable[P, Generator[R, None, None]]:
+def sync_generator(
+    func: Callable[P, AsyncGenerator[R, None]],
+) -> Callable[P, Generator[R, None, None]]:
     """Decorator that runs an async generator synchronously by dispatching to
     an event loop running in a separate thread.
     """
@@ -76,7 +78,9 @@ def sync_generator(func: Callable[P, AsyncGenerator[R, None]]) -> Callable[P, Ge
 
 @contextmanager
 # pyre-ignore[24]: pyre doesn't understand AbstractAsyncContextManager
-def sync_contextmanager(async_context_manager: AbstractAsyncContextManager[S]) -> Generator[S, None, None]:
+def sync_contextmanager(
+    async_context_manager: AbstractAsyncContextManager[S],
+) -> Generator[S, None, None]:
     sync_aenter = sync(async_context_manager.__aenter__)
     sync_aexit = sync(async_context_manager.__aexit__)
 
@@ -95,7 +99,9 @@ def sync_contextmanager_func(
     cm_func: Callable[P, AbstractAsyncContextManager[S]],  # pyre-ignore[24]
 ) -> Callable[P, AbstractContextManager[S]]:  # pyre-ignore[24]
     @functools.wraps(cm_func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> AbstractContextManager[S]:  # pyre-ignore[24]
+    def wrapper(
+        *args: P.args, **kwargs: P.kwargs
+    ) -> AbstractContextManager[S]:  # pyre-ignore[24]
         return sync_contextmanager(cm_func(*args, **kwargs))
 
     return wrapper
@@ -116,7 +122,9 @@ def _get_or_create_event_loop() -> asyncio.AbstractEventLoop:
         _LOOP = asyncio.new_event_loop()
         asyncio.set_event_loop(_LOOP)
         # pyre-ignore[16]: we have _LOOP_LOCK, so _LOOP is still not None
-        threading.Thread(target=_LOOP.run_forever, daemon=True, name="async_loop").start()
+        threading.Thread(
+            target=_LOOP.run_forever, daemon=True, name="async_loop"
+        ).start()
     return _LOOP  # pyre-ignore[7]: we just made _LOOP, so it's not None unless it got destroyed just now
 
 
@@ -142,7 +150,9 @@ def shorten_filename(filename: str) -> str:
 #  I could even imagine controls that allowed for printing just the task groups themselves, which would also be easier
 #  to understand.
 def get_all_async_task_stacks(
-    num_skipped_frames: int = 0, log_variables: bool = False, loop: asyncio.AbstractEventLoop | None = None
+    num_skipped_frames: int = 0,
+    log_variables: bool = False,
+    loop: asyncio.AbstractEventLoop | None = None,
 ) -> Iterator[str]:
     """Yields the lines of a report for all stack frames of all async tasks including variables."""
     tasks_by_task_group: dict[asyncio.TaskGroup | None, list[asyncio.Task]] = {}
@@ -152,7 +162,9 @@ def get_all_async_task_stacks(
         if task.done():
             continue
         task_group = cast(asyncio.TaskGroup | None, getattr(task, "task_group", None))
-        owned_task_group = cast(asyncio.TaskGroup | None, getattr(task, "owned_task_group", None))
+        owned_task_group = cast(
+            asyncio.TaskGroup | None, getattr(task, "owned_task_group", None)
+        )
         if owned_task_group is not None:
             owning_task_by_task_group[owned_task_group] = task
             if owned_task_group not in tasks_by_task_group:
@@ -163,7 +175,9 @@ def get_all_async_task_stacks(
     all_owning_tasks = set(owning_task_by_task_group.values())
 
     task_group_keys = list(tasks_by_task_group.keys())
-    for task_group in cast(list[asyncio.TaskGroup | None], [None]) + [x for x in task_group_keys if x is not None]:
+    for task_group in cast(list[asyncio.TaskGroup | None], [None]) + [
+        x for x in task_group_keys if x is not None
+    ]:
         if task_group not in tasks_by_task_group:
             continue
         tasks = tasks_by_task_group[task_group]
@@ -206,7 +220,11 @@ def get_all_async_task_stacks(
                             shorten_filename(info.filename),
                             lineno=info.lineno,
                             name=info.function,
-                            line=info.code_context[0].strip() if info.code_context else None,
+                            line=(
+                                info.code_context[0].strip()
+                                if info.code_context
+                                else None
+                            ),
                         )
                         for info in frame_infos
                     ]
@@ -233,7 +251,9 @@ def print_all_async_task_stacks(log_variables: bool = False) -> None:
         print(line)
 
 
-def dump_all_async_task_stacks(log_path: str | Path, log_variables: bool = False) -> None:
+def dump_all_async_task_stacks(
+    log_path: str | Path, log_variables: bool = False
+) -> None:
     """Dump the stack frames of all running tasks to file."""
     with open(log_path, "w") as f:
         for line in get_all_async_task_stacks(log_variables=log_variables):
@@ -242,7 +262,9 @@ def dump_all_async_task_stacks(log_path: str | Path, log_variables: bool = False
             f.write(line)
 
 
-async def periodically_log_async_stacks(log_dir: str | Path, interval: float, log_variables: bool = False) -> None:
+async def periodically_log_async_stacks(
+    log_dir: str | Path, interval: float, log_variables: bool = False
+) -> None:
     """Periodically print the stack traces of all running tasks."""
     Path(log_dir).mkdir(parents=True, exist_ok=True)
     while True:
@@ -258,7 +280,9 @@ async def is_task_group_complete(
     """Continuously check if all tasks except the stack trace logger are done."""
     while True:
         if all(task.done() for task in task_group._tasks if task is not trace_task):
-            await asyncio.sleep(buffer_time)  # Wait for buffer time in case new tasks are added
+            await asyncio.sleep(
+                buffer_time
+            )  # Wait for buffer time in case new tasks are added
             # Recheck to confirm
             if all(task.done() for task in task_group._tasks if task is not trace_task):
                 break
@@ -266,11 +290,16 @@ async def is_task_group_complete(
 
 
 async def inject_async_stack_trace_logger(
-    task_group: asyncio.TaskGroup, log_dir: str | Path, log_interval: float = 60.0, log_variables: bool = False
+    task_group: asyncio.TaskGroup,
+    log_dir: str | Path,
+    log_interval: float = 60.0,
+    log_variables: bool = False,
 ) -> None:
     """Inject a stack trace logger into the task group."""
     trace_task = asyncio.create_task(
-        periodically_log_async_stacks(log_dir=log_dir, interval=log_interval, log_variables=log_variables),
+        periodically_log_async_stacks(
+            log_dir=log_dir, interval=log_interval, log_variables=log_variables
+        ),
         name="periodically_log_async_stacks",
     )
     await is_task_group_complete(task_group, trace_task)
@@ -286,7 +315,11 @@ class AsyncTaskStacksHandler(BaseHTTPRequestHandler):
         try:
             parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
-            log_variables = query_params.get("locals", ["false"])[0].lower() in ["true", "1", "yes"]
+            log_variables = query_params.get("locals", ["false"])[0].lower() in [
+                "true",
+                "1",
+                "yes",
+            ]
 
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
@@ -302,18 +335,26 @@ class AsyncTaskStacksHandler(BaseHTTPRequestHandler):
             python_version = platform.python_version()
 
             # Print the collected information
-            self.wfile.write(f"Process {pid}: {python_executable} {command_line}\n".encode("utf-8"))
-            self.wfile.write(f"Python v{python_version} ({python_executable})\n\n".encode("utf-8"))
+            self.wfile.write(
+                f"Process {pid}: {python_executable} {command_line}\n".encode("utf-8")
+            )
+            self.wfile.write(
+                f"Python v{python_version} ({python_executable})\n\n".encode("utf-8")
+            )
 
             for loop in ALL_EVENT_LOOPS:
-                for line in get_all_async_task_stacks(log_variables=log_variables, loop=loop):
+                for line in get_all_async_task_stacks(
+                    log_variables=log_variables, loop=loop
+                ):
                     self.wfile.write(line.encode("utf-8"))
         except BaseException as e:
             log_exception(e, "exception in AsyncTaskStacksHandler")
             raise
 
 
-def run_async_stackframe_server_thread(port_range_low: int, port_range_high: int) -> None:
+def run_async_stackframe_server_thread(
+    port_range_low: int, port_range_high: int
+) -> None:
     try:
         success = False
         for port in range(port_range_low, port_range_high):
@@ -321,13 +362,17 @@ def run_async_stackframe_server_thread(port_range_low: int, port_range_high: int
                 server_address = ("localhost", port)
                 httpd = HTTPServer(server_address, AsyncTaskStacksHandler)
                 success = True
-                print(f"Starting async stack trace server on port {port}. Process pid: {os.getpid()}")
+                print(
+                    f"Starting async stack trace server on port {port}. Process pid: {os.getpid()}"
+                )
                 break
             except OSError:
                 continue
 
         if not success:
-            logger.info("Could not find an open port to start the async stack trace server, continuing without it.")
+            logger.info(
+                "Could not find an open port to start the async stack trace server, continuing without it."
+            )
             return
 
         httpd.serve_forever()
@@ -358,7 +403,9 @@ def run_async_stackframe_server() -> None:
                 port_range_low = port
                 port_range_high = port + 1
             except ValueError:
-                logger.error("ASYNC_STACKFRAME_SERVER_PORT is not an integer: {}", port_str)
+                logger.error(
+                    "ASYNC_STACKFRAME_SERVER_PORT is not an integer: {}", port_str
+                )
                 raise
         else:
             port_range_low = STACKFRAME_SERVER_PORT_LOW
@@ -367,12 +414,17 @@ def run_async_stackframe_server() -> None:
         thread = threading.Thread(
             target=run_async_stackframe_server_thread,
             daemon=True,
-            kwargs={"port_range_low": port_range_low, "port_range_high": port_range_high},
+            kwargs={
+                "port_range_low": port_range_low,
+                "port_range_high": port_range_high,
+            },
         )
         thread.start()
 
 
-def with_timeout(func: Callable[P, Awaitable[R]], timeout_secs: float) -> Callable[P, Awaitable[R]]:
+def with_timeout(
+    func: Callable[P, Awaitable[R]], timeout_secs: float
+) -> Callable[P, Awaitable[R]]:
     """Decorator that adds a timeout to an async function."""
 
     @functools.wraps(func)
@@ -385,7 +437,9 @@ def with_timeout(func: Callable[P, Awaitable[R]], timeout_secs: float) -> Callab
 T = TypeVar("T")
 
 
-async def gather_with_limited_concurrency(coros: Iterable[Awaitable[T]], n: int) -> list[T]:
+async def gather_with_limited_concurrency(
+    coros: Iterable[Awaitable[T]], n: int
+) -> list[T]:
     """Like asyncio.gather() but will only run `n` in parallel at a time.
 
     Note that a call like `asyncio.gather(*coros)` is now `gather_with_limited_concurrency(coros, n=10),
@@ -419,11 +473,15 @@ class AsyncCachedProperty(Generic[T]):
         if self.attrname is None:
             self.attrname = name
         elif name != self.attrname:
-            raise TypeError("Cannot assign the same AsyncCachedProperty to multiple names")
+            raise TypeError(
+                "Cannot assign the same AsyncCachedProperty to multiple names"
+            )
 
     def _get_attrname(self) -> str:
         if self.attrname is None:
-            raise TypeError("Cannot use AsyncCachedProperty instance without calling __set_name__")
+            raise TypeError(
+                "Cannot use AsyncCachedProperty instance without calling __set_name__"
+            )
         return self.attrname
 
     def _get_cache(self, instance: object) -> dict[str, Any]:

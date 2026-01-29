@@ -4,9 +4,13 @@ from loguru import logger
 from tenacity import RetryCallState
 
 
-def _log_before_sleep(retry_state: RetryCallState, log_fn: Callable[[str], None]) -> None:
+def _log_before_sleep(
+    retry_state: RetryCallState, log_fn: Callable[[str], None]
+) -> None:
     fn_name = getattr(retry_state.fn, "__name__", "unknown")
-    sleep_time = retry_state.next_action.sleep if retry_state.next_action is not None else 0
+    sleep_time = (
+        retry_state.next_action.sleep if retry_state.next_action is not None else 0
+    )
     outcome = retry_state.outcome
     if outcome is not None:
         exception = outcome.exception()

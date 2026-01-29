@@ -35,5 +35,8 @@ def fields_only_model_copy(model: T, update: dict[str, Any] = {}) -> T:
     (Specifically, do not copy cached properties.)
 
     """
-    fields = {name: update.get(name, getattr(model, name)) for name in model.__class__.model_fields}
+    fields = {
+        name: update.get(name, getattr(model, name))
+        for name in model.__class__.model_fields
+    }
     return model.__class__(**fields)

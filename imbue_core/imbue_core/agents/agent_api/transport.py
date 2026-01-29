@@ -19,7 +19,9 @@ from typing import TypeVar
 
 from imbue_core.agents.agent_api.data_types import AgentOptions
 from imbue_core.agents.agent_api.errors import AgentCLIConnectionError
-from imbue_core.agents.agent_api.errors import AgentCLIJSONDecodeError as SDKJSONDecodeError
+from imbue_core.agents.agent_api.errors import (
+    AgentCLIJSONDecodeError as SDKJSONDecodeError,
+)
 from imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from imbue_core.agents.agent_api.errors import AgentProcessError
 from imbue_core.pydantic_serialization import SerializableModel
@@ -73,7 +75,9 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
 
     @classmethod
     @contextmanager
-    def build(cls, options: AgentSubprocessCLITransportOptions) -> Generator[Self, None, None]:
+    def build(
+        cls, options: AgentSubprocessCLITransportOptions
+    ) -> Generator[Self, None, None]:
         extra_env_vars = options.extra_env_vars or {}
         try:
             popen = subprocess.Popen(
@@ -89,9 +93,13 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
                 encoding="utf-8",
             )
         except FileNotFoundError as e:
-            raise AgentCLINotFoundError(f"Agent CLI not found for: cmd={options.cmd}") from e
+            raise AgentCLINotFoundError(
+                f"Agent CLI not found for: cmd={options.cmd}"
+            ) from e
         except Exception as e:
-            raise AgentCLIConnectionError(f"Failed to start Agent CLI via cmd={options.cmd}: {e}") from e
+            raise AgentCLIConnectionError(
+                f"Failed to start Agent CLI via cmd={options.cmd}: {e}"
+            ) from e
 
         try:
             yield cls(popen)
@@ -108,7 +116,9 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
             popen.stderr and popen.stderr.close()
             popen.stdin and popen.stdin.close()
 
-    def send_request(self, messages: Iterable[dict[str, Any] | str], agent_options: AgentOptions) -> None:
+    def send_request(
+        self, messages: Iterable[dict[str, Any] | str], agent_options: AgentOptions
+    ) -> None:
         process = self._process
         stdin_stream = self._stdin_stream
         if not process or not stdin_stream:
@@ -135,7 +145,9 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
             raise AgentCLIConnectionError("Not connected")
 
         stderr_lines: list[str] = []
-        stderr_read_thread = threading.Thread(target=self._read_stderr, args=(stderr_lines,))
+        stderr_read_thread = threading.Thread(
+            target=self._read_stderr, args=(stderr_lines,)
+        )
         stderr_read_thread.start()
 
         try:

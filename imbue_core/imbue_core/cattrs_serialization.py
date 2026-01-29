@@ -85,7 +85,9 @@ def _is_special_mapping_type(t: type) -> bool:
 
 
 def _is_str_type_special_mapping_type(t: str) -> bool:
-    return t in [_type_to_string(t, fully_qualified=True) for t in _ALLOWED_SPECIAL_MAPPING_TYPES]
+    return t in [
+        _type_to_string(t, fully_qualified=True) for t in _ALLOWED_SPECIAL_MAPPING_TYPES
+    ]
 
 
 def _is_obj_supported_primitive(obj: Any) -> bool:
@@ -126,7 +128,8 @@ def get_serializable_properties(obj: Any) -> dict[str, Any]:
 
 def is_serializable_property(func: Callable) -> bool:
     return getattr(func, CACHED_SERIALIZABLE_PROPERTY_KEY, False) or (
-        isinstance(func, property) and getattr(func.fget, SERIALIZABLE_PROPERTY_KEY, False)
+        isinstance(func, property)
+        and getattr(func.fget, SERIALIZABLE_PROPERTY_KEY, False)
     )
 
 
@@ -149,14 +152,21 @@ def serializable_property(func: Callable[..., T]) -> property:
 def get_dont_serialize_member_names_of_type(obj_type: type) -> list[str]:
     if not attr.has(obj_type):
         return []
-    return [field.name for field in attr.fields(obj_type) if field.metadata.get(DONT_SERIALIZE_METADATA_KEY, False)]
+    return [
+        field.name
+        for field in attr.fields(obj_type)
+        if field.metadata.get(DONT_SERIALIZE_METADATA_KEY, False)
+    ]
 
 
-def get_serialize_with_default_member_names_of_type(obj_type: type) -> Mapping[str, Any]:
+def get_serialize_with_default_member_names_of_type(
+    obj_type: type,
+) -> Mapping[str, Any]:
     if _safe_issubclass(obj_type, BaseModel):
         model_fields = getattr(obj_type, "model_fields", {})
         return {
-            name: None if field.default == PydanticUndefined else field.default for name, field in model_fields.items()
+            name: None if field.default == PydanticUndefined else field.default
+            for name, field in model_fields.items()
         }
     if not attr.has(obj_type):
         return {}
@@ -223,11 +233,19 @@ def _camelize_keys_which_represent_python_names(data: Any) -> Any:
     See cattrs_serialization_test.test_camel_casing for an example.
     """
     if isinstance(data, dict):
-        if TYPE_KEY not in data or issubclass(_type_from_string(data[TYPE_KEY]), Mapping):
-            return {key: _camelize_keys_which_represent_python_names(value) for key, value in data.items()}
+        if TYPE_KEY not in data or issubclass(
+            _type_from_string(data[TYPE_KEY]), Mapping
+        ):
+            return {
+                key: _camelize_keys_which_represent_python_names(value)
+                for key, value in data.items()
+            }
         else:
             # pyre-ignore[16]: pyre doesn't understand the import of camelize
-            return {camelize(key): _camelize_keys_which_represent_python_names(value) for key, value in data.items()}
+            return {
+                camelize(key): _camelize_keys_which_represent_python_names(value)
+                for key, value in data.items()
+            }
     elif isinstance(data, list):
         return [_camelize_keys_which_represent_python_names(item) for item in data]
     else:
@@ -246,14 +264,25 @@ class _ShouldDeserialize:
 # FIXME: Types such as LRUCache will always serialize without errors since they inherit from Mapping but will not deserialize correctly.
 #  We should either document this behavior or change it so that the serialization fails if the type is not supported.
 def _serialize_mapping_to_json_dict(data: Mapping, converter: Converter) -> Any:
-    assert _is_mapping_type(type(data)), f"Attempted to serialize object of type {type(data)} as a mapping."
-    return {str(converter.unstructure(k)): converter.unstructure(v) for k, v in data.items()}
+    assert _is_mapping_type(
+        type(data)
+    ), f"Attempted to serialize object of type {type(data)} as a mapping."
+    return {
+        str(converter.unstructure(k)): converter.unstructure(v) for k, v in data.items()
+    }
 
 
 def _serialize_mapping(data: Mapping, converter: Converter) -> Any:
-    assert _is_mapping_type(type(data)), f"Attempted to serialize object of type {type(data)} as a mapping."
-    entries = [(converter.unstructure(k), converter.unstructure(v)) for k, v in data.items()]
-    return {TYPE_KEY: _type_to_string(type(data), fully_qualified=True), "__entries": entries}
+    assert _is_mapping_type(
+        type(data)
+    ), f"Attempted to serialize object of type {type(data)} as a mapping."
+    entries = [
+        (converter.unstructure(k), converter.unstructure(v)) for k, v in data.items()
+    ]
+    return {
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+        "__entries": entries,
+    }
 
 
 def _deserialize_special_mapping_types(data: dict, type_key: str) -> Mapping:
@@ -265,7 +294,9 @@ def _deserialize_special_mapping_types(data: dict, type_key: str) -> Mapping:
         raise ValueError(f"Unsupported type {type_key}")
 
 
-def _deserialize_mapping(data: dict, mapping_type: type, converter: Converter) -> Mapping:
+def _deserialize_mapping(
+    data: dict, mapping_type: type, converter: Converter
+) -> Mapping:
     if TYPE_KEY in data and _is_str_type_special_mapping_type(data[TYPE_KEY]):
         return _deserialize_special_mapping_types(data, data[TYPE_KEY])
 
@@ -280,7 +311,9 @@ def _deserialize_mapping(data: dict, mapping_type: type, converter: Converter) -
         entries = data.items()
 
     for k, v in entries:
-        out[converter.structure(k, _ShouldDeserialize)] = converter.structure(v, _ShouldDeserialize)
+        out[converter.structure(k, _ShouldDeserialize)] = converter.structure(
+            v, _ShouldDeserialize
+        )
 
     if _is_frozen_mapping_type(mapping_type):
         return FrozenDict(out)
@@ -288,7 +321,9 @@ def _deserialize_mapping(data: dict, mapping_type: type, converter: Converter) -
 
 
 def _serialize_frozen_set(data: frozenset, converter: Converter) -> dict:
-    assert type(data) is frozenset, f"Attempted to serialize object of type {type(data)} as a frozenset."
+    assert (
+        type(data) is frozenset
+    ), f"Attempted to serialize object of type {type(data)} as a frozenset."
     value = converter.unstructure(data, unstructure_as=list)
     return {"value": value, TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
 
@@ -299,11 +334,18 @@ def _deserialize_frozen_set(data: dict, _: type, converter: Converter) -> frozen
 
 def _serialize_uuid(data: UUID) -> dict:
     if type(data) is UUID:
-        return {"value": data.hex, TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+        return {
+            "value": data.hex,
+            TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+        }
     elif type(data) is str:
         return {"value": data, TYPE_KEY: _type_to_string(UUID, fully_qualified=True)}
     else:
-        raise TypeError("Tried to serialize " + str(data) + ", which is neither a string nor a UUID, as a UUID.")
+        raise TypeError(
+            "Tried to serialize "
+            + str(data)
+            + ", which is neither a string nor a UUID, as a UUID."
+        )
 
 
 def _deserialize_uuid(data: dict[str, str] | str, _: type) -> UUID:
@@ -312,11 +354,15 @@ def _deserialize_uuid(data: dict[str, str] | str, _: type) -> UUID:
     elif isinstance(data, str):
         return UUID(data)
     else:
-        raise TypeError("Tried to deserialize something which is neither a string nor a dictionary, as a UUID.")
+        raise TypeError(
+            "Tried to deserialize something which is neither a string nor a dictionary, as a UUID."
+        )
 
 
 def _serialize_tuple(data: tuple, converter: Converter) -> dict:
-    assert type(data) is tuple, f"Attempted to serialize object of type {type(data)} as a tuple."
+    assert (
+        type(data) is tuple
+    ), f"Attempted to serialize object of type {type(data)} as a tuple."
     return {
         "value": [converter.unstructure(x) for x in data],
         TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
@@ -329,7 +375,10 @@ def _deserialize_tuple(data: dict, _: type, converter: Converter) -> tuple:
 
 def _serialize_url(data: URL) -> dict:
     assert type(data) is URL, f"Tried to serialize {data} which is not a URL."
-    return {"value": str(data), TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+    return {
+        "value": str(data),
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+    }
 
 
 def _deserialize_url(data: dict, _: type) -> URL:
@@ -337,8 +386,13 @@ def _deserialize_url(data: dict, _: type) -> URL:
 
 
 def _serialize_decimal(data: Decimal) -> dict:
-    assert type(data) is Decimal, f"Attempted to serialize object of type {type(data)} as a Decimal."
-    return {"value": str(data), TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+    assert (
+        type(data) is Decimal
+    ), f"Attempted to serialize object of type {type(data)} as a Decimal."
+    return {
+        "value": str(data),
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+    }
 
 
 def _deserialize_decimal(data: dict, _: type) -> Decimal:
@@ -346,10 +400,13 @@ def _deserialize_decimal(data: dict, _: type) -> Decimal:
 
 
 def _serialize_traceback(data: FixedTraceback) -> dict:
-    assert _safe_issubclass(type(data), FixedTraceback), (
-        f"Attempted to serialize object of type {type(data)} as a traceback."
-    )
-    return {"value": data.to_dict(), TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+    assert _safe_issubclass(
+        type(data), FixedTraceback
+    ), f"Attempted to serialize object of type {type(data)} as a traceback."
+    return {
+        "value": data.to_dict(),
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+    }
 
 
 def _deserialize_traceback(data: dict, _: type) -> FixedTraceback:
@@ -357,8 +414,13 @@ def _deserialize_traceback(data: dict, _: type) -> FixedTraceback:
 
 
 def _serialize_path(data: Path) -> dict:
-    assert _safe_issubclass(type(data), Path), f"Attempted to serialize an object of type {type(data)} as a Path."
-    return {"value": str(data), TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+    assert _safe_issubclass(
+        type(data), Path
+    ), f"Attempted to serialize an object of type {type(data)} as a Path."
+    return {
+        "value": str(data),
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+    }
 
 
 def _deserialize_path(data: Any, _: type) -> Path:
@@ -368,10 +430,13 @@ def _deserialize_path(data: Any, _: type) -> Path:
 
 
 def _serialize_anyio_path(data: anyio.Path) -> dict:
-    assert _safe_issubclass(type(data), anyio.Path), (
-        f"Attempted to serialize an object of type {type(data)} as a Path."
-    )
-    return {"value": str(data), TYPE_KEY: _type_to_string(type(data), fully_qualified=True)}
+    assert _safe_issubclass(
+        type(data), anyio.Path
+    ), f"Attempted to serialize an object of type {type(data)} as a Path."
+    return {
+        "value": str(data),
+        TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
+    }
 
 
 def _deserialize_anyio_path(data: Any, _: type) -> anyio.Path:
@@ -381,9 +446,9 @@ def _deserialize_anyio_path(data: Any, _: type) -> anyio.Path:
 
 
 def _serialize_datetime(data: datetime.datetime) -> dict:
-    assert _safe_issubclass(type(data), datetime.datetime), (
-        f"Attempted to serialize object of type {type(data)} as a datetime."
-    )
+    assert _safe_issubclass(
+        type(data), datetime.datetime
+    ), f"Attempted to serialize object of type {type(data)} as a datetime."
     return {
         TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
         "time": data.astimezone(datetime.timezone.utc).timestamp(),
@@ -392,11 +457,15 @@ def _serialize_datetime(data: datetime.datetime) -> dict:
 
 
 def _deserialize_datetime(data: dict, _: type) -> datetime.datetime:
-    return datetime.datetime.fromtimestamp(data["time"], datetime.timezone.utc if data.get("tzaware", None) else None)
+    return datetime.datetime.fromtimestamp(
+        data["time"], datetime.timezone.utc if data.get("tzaware", None) else None
+    )
 
 
 def _serialize_bytes(data: bytes) -> dict:
-    assert type(data) is bytes, f"Attempted to serialize object of type {type(data)} as bytes."
+    assert (
+        type(data) is bytes
+    ), f"Attempted to serialize object of type {type(data)} as bytes."
     return {
         TYPE_KEY: _type_to_string(type(data), fully_qualified=True),
         # use ascii since base64 guarantees ascii characters only
@@ -433,9 +502,9 @@ def _deserialize_union_type(data: Any, type_of_data: type, converter: Converter)
 
 
 def _serialize_enum(data: Enum, converter: Converter) -> Any:
-    assert inspect.isclass(type(data)) and issubclass(type(data), Enum), (
-        f"Attempted to serialize object of type {type(data)} as an Enum."
-    )
+    assert inspect.isclass(type(data)) and issubclass(
+        type(data), Enum
+    ), f"Attempted to serialize object of type {type(data)} as an Enum."
     return converter._unstructure_enum(data)
 
 
@@ -492,7 +561,9 @@ def get_pydantic_model_attributes(model: BaseModel) -> dict[str, Any]:
 # These two factory functions produce the functions for serializing attr classes.
 # Only one of them should be registered at a time, depending on whether we are including
 # do-not-serialize fields in the serialization.
-def _serialize_attr_class_factory(cls: type, converter: Converter) -> Callable[[Any], Any]:
+def _serialize_attr_class_factory(
+    cls: type, converter: Converter
+) -> Callable[[Any], Any]:
     return make_dict_unstructure_fn(cls, converter)
 
 
@@ -504,10 +575,16 @@ def _serialize_attr_class_without_dont_serialize_fields(
     return make_dict_unstructure_fn(cls, converter, **omit_kwargs)  # type: ignore
 
 
-def _serialize_with_type_key(data: Any, converter: Converter, for_javascript: bool = False) -> Any:
+def _serialize_with_type_key(
+    data: Any, converter: Converter, for_javascript: bool = False
+) -> Any:
     type_of_data = type(data)
 
-    if _is_obj_supported_primitive(data) or isinstance(data, list) or isinstance(data, tuple):
+    if (
+        _is_obj_supported_primitive(data)
+        or isinstance(data, list)
+        or isinstance(data, tuple)
+    ):
         # This means that data was annotated as a Serializable, but it is a primitive or a tuple.
         return converter.unstructure(data, unstructure_as=type_of_data)
 
@@ -517,8 +594,12 @@ def _serialize_with_type_key(data: Any, converter: Converter, for_javascript: bo
     # Protocols are generic classes, but they don't have __orig_bases__, which cattrs
     # assumes them to have.
     if is_generic(type_of_data_with_typekey_already_added):
-        old_orig_bases = getattr(type_of_data_with_typekey_already_added, "__orig_bases__", ())
-        setattr(type_of_data_with_typekey_already_added, "__orig_bases__", old_orig_bases)
+        old_orig_bases = getattr(
+            type_of_data_with_typekey_already_added, "__orig_bases__", ()
+        )
+        setattr(
+            type_of_data_with_typekey_already_added, "__orig_bases__", old_orig_bases
+        )
 
     if isinstance(data, BaseModel):
         # This is a shortcut: when you encounter a Pydantic model, just use Pydantic serialization.
@@ -526,12 +607,19 @@ def _serialize_with_type_key(data: Any, converter: Converter, for_javascript: bo
         #  so we just serialize all fields.
         unstructured = data.model_dump(by_alias=for_javascript, mode="json")
     else:
-        unstructured = converter.unstructure(data, unstructure_as=type_of_data_with_typekey_already_added)
+        unstructured = converter.unstructure(
+            data, unstructure_as=type_of_data_with_typekey_already_added
+        )
 
     assert isinstance(unstructured, dict)
 
     if for_javascript:
-        unstructured.update({k: converter.unstructure(v) for k, v in get_serializable_properties(data).items()})
+        unstructured.update(
+            {
+                k: converter.unstructure(v)
+                for k, v in get_serializable_properties(data).items()
+            }
+        )
 
     return {
         TYPE_KEY: _type_to_string(type_of_data, fully_qualified=True),
@@ -542,16 +630,26 @@ def _serialize_with_type_key(data: Any, converter: Converter, for_javascript: bo
 # This is the predicate used in the factory functions above, so they trigger for serializable and attr classes
 # that have had their type key logic handled.
 def _should_serialize_without_type_key(t: type) -> bool:
-    is_serializable_class = _safe_issubclass(t, Serializable) or attr.has(t) or _safe_issubclass(t, BaseModel)
+    is_serializable_class = (
+        _safe_issubclass(t, Serializable)
+        or attr.has(t)
+        or _safe_issubclass(t, BaseModel)
+    )
     return is_serializable_class and _safe_issubclass(t, _AvoidTypeKeyLogic)
 
 
 def _should_add_type_key(t: type) -> bool:
-    is_serializable_class = _safe_issubclass(t, Serializable) or attr.has(t) or _safe_issubclass(t, BaseModel)
+    is_serializable_class = (
+        _safe_issubclass(t, Serializable)
+        or attr.has(t)
+        or _safe_issubclass(t, BaseModel)
+    )
     return is_serializable_class and not _safe_issubclass(t, _AvoidTypeKeyLogic)
 
 
-def _deserialize_serialized_object(data: Any, type_of_data: type, converter: Converter) -> Any:
+def _deserialize_serialized_object(
+    data: Any, type_of_data: type, converter: Converter
+) -> Any:
     if isinstance(data, list):
         # Data is a list of objects.
         return converter.structure(data, list[_ShouldDeserialize])
@@ -572,9 +670,9 @@ def _should_deserialize_with_type_key_logic(t: type) -> bool:
         or _is_mapping_type(t)
         or _safe_issubclass(t, BaseModel)
     )
-    should_avoid_type_key_logic = _safe_issubclass(t, _AvoidTypeKeyLogic) or _safe_issubclass(
-        get_origin(t) or NoneType, _AvoidTypeKeyLogic
-    )
+    should_avoid_type_key_logic = _safe_issubclass(
+        t, _AvoidTypeKeyLogic
+    ) or _safe_issubclass(get_origin(t) or NoneType, _AvoidTypeKeyLogic)
     return is_type_that_should_be_deserialized and not should_avoid_type_key_logic
 
 
@@ -591,7 +689,9 @@ def deserialized_object_violates_target_type(obj: Any, target_type: type) -> boo
 # For example: it may be Serializable, when the object is supposed to be
 # deserialized as a HammerResult. We get the real type from the "__type" key.
 def _deserialize_using_type_marker(
-    obj: Mapping[Any, Any], expected_type_based_on_annotations: type[T], converter: Converter
+    obj: Mapping[Any, Any],
+    expected_type_based_on_annotations: type[T],
+    converter: Converter,
 ) -> T:
     if TYPE_KEY in obj:
         type_of_obj = _type_from_string(obj[TYPE_KEY])
@@ -621,7 +721,9 @@ def _deserialize_using_type_marker(
         # Upcast the result so that it has the correct type again, without the mixin.
         object.__setattr__(ret, "__class__", type_of_obj)
 
-    if deserialized_object_violates_target_type(ret, expected_type_based_on_annotations):
+    if deserialized_object_violates_target_type(
+        ret, expected_type_based_on_annotations
+    ):
         raise TypeError(
             f"Tried to deserialize into type {expected_type_based_on_annotations}, but got object of type {type(ret)}"
         )
@@ -638,7 +740,10 @@ def _resolve_default(default: Any) -> Any:
 def _serialize_with_defaults(cls: type, converter: Converter) -> Callable[[Any], Any]:
     # Handle a pydantic model
     if _safe_issubclass(cls, BaseModel):
-        return lambda x: {k: converter.unstructure(v) for k, v in get_pydantic_model_attributes(x).items()}
+        return lambda x: {
+            k: converter.unstructure(v)
+            for k, v in get_pydantic_model_attributes(x).items()
+        }
 
     members_with_defaults = get_serialize_with_default_member_names_of_type(cls)
     overriden_kwargs = {
@@ -650,7 +755,9 @@ def _serialize_with_defaults(cls: type, converter: Converter) -> Callable[[Any],
 
 def _should_serialize_as_serialized_exception(t: type) -> bool:
     return (
-        _safe_issubclass(get_origin(t) or t, BaseException) and not attr.has(t) and not _safe_issubclass(t, BaseModel)
+        _safe_issubclass(get_origin(t) or t, BaseException)
+        and not attr.has(t)
+        and not _safe_issubclass(t, BaseModel)
     )
 
 
@@ -673,11 +780,17 @@ class _ConverterFactory:
         # being called with the correct converter object.
         converter = Converter()
 
-        converter.register_structure_hook_func(_is_mapping_type, partial(_deserialize_mapping, converter=converter))
+        converter.register_structure_hook_func(
+            _is_mapping_type, partial(_deserialize_mapping, converter=converter)
+        )
         # serialization of mapping types depends on the specific converter so is done in the get_converter factory method
 
-        converter.register_unstructure_hook(frozenset, partial(_serialize_frozen_set, converter=converter))
-        converter.register_structure_hook(frozenset, partial(_deserialize_frozen_set, converter=converter))
+        converter.register_unstructure_hook(
+            frozenset, partial(_serialize_frozen_set, converter=converter)
+        )
+        converter.register_structure_hook(
+            frozenset, partial(_deserialize_frozen_set, converter=converter)
+        )
 
         converter.register_unstructure_hook(UUID, _serialize_uuid)
         converter.register_structure_hook(UUID, _deserialize_uuid)
@@ -706,19 +819,30 @@ class _ConverterFactory:
         converter.register_unstructure_hook(PosixPath, _serialize_path)
         converter.register_structure_hook(PosixPath, _deserialize_path)
 
-        converter.register_unstructure_hook_func(_is_forward_ref, partial(_serialize_forward_ref, converter=converter))
-        converter.register_structure_hook_func(_is_forward_ref, partial(_deserialize_forward_ref, converter=converter))
+        converter.register_unstructure_hook_func(
+            _is_forward_ref, partial(_serialize_forward_ref, converter=converter)
+        )
+        converter.register_structure_hook_func(
+            _is_forward_ref, partial(_deserialize_forward_ref, converter=converter)
+        )
 
-        converter.register_structure_hook_func(_is_union_type, partial(_deserialize_union_type, converter=converter))
+        converter.register_structure_hook_func(
+            _is_union_type, partial(_deserialize_union_type, converter=converter)
+        )
 
         converter.register_structure_hook(NoneType, lambda data, _: None)
 
-        converter.register_unstructure_hook(Enum, partial(_serialize_enum, converter=converter))
+        converter.register_unstructure_hook(
+            Enum, partial(_serialize_enum, converter=converter)
+        )
         converter.register_structure_hook(Enum, _deserialize_enum)
 
         converter.register_unstructure_hook_func(
             _should_serialize_as_serialized_exception,
-            lambda e: serialize_to_dict(SerializedException.build(e), use_defaults_for_unserializable_fields=True),
+            lambda e: serialize_to_dict(
+                SerializedException.build(e),
+                use_defaults_for_unserializable_fields=True,
+            ),
         )
 
         converter.register_structure_hook_func(
@@ -727,7 +851,8 @@ class _ConverterFactory:
         )
 
         converter.register_structure_hook_func(
-            lambda t: isinstance(t, TypeVar), partial(_deserialize_serialized_object, converter=converter)
+            lambda t: isinstance(t, TypeVar),
+            partial(_deserialize_serialized_object, converter=converter),
         )
 
         return converter
@@ -751,7 +876,8 @@ class _ConverterFactory:
         converter.register_unstructure_hook(abc.ABCMeta, lambda _: None)
         converter.register_structure_hook(abc.ABCMeta, lambda data, _: None)
         converter.register_unstructure_hook_factory(
-            _should_serialize_without_type_key, partial(_serialize_with_defaults, converter=converter)
+            _should_serialize_without_type_key,
+            partial(_serialize_with_defaults, converter=converter),
         )
 
         return converter
@@ -767,21 +893,26 @@ class _ConverterFactory:
 
         The result of this method is cached, so subsequent calls with the same arguments will return the same converter.
         """
-        assert not (exclude_dont_serialize_fields and use_defaults_for_unserializable_fields), (
-            f"Expected exactly one flag to be set, got {exclude_dont_serialize_fields=}, {use_defaults_for_unserializable_fields=}"
-        )
+        assert not (
+            exclude_dont_serialize_fields and use_defaults_for_unserializable_fields
+        ), f"Expected exactly one flag to be set, got {exclude_dont_serialize_fields=}, {use_defaults_for_unserializable_fields=}"
 
         converter = self.build_base_converter()
         if for_javascript:
             converter.register_unstructure_hook_func(
-                _is_mapping_type, partial(_serialize_mapping_to_json_dict, converter=converter)
+                _is_mapping_type,
+                partial(_serialize_mapping_to_json_dict, converter=converter),
             )
         else:
             converter.register_unstructure_hook_func(
                 _is_mapping_type, partial(_serialize_mapping, converter=converter)
             )
-            converter.register_unstructure_hook(tuple, partial(_serialize_tuple, converter=converter))
-            converter.register_structure_hook(tuple, partial(_deserialize_tuple, converter=converter))
+            converter.register_unstructure_hook(
+                tuple, partial(_serialize_tuple, converter=converter)
+            )
+            converter.register_structure_hook(
+                tuple, partial(_deserialize_tuple, converter=converter)
+            )
 
         if exclude_dont_serialize_fields:
             converter.register_unstructure_hook_factory(
@@ -801,7 +932,12 @@ class _ConverterFactory:
             converter = self.get_converter_with_defaults(converter)
 
         converter.register_unstructure_hook_func(
-            _should_add_type_key, partial(_serialize_with_type_key, converter=converter, for_javascript=for_javascript)
+            _should_add_type_key,
+            partial(
+                _serialize_with_type_key,
+                converter=converter,
+                for_javascript=for_javascript,
+            ),
         )
 
         return converter
@@ -828,9 +964,9 @@ def _serialize_to_json_dumpable_object(
         # NOTE: this will only catch cases where non-serializable fields are in obj, but not cases where
         # the non-serializable fields are in nested objects, checking for the nested case is a little complicated
         # so we don't do it basically.
-        assert not is_reversible, (
-            "Cannot deserialize object when excluding do-not-serialize fields (i.e. when `exclude_dont_serialize_fields=True`). If you want to serialize an object and exclude do-not-serialize fields, make sure to set `is_reversible=False`."
-        )
+        assert (
+            not is_reversible
+        ), "Cannot deserialize object when excluding do-not-serialize fields (i.e. when `exclude_dont_serialize_fields=True`). If you want to serialize an object and exclude do-not-serialize fields, make sure to set `is_reversible=False`."
 
     if use_defaults_for_unserializable_fields:
         # The point of the use_defaults_for_unserializable_fields flag is to make it possible to serialize objects
@@ -939,7 +1075,9 @@ def deserialize_from_json(
             exclude_dont_serialize_fields=exclude_dont_serialize_fields,
             use_defaults_for_unserializable_fields=use_defaults_for_unserializable_fields,
         )
-        return _deserialize_serialized_object(json.loads(data), _ShouldDeserialize, converter=converter)
+        return _deserialize_serialized_object(
+            json.loads(data), _ShouldDeserialize, converter=converter
+        )
     except Exception as e:
         raise SerializationError(str(e)) from e
 
@@ -964,17 +1102,30 @@ def deserialize_from_dict(
 
 def deserialize_from_dict_with_type(data: dict[str, Any], obj_type: type[T]) -> T:
     try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
+        converter = CONVERTER_FACTORY.get_converter(
+            for_javascript=False, exclude_dont_serialize_fields=False
+        )
         result = converter.structure(data, obj_type)
-        assert isinstance(result, obj_type), f"Expected an object of type {obj_type}, but got {result}"
+        assert isinstance(
+            result, obj_type
+        ), f"Expected an object of type {obj_type}, but got {result}"
         return result
     except Exception as e:
         raise SerializationError(str(e)) from e
 
 
-def deserialize_from_json_with_type(data: str | bytes | bytearray, obj_type: type[T]) -> T:
+def deserialize_from_json_with_type(
+    data: str | bytes | bytearray, obj_type: type[T]
+) -> T:
     try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
-        return cast(T, _deserialize_serialized_object(json.loads(data), obj_type, converter=converter))
+        converter = CONVERTER_FACTORY.get_converter(
+            for_javascript=False, exclude_dont_serialize_fields=False
+        )
+        return cast(
+            T,
+            _deserialize_serialized_object(
+                json.loads(data), obj_type, converter=converter
+            ),
+        )
     except Exception as e:
         raise SerializationError(str(e)) from e

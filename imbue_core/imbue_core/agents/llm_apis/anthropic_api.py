@@ -507,9 +507,9 @@ class AnthropicAPI(LanguageModelAPI):
         params: LanguageModelGenerationParams,
         network_failure_count: int = 0,
     ) -> CostedLanguageModelResponse:
-        assert params.count == 1, (
-            "Anthropic API only supports count=1.  It is possible to hack around this by using a for loop, but doesn't seem worth it right now."
-        )
+        assert (
+            params.count == 1
+        ), "Anthropic API only supports count=1.  It is possible to hack around this by using a for loop, but doesn't seem worth it right now."
 
         non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(
             prompt
@@ -528,9 +528,9 @@ class AnthropicAPI(LanguageModelAPI):
                         lambda: self.model_info.max_output_tokens,
                     )
                     params = chill(param_with_max_tokens_evolver)
-                assert params.max_tokens is not None, (
-                    "max_tokens must be provided for Anthropic API"
-                )
+                assert (
+                    params.max_tokens is not None
+                ), "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
@@ -630,9 +630,9 @@ class AnthropicAPI(LanguageModelAPI):
                     if params.max_tokens is not None
                     else self.model_info.max_output_tokens
                 )
-                assert max_tokens is not None, (
-                    "max_tokens must be provided for Anthropic API"
-                )
+                assert (
+                    max_tokens is not None
+                ), "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
@@ -817,13 +817,13 @@ class AnthropicAPI(LanguageModelAPI):
                     f"Missing required info for more precise cost estimates; caching info: {caching_info}, model info: {self.model_info.provider_specific_info}"
                 )
             anthropic_caching_usage = caching_info.provider_specific_data
-            assert isinstance(anthropic_caching_usage, AnthropicCachingInfo), (
-                "Expected AnthropicCachingInfo"
-            )
+            assert isinstance(
+                anthropic_caching_usage, AnthropicCachingInfo
+            ), "Expected AnthropicCachingInfo"
             anthropic_caching_rates = self.model_info.provider_specific_info
-            assert isinstance(anthropic_caching_rates, AnthropicModelInfo), (
-                "Expected AnthropicModelInfo"
-            )
+            assert isinstance(
+                anthropic_caching_rates, AnthropicModelInfo
+            ), "Expected AnthropicModelInfo"
             cache_write_5m_tokens = anthropic_caching_usage.written_5m
             cache_write_1h_tokens = anthropic_caching_usage.written_1h
             cache_read_tokens = caching_info.read_from_cache

@@ -98,7 +98,9 @@ class AsyncCache(AsyncCacheInterface[ValueType], Generic[ValueType]):
         loop = asyncio.get_running_loop()
         cache = self.cache
         assert cache is not None
-        result = await loop.run_in_executor(None, cache.__exit__, exc_type, exc_val, exc_tb)
+        result = await loop.run_in_executor(
+            None, cache.__exit__, exc_type, exc_val, exc_tb
+        )
         self.cache = None
         return result
 
@@ -115,9 +117,13 @@ class AsyncCache(AsyncCacheInterface[ValueType], Generic[ValueType]):
         cache = self.cache
         assert cache is not None
         loop = asyncio.get_running_loop()
-        assert isinstance(value, self.value_cls), f"Expected {self.value_cls}, got {type(value)}"
+        assert isinstance(
+            value, self.value_cls
+        ), f"Expected {self.value_cls}, got {type(value)}"
         serialized_value = serialize_to_json(value)
-        return await loop.run_in_executor(None, cache.set, key, serialized_value, expire, read, tag, retry)
+        return await loop.run_in_executor(
+            None, cache.set, key, serialized_value, expire, read, tag, retry
+        )
 
     async def delete(self, key: str, retry: bool = False) -> bool:
         cache = self.cache
@@ -137,13 +143,15 @@ class AsyncCache(AsyncCacheInterface[ValueType], Generic[ValueType]):
         cache = self.cache
         assert cache is not None
         loop = asyncio.get_running_loop()
-        value = await loop.run_in_executor(None, cache.get, key, None, read, expire_time, tag, retry)
+        value = await loop.run_in_executor(
+            None, cache.get, key, None, read, expire_time, tag, retry
+        )
         if value is None:
             return default
         deserialized_value = deserialize_from_json(value)
-        assert isinstance(deserialized_value, self.value_cls), (
-            f"Expected {self.value_cls}, got {type(deserialized_value)}"
-        )
+        assert isinstance(
+            deserialized_value, self.value_cls
+        ), f"Expected {self.value_cls}, got {type(deserialized_value)}"
         return deserialized_value
 
     # TODO: this is not smart implementation, but at least it will be possible to optimize later without refactoring
@@ -173,15 +181,29 @@ class AsyncCache(AsyncCacheInterface[ValueType], Generic[ValueType]):
 @lru_cache
 def get_cache(data_path: Path) -> Cache:
     # not sure if the size limit applies when eviction is none, but ~64GB should be enough for now
-    return Cache(str(data_path), disk=JSONDisk, disk_compress_level=0, eviction_policy="none", size_limit=2**36)
+    return Cache(
+        str(data_path),
+        disk=JSONDisk,
+        disk_compress_level=0,
+        eviction_policy="none",
+        size_limit=2**36,
+    )
 
 
 def get_default_llm_response_cache() -> Path:
-    return Path(os.environ.get("RESPONSE_CACHE_PATH", os.path.expanduser("~/.llm_response_cache")))
+    return Path(
+        os.environ.get(
+            "RESPONSE_CACHE_PATH", os.path.expanduser("~/.llm_response_cache")
+        )
+    )
 
 
 def get_default_count_tokens_cache() -> Path:
-    return Path(os.environ.get("COUNT_TOKENS_CACHE_PATH", os.path.expanduser("~/.count_tokens_cache")))
+    return Path(
+        os.environ.get(
+            "COUNT_TOKENS_CACHE_PATH", os.path.expanduser("~/.count_tokens_cache")
+        )
+    )
 
 
 def get_test_llm_response_cache() -> Path:

@@ -7,11 +7,19 @@ from imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model
 from imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
 from imbue_core.agents.llm_apis.models import ModelInfo
 from imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
+from imbue_core.agents.llm_apis.openai_api import (
+    get_model_info as get_openai_model_info,
+)
 from imbue_core.agents.llm_apis.together_api import TOGETHERAI_MODEL_INFO_BY_NAME
 from imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 
-ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | TogetherAIModelName | GeminiModelName
+ModelName = (
+    AnthropicModelName
+    | OpenAIModelName
+    | GroqSupportedModelName
+    | TogetherAIModelName
+    | GeminiModelName
+)
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:

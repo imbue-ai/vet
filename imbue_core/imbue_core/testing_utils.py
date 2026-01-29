@@ -55,7 +55,14 @@ def fixture(
                 ids=ids,  # type: ignore
             )
         else:
-            return pytest.fixture(function, name=true_name, scope=scope, params=params, autouse=autouse, ids=ids)
+            return pytest.fixture(
+                function,
+                name=true_name,
+                scope=scope,
+                params=params,
+                autouse=autouse,
+                ids=ids,
+            )
 
     if fixture_function is not None and callable(fixture_function):
         return decorator(fixture_function)
@@ -63,7 +70,9 @@ def fixture(
     return decorator
 
 
-def placeholder_param_for_mark(marks: pytest.MarkDecorator | list[pytest.MarkDecorator]) -> object:
+def placeholder_param_for_mark(
+    marks: pytest.MarkDecorator | list[pytest.MarkDecorator],
+) -> object:
     """Returns a param for annotating a fixture with marks.
 
     It can be useful to add marks to a fixture that propagate to all functions that use it.
@@ -163,7 +172,9 @@ def temp_dir(base_dir: str, is_uuid_concatenated: bool = False) -> ContextManage
 
 
 @asynccontextmanager
-async def async_temp_dir(base_dir: str, is_uuid_concatenated: bool = False) -> AsyncGenerator[Path, None]:
+async def async_temp_dir(
+    base_dir: str, is_uuid_concatenated: bool = False
+) -> AsyncGenerator[Path, None]:
     random_id = uuid4()
     if is_uuid_concatenated:
         output_path = anyio.Path(base_dir.rstrip("/") + "_" + str(random_id))

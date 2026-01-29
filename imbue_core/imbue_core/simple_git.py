@@ -55,7 +55,9 @@ class SyncLocalGitRepo:
         """
         command = ["git"] + list(command)
         if not retry_on_git_lock_error:
-            result = self.run_command(command, check=check, is_error_logged=is_error_logged, cwd=cwd)
+            result = self.run_command(
+                command, check=check, is_error_logged=is_error_logged, cwd=cwd
+            )
         else:
             result = self._run_command_with_retry_on_git_lock_error(
                 command, check=check, is_error_logged=is_error_logged, cwd=cwd
@@ -140,10 +142,14 @@ class SyncLocalGitRepo:
 
     def get_untracked_files(self) -> tuple[str, ...]:
         """Get the untracked files in the repo."""
-        result = self.run_git(["ls-files", "--others", "--exclude-standard"], is_error_logged=False)
+        result = self.run_git(
+            ["ls-files", "--others", "--exclude-standard"], is_error_logged=False
+        )
         return tuple([line.strip() for line in result.splitlines() if line.strip()])
 
-    def get_untracked_file_diff(self, file_path: str, include_binary: bool = True) -> str:
+    def get_untracked_file_diff(
+        self, file_path: str, include_binary: bool = True
+    ) -> str:
         """Get the diff for a untracked file.
 
         Note this function will raise a RunCommandError if the there is no diff for the untracked file or if there
@@ -169,7 +175,9 @@ class SyncLocalGitRepo:
         """Check if the given git ref is a branch."""
         try:
             self.run_git(
-                ("show-ref", "--verify", "-q", f"refs/heads/{commit_hash}"), is_error_logged=False, check=True
+                ("show-ref", "--verify", "-q", f"refs/heads/{commit_hash}"),
+                is_error_logged=False,
+                check=True,
             )
             return True
         except RunCommandError as e:
@@ -182,7 +190,9 @@ class SyncLocalGitRepo:
 
         The merge base is the most recent commit that is on both branches.
         """
-        return self.run_git(["merge-base", branch_name, target_branch], is_error_logged=False)
+        return self.run_git(
+            ["merge-base", branch_name, target_branch], is_error_logged=False
+        )
 
     def _run_command_with_retry_on_git_lock_error(
         self,
@@ -197,11 +207,17 @@ class SyncLocalGitRepo:
         while True:
             try:
                 return self.run_command(
-                    command, check=check, is_error_logged=is_error_logged and retry_count >= max_retries, cwd=cwd
+                    command,
+                    check=check,
+                    is_error_logged=is_error_logged and retry_count >= max_retries,
+                    cwd=cwd,
                 )
             except RunCommandError as e:
                 error_message = str(e)
-                if "fatal: Unable to create" in error_message and ".git/index.lock': File exists" in error_message:
+                if (
+                    "fatal: Unable to create" in error_message
+                    and ".git/index.lock': File exists" in error_message
+                ):
                     if retry_count >= max_retries:
                         raise
                     time.sleep(retry_delay)

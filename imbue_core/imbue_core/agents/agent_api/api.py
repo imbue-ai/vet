@@ -18,7 +18,9 @@ from imbue_core.agents.agent_api.data_types import AgentOptions
 
 
 @singledispatch
-def _build_client_from_options(options: AgentOptions) -> ContextManager[AgentClient[Any]]:
+def _build_client_from_options(
+    options: AgentOptions,
+) -> ContextManager[AgentClient[Any]]:
     """Return a context manager that builds an AgentClient for the given options."""
     raise ValueError(f"Unsupported agent options type: {type(options).__name__}")
 

@@ -16,8 +16,12 @@ def setup_logging_and_secrets() -> None:
 
 
 @contextlib.contextmanager
-def create_temp_file(contents: str, suffix: str, root_dir: Path) -> Generator[Path, None, None]:
-    with NamedTemporaryFile(mode="w", suffix=suffix, dir=root_dir, delete=False) as temp_file:
+def create_temp_file(
+    contents: str, suffix: str, root_dir: Path
+) -> Generator[Path, None, None]:
+    with NamedTemporaryFile(
+        mode="w", suffix=suffix, dir=root_dir, delete=False
+    ) as temp_file:
         temp_file.write(contents)
         temp_file.flush()
         yield Path(temp_file.name)

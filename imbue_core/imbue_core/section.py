@@ -107,7 +107,12 @@ T = TypeVar("T")
 # pyre-ignore[24]: pyre doesn't understand AbstractContextManager
 class SectionWrapper(contextlib.AbstractContextManager[T]):
     # pyre-ignore[24]
-    def __init__(self, cm: contextlib.AbstractContextManager[T], enter_message: str, exit_message: str) -> None:
+    def __init__(
+        self,
+        cm: contextlib.AbstractContextManager[T],
+        enter_message: str,
+        exit_message: str,
+    ) -> None:
         self._cm = cm
         self._enter_message = enter_message
         self._exit_message = exit_message

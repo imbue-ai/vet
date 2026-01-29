@@ -12,8 +12,12 @@ from imbue_tools.repo_utils.errors import DiffCalculationError
 from imbue_tools.repo_utils.file_system import FileContents
 from imbue_tools.repo_utils.file_system import InMemoryFileSystem
 from imbue_tools.repo_utils.file_system import SymlinkContents
-from imbue_tools.repo_utils.file_system_utils import create_initial_placeholder_commit_for_dir
-from imbue_tools.repo_utils.file_system_utils import temporary_local_dir_from_in_memory_file_system
+from imbue_tools.repo_utils.file_system_utils import (
+    create_initial_placeholder_commit_for_dir,
+)
+from imbue_tools.repo_utils.file_system_utils import (
+    temporary_local_dir_from_in_memory_file_system,
+)
 from imbue_tools.repo_utils.file_system_utils import write_file_contents_to_dir
 
 
@@ -21,8 +25,13 @@ class NonZeroReturncodeError(Exception):
     pass
 
 
-async def get_diff_between_files(old_file_contents: InMemoryFileSystem, new_file_contents: InMemoryFileSystem) -> str:
-    with tempfile.TemporaryDirectory() as old_repo_dir, tempfile.TemporaryDirectory() as new_repo_dir:
+async def get_diff_between_files(
+    old_file_contents: InMemoryFileSystem, new_file_contents: InMemoryFileSystem
+) -> str:
+    with (
+        tempfile.TemporaryDirectory() as old_repo_dir,
+        tempfile.TemporaryDirectory() as new_repo_dir,
+    ):
         # Get all changed file contents to prevent writing more than necessary
         changed_old_file_contents_dict = {}
         changed_new_file_contents_dict = {}
@@ -30,22 +39,43 @@ async def get_diff_between_files(old_file_contents: InMemoryFileSystem, new_file
         new_file_contents_dict = new_file_contents.files
         for file_path in old_file_contents_dict.keys() | new_file_contents_dict.keys():
             if file_path not in old_file_contents_dict:
-                changed_new_file_contents_dict[file_path] = new_file_contents_dict[file_path]
+                changed_new_file_contents_dict[file_path] = new_file_contents_dict[
+                    file_path
+                ]
             elif file_path not in new_file_contents_dict:
-                changed_old_file_contents_dict[file_path] = old_file_contents_dict[file_path]
+                changed_old_file_contents_dict[file_path] = old_file_contents_dict[
+                    file_path
+                ]
             elif old_file_contents_dict[file_path] != new_file_contents_dict[file_path]:
-                changed_old_file_contents_dict[file_path] = old_file_contents_dict[file_path]
-                changed_new_file_contents_dict[file_path] = new_file_contents_dict[file_path]
+                changed_old_file_contents_dict[file_path] = old_file_contents_dict[
+                    file_path
+                ]
+                changed_new_file_contents_dict[file_path] = new_file_contents_dict[
+                    file_path
+                ]
 
-        changed_old_file_contents = InMemoryFileSystem.build(changed_old_file_contents_dict)
-        changed_new_file_contents = InMemoryFileSystem.build(changed_new_file_contents_dict)
+        changed_old_file_contents = InMemoryFileSystem.build(
+            changed_old_file_contents_dict
+        )
+        changed_new_file_contents = InMemoryFileSystem.build(
+            changed_new_file_contents_dict
+        )
 
         await write_file_contents_to_dir(changed_old_file_contents, old_repo_dir)
         await write_file_contents_to_dir(changed_new_file_contents, new_repo_dir)
 
         try:
             result = subprocess.run(
-                ("git", "diff", "--no-index", "--relative", "--full-index", "--binary", old_repo_dir, new_repo_dir),
+                (
+                    "git",
+                    "diff",
+                    "--no-index",
+                    "--relative",
+                    "--full-index",
+                    "--binary",
+                    old_repo_dir,
+                    new_repo_dir,
+                ),
                 capture_output=True,
                 text=True,
                 timeout=10.0,
@@ -53,7 +83,9 @@ async def get_diff_between_files(old_file_contents: InMemoryFileSystem, new_file
             if result.returncode == 0 or result.returncode == 1:
                 diff = result.stdout
             else:
-                raise NonZeroReturncodeError(f"git diff process returned with non-zero returncode {result.returncode}")
+                raise NonZeroReturncodeError(
+                    f"git diff process returned with non-zero returncode {result.returncode}"
+                )
         except Exception as e:
             raise DiffCalculationError from e
 
@@ -64,15 +96,21 @@ async def get_diff_between_files(old_file_contents: InMemoryFileSystem, new_file
 
 
 @alru_cache
-async def apply_diffs_to_files(file_contents: InMemoryFileSystem, diff_strings: tuple[str, ...]) -> InMemoryFileSystem:
+async def apply_diffs_to_files(
+    file_contents: InMemoryFileSystem, diff_strings: tuple[str, ...]
+) -> InMemoryFileSystem:
     # Have to do this wrapping and unwrapping into dicts to allow @alru_cache to work
     files_with_diffs = file_contents
     for diff_string in diff_strings:
-        files_with_diffs = await _apply_diff_to_files(file_contents=files_with_diffs, diff_string=diff_string)
+        files_with_diffs = await _apply_diff_to_files(
+            file_contents=files_with_diffs, diff_string=diff_string
+        )
     return files_with_diffs
 
 
-async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: str) -> InMemoryFileSystem:
+async def _apply_diff_to_files(
+    file_contents: InMemoryFileSystem, diff_string: str
+) -> InMemoryFileSystem:
     if diff_string.strip() == "":
         return file_contents
 
@@ -112,7 +150,9 @@ async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: s
                 raise DiffApplicationError from e
 
         try:
-            updated_file_contents = _read_file_contents_from_dir_without_git(temp_repo_dir)
+            updated_file_contents = _read_file_contents_from_dir_without_git(
+                temp_repo_dir
+            )
         except Exception as e:
             raise DiffApplicationError from e
 

@@ -28,7 +28,9 @@ class EvolvableModel:
     # pyre-ignore[47]: pyre is not so easily tricked
     def evolve(self: T, attribute: V, new_value: V) -> T:
         # pyre-ignore[16]: pyre doesn't know about evolved_obj
-        assert _threading_local.evolved_obj is not None, ".ref() must be called before evolve"
+        assert (
+            _threading_local.evolved_obj is not None
+        ), ".ref() must be called before evolve"
 
         assert isinstance(attribute, _Evolver)  # Tricked you, type system!
         dest_evolver: _Evolver[T] = cast(_Evolver[T], attribute)
@@ -121,7 +123,8 @@ def model_load_json(model_type: type[T], data: str) -> T:
 # When you want to upgrade a model (and keep it backwards compatible), you can make a custom discriminator
 # (eg, that looks for the old type name or converts the old class names)
 def build_discriminator(
-    field_name: str = "object_type", additional_types_and_string_representations: tuple[tuple[type, str], ...] = ()
+    field_name: str = "object_type",
+    additional_types_and_string_representations: tuple[tuple[type, str], ...] = (),
 ) -> Discriminator:
     """
     Build a discriminator function for a Pydantic model.
@@ -136,7 +139,10 @@ def build_discriminator(
     """
 
     def discriminator(obj: T | dict) -> str:
-        for model_type, string_representation in additional_types_and_string_representations:
+        for (
+            model_type,
+            string_representation,
+        ) in additional_types_and_string_representations:
             if isinstance(obj, model_type):
                 return string_representation
         if isinstance(obj, dict):

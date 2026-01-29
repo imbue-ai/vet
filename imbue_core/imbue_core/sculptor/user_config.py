@@ -24,13 +24,21 @@ class UpdateChannel(StrEnum):
 class PrivacySettings(SerializableModel):
     """This model contains a subset of the the privacy fields that we support."""
 
-    is_error_reporting_enabled: bool = Field(False, description="Whether to enable error reporting, i.e. Sentry")
+    is_error_reporting_enabled: bool = Field(
+        False, description="Whether to enable error reporting, i.e. Sentry"
+    )
     is_product_analytics_enabled: bool = Field(
         False, description="Whether to enable product analytics, e.g. through PostHog"
     )
-    is_llm_logs_enabled: bool = Field(False, description="Whether to enable LLM logs spooling to our systems")
-    is_session_recording_enabled: bool = Field(False, description="Whether to enable session recording")
-    is_repo_backup_enabled: bool = Field(False, description="Whether to enable repo backup")
+    is_llm_logs_enabled: bool = Field(
+        False, description="Whether to enable LLM logs spooling to our systems"
+    )
+    is_session_recording_enabled: bool = Field(
+        False, description="Whether to enable session recording"
+    )
+    is_repo_backup_enabled: bool = Field(
+        False, description="Whether to enable repo backup"
+    )
     is_full_contribution: bool = Field(
         False,
         description="Synthetic field to let us know if the user has selected full contribution. This includes 'full LLM logs, including code' to train our agent.",
@@ -47,7 +55,9 @@ class UserConfig(SerializableModel):
     """
 
     user_email: str = without_consent(..., description="User email address")
-    user_full_name: str | None = without_consent(None, description="Full name of the user")
+    user_full_name: str | None = without_consent(
+        None, description="Full name of the user"
+    )
     user_git_username: str = without_consent(..., description="Git User name")
     user_id: str = without_consent(..., description="User ID")
     anonymous_access_token: str = never_log(
@@ -55,16 +65,28 @@ class UserConfig(SerializableModel):
     )
     organization_id: str = without_consent(..., description="Organization ID")
     instance_id: str = without_consent(..., description="Instance ID")
-    is_error_reporting_enabled: bool = without_consent(False, description="Whether to enable error reporting")
-    is_product_analytics_enabled: bool = without_consent(False, description="Whether to enable product analytics")
-    is_llm_logs_enabled: bool = without_consent(False, description="Whether to enable LLM logs")
-    is_session_recording_enabled: bool = without_consent(False, description="Whether to enable session recording")
-    is_repo_backup_enabled: bool = without_consent(False, description="Whether to enable repo backup")
+    is_error_reporting_enabled: bool = without_consent(
+        False, description="Whether to enable error reporting"
+    )
+    is_product_analytics_enabled: bool = without_consent(
+        False, description="Whether to enable product analytics"
+    )
+    is_llm_logs_enabled: bool = without_consent(
+        False, description="Whether to enable LLM logs"
+    )
+    is_session_recording_enabled: bool = without_consent(
+        False, description="Whether to enable session recording"
+    )
+    is_repo_backup_enabled: bool = without_consent(
+        False, description="Whether to enable repo backup"
+    )
     is_full_contribution: bool = without_consent(
         False,
         description="Synthetic field to let us know if the user has selected full contribution. This includes 'full LLM logs, including code' to train our agent.",
     )
-    telemetry_consent_level: str = without_consent("", description="Telemetry level description")
+    telemetry_consent_level: str = without_consent(
+        "", description="Telemetry level description"
+    )
     # For now, we give users the option to opt-out of syncing their Claude settings with Sculptor.
     is_claude_configuration_synchronized: bool = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -82,7 +104,9 @@ class UserConfig(SerializableModel):
     )
     # App configuration:
     app_theme: str = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default="system", description="App theme: light, dark, or system"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default="system",
+        description="App theme: light, dark, or system",
     )
     does_send_message_shortcut_include_modifier: bool = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -105,7 +129,9 @@ class UserConfig(SerializableModel):
         description="Shortcut for toggling the sidebar",
     )
     global_hotkey: str = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default="", description="Global hotkey to open Sculptor"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default="",
+        description="Global hotkey to open Sculptor",
     )
     default_llm: str | None = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -113,10 +139,14 @@ class UserConfig(SerializableModel):
         description="Default LLM model for new agents. If None, then most recently used LLM will be used.",
     )
     has_seen_pairing_mode_modal: bool = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=False, description="Whether the user has seen the pairing mode modal"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=False,
+        description="Whether the user has seen the pairing mode modal",
     )
     are_suggestions_enabled: bool = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=True, description="Whether to enable the suggestions feature"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=True,
+        description="Whether to enable the suggestions feature",
     )
     imbue_verify_run_frequency: str = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -129,7 +159,9 @@ class UserConfig(SerializableModel):
         description="Token threshold for running Imbue Verify: none, low, medium, or high",
     )
     is_forking_beta_feature_on: bool = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=False, description="Whether to enable the forking beta feature"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=False,
+        description="Whether to enable the forking beta feature",
     )
     is_pairing_mode_stashing_beta_feature_on: bool = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -142,10 +174,14 @@ class UserConfig(SerializableModel):
         description="Whether to show a warning dialog before stashing changes when starting pairing mode",
     )
     are_dev_suggestions_on: bool = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=False, description="Whether to enable the dev suggestions pane"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=False,
+        description="Whether to enable the dev suggestions pane",
     )
     is_scout_beta_feature_on: bool = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=False, description="Whether to enable the scout beta feature"
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=False,
+        description="Whether to enable the scout beta feature",
     )
 
     # NOTE: The electron frontend might read this value directly in configFallback.ts. Please remember to keep them in sync.
@@ -155,7 +191,9 @@ class UserConfig(SerializableModel):
         description="Update channel for receiving Sculptor updates (stable or alpha)",
     )
     max_snapshot_size_bytes: int = with_consent(
-        ConsentLevel.PRODUCT_ANALYTICS, default=50 * 1024 * 1024, description="Maximum snapshot size in bytes."
+        ConsentLevel.PRODUCT_ANALYTICS,
+        default=50 * 1024 * 1024,
+        description="Maximum snapshot size in bytes.",
     )
     min_free_disk_gb: float = with_consent(
         ConsentLevel.PRODUCT_ANALYTICS,
@@ -196,7 +234,9 @@ class UserConfig(SerializableModel):
 
 # At Runtime, ensure that all fields in PrivacySettings are also in UserConfig
 for field in PrivacySettings.model_fields:
-    assert field in UserConfig.model_fields, f"PrivacySettings field {field} is missing from UserConfig"
+    assert (
+        field in UserConfig.model_fields
+    ), f"PrivacySettings field {field} is missing from UserConfig"
 
 
 def _generate_user_config_field_enum() -> type[StrEnum]:

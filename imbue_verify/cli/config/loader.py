@@ -50,7 +50,10 @@ def find_git_repo_root(start_path: Path) -> Path | None:
 
 
 def _get_config_file_paths(
-    global_subpath: str, global_filename: str, project_filename: str, repo_path: Path | None = None
+    global_subpath: str,
+    global_filename: str,
+    project_filename: str,
+    repo_path: Path | None = None,
 ) -> list[Path]:
     paths = [get_xdg_config_home() / global_subpath / global_filename]
 
@@ -94,7 +97,9 @@ def get_user_defined_model_ids(config: ModelsConfig) -> set[str]:
     return model_ids
 
 
-def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfig | None:
+def get_provider_for_model(
+    model_id: str, config: ModelsConfig
+) -> ProviderConfig | None:
     for provider in config.providers.values():
         if model_id in provider.models:
             return provider
@@ -139,7 +144,9 @@ def get_max_output_tokens_for_model(model_id: str, config: ModelsConfig) -> int 
         return None
 
 
-def build_language_model_config(model_id: str, user_config: ModelsConfig) -> LanguageModelGenerationConfig:
+def build_language_model_config(
+    model_id: str, user_config: ModelsConfig
+) -> LanguageModelGenerationConfig:
     provider = get_provider_for_model(model_id, user_config)
     if provider is None:
         return LanguageModelGenerationConfig(model_name=model_id)
@@ -157,7 +164,9 @@ def build_language_model_config(model_id: str, user_config: ModelsConfig) -> Lan
 
 
 def get_cli_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("imbue-verify", "config.toml", "imbue-verify.toml", repo_path)
+    return _get_config_file_paths(
+        "imbue-verify", "config.toml", "imbue-verify.toml", repo_path
+    )
 
 
 def _load_cli_config_file(config_path: Path) -> dict[str, CliConfigPreset]:
@@ -189,7 +198,9 @@ def load_cli_config(repo_path: Path | None = None) -> dict[str, CliConfigPreset]
 
 
 def get_config_preset(
-    config_name: str, cli_configs: dict[str, CliConfigPreset], repo_path: Path | None = None
+    config_name: str,
+    cli_configs: dict[str, CliConfigPreset],
+    repo_path: Path | None = None,
 ) -> CliConfigPreset:
     if config_name not in cli_configs:
         available = sorted(cli_configs.keys())
@@ -199,7 +210,10 @@ def get_config_preset(
             )
         else:
             paths = get_cli_config_file_paths(repo_path)
-            paths_list = "\n".join(f"  - {p} ({'global' if i == 0 else 'project'})" for i, p in enumerate(paths))
+            paths_list = "\n".join(
+                f"  - {p} ({'global' if i == 0 else 'project'})"
+                for i, p in enumerate(paths)
+            )
             raise ConfigLoadError(
                 f"Configuration '{config_name}' not found.\n\n"
                 f"No configuration files found. Create a config at one of these locations:\n{paths_list}"

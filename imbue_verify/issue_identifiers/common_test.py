@@ -7,19 +7,33 @@ from imbue_core.data_types import IdentifiedVerifyIssue
 from imbue_core.data_types import IssueCode
 from imbue_core.frozen_utils import FrozenDict
 from imbue_core.itertools import only
-from imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from imbue_tools.repo_utils.project_context import BaseProjectContext
 from imbue_tools.repo_utils.project_context import ProjectContext
 from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import convert_generated_issue_to_identified_issue
-from imbue_verify.issue_identifiers.common import format_issue_identification_guide_for_llm
-from imbue_verify.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
-from imbue_verify.issue_identifiers.identification_guides import IssueIdentificationGuide
+from imbue_verify.issue_identifiers.common import (
+    convert_generated_issue_to_identified_issue,
+)
+from imbue_verify.issue_identifiers.common import (
+    format_issue_identification_guide_for_llm,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+)
+from imbue_verify.issue_identifiers.identification_guides import (
+    IssueIdentificationGuide,
+)
 
 
 def _parse_issues(
-    valid_response: str, project_context: ProjectContext, enabled_issue_codes: Iterable[IssueCode]
+    valid_response: str,
+    project_context: ProjectContext,
+    enabled_issue_codes: Iterable[IssueCode],
 ) -> list[IdentifiedVerifyIssue]:
     issues = []
     try:
@@ -28,7 +42,9 @@ def _parse_issues(
         return []
     for parsed_issue in issue_data.issues:
         issue = convert_generated_issue_to_identified_issue(
-            issue_data=parsed_issue, project_context=project_context, enabled_issue_codes=tuple(enabled_issue_codes)
+            issue_data=parsed_issue,
+            project_context=project_context,
+            enabled_issue_codes=tuple(enabled_issue_codes),
         )
         if issue:
             issues.append(issue)
@@ -37,7 +53,9 @@ def _parse_issues(
 
 def test_parse_issues_valid_json() -> None:
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": "def test():\n    while True:\n        pass"}),
+        file_contents_by_path=FrozenDict(
+            {"test.py": "def test():\n    while True:\n        pass"}
+        ),
         cached_prompt_prefix="test",
     )
 
@@ -56,7 +74,9 @@ def test_parse_issues_valid_json() -> None:
         }
     )
 
-    issues = _parse_issues(valid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        valid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
 
     issue = only(issues)
     assert issue.code == IssueCode.LOGIC_ERROR
@@ -70,7 +90,9 @@ def test_parse_issues_valid_json() -> None:
 
 
 def test_parse_response_with_leading_and_trailing_text() -> None:
-    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="test")
+    project_context = BaseProjectContext(
+        file_contents_by_path=FrozenDict(), cached_prompt_prefix="test"
+    )
     valid_response = json.dumps(
         {
             "issues": [
@@ -86,9 +108,13 @@ def test_parse_response_with_leading_and_trailing_text() -> None:
         }
     )
 
-    response_text = "Some leading text\n```json\n" + valid_response + "\n```\nSome trailing text"
-    with expect_exact_logged_errors(["Unknown location"]):
-        issues = _parse_issues(response_text, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    response_text = (
+        "Some leading text\n```json\n" + valid_response + "\n```\nSome trailing text"
+    )
+    # Note: This logs a warning about "Unknown location" since test.py isn't in the project context
+    issues = _parse_issues(
+        response_text, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     issue = only(issues)
     assert issue.code == IssueCode.LOGIC_ERROR
     assert issue.description == "Infinite loop detected"
@@ -99,27 +125,36 @@ def test_parse_response_with_leading_and_trailing_text() -> None:
 
 
 def test_parse_issues_empty_response() -> None:
-    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="test")
+    project_context = BaseProjectContext(
+        file_contents_by_path=FrozenDict(), cached_prompt_prefix="test"
+    )
 
     empty_response = json.dumps({"issues": []})
 
-    issues = _parse_issues(empty_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        empty_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     assert len(issues) == 0
 
 
 def test_parse_issues_invalid_json() -> None:
-    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="test")
+    project_context = BaseProjectContext(
+        file_contents_by_path=FrozenDict(), cached_prompt_prefix="test"
+    )
 
     invalid_response = "not json"
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(invalid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            invalid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+        )
     assert len(issues) == 0
 
 
 def test_parse_issues_with_markdown_formatting() -> None:
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": "x = 1"}), cached_prompt_prefix="test"
+        file_contents_by_path=FrozenDict({"test.py": "x = 1"}),
+        cached_prompt_prefix="test",
     )
 
     markdown_response = (
@@ -139,13 +174,17 @@ def test_parse_issues_with_markdown_formatting() -> None:
         + "\n```"
     )
 
-    issues = _parse_issues(markdown_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        markdown_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     assert len(issues) == 1
     assert issues[0].code == IssueCode.RUNTIME_ERROR_RISK
 
 
 def test_parse_issues_invalid_severity() -> None:
-    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="test")
+    project_context = BaseProjectContext(
+        file_contents_by_path=FrozenDict(), cached_prompt_prefix="test"
+    )
 
     invalid_severity_response = json.dumps(
         {
@@ -161,12 +200,18 @@ def test_parse_issues_invalid_severity() -> None:
     )
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(invalid_severity_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            invalid_severity_response,
+            project_context,
+            ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+        )
     assert len(issues) == 0  # Should be skipped due to invalid severity
 
 
 def test_parse_issues_unknown_issue_code() -> None:
-    project_context = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="test")
+    project_context = BaseProjectContext(
+        file_contents_by_path=FrozenDict(), cached_prompt_prefix="test"
+    )
 
     unknown_code_response = json.dumps(
         {
@@ -182,7 +227,9 @@ def test_parse_issues_unknown_issue_code() -> None:
     )
 
     with expect_exact_logged_errors(["Got issue code"]):
-        issues = _parse_issues(unknown_code_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            unknown_code_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+        )
     assert len(issues) == 0  # Should be skipped due to unknown code
 
 
@@ -206,7 +253,9 @@ def test_parse_issues_missing_required_fields() -> None:
     )
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(missing_field_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            missing_field_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+        )
     assert len(issues) == 0  # Should be skipped due to missing field
 
 
@@ -229,14 +278,19 @@ def test_parse_issues_invalid_confidence() -> None:
     )
 
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(invalid_confidence_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            invalid_confidence_response,
+            project_context,
+            ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+        )
     assert len(issues) == 0  # Should be skipped due to invalid confidence
 
 
 def test_parse_issues_with_line_ranges() -> None:
     code_content = "def hello():\n    print('world')\n    return True"
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": code_content}), cached_prompt_prefix="[ROLE=SYSTEM]\ntest"
+        file_contents_by_path=FrozenDict({"test.py": code_content}),
+        cached_prompt_prefix="[ROLE=SYSTEM]\ntest",
     )
 
     response_with_location = json.dumps(
@@ -254,7 +308,9 @@ def test_parse_issues_with_line_ranges() -> None:
         }
     )
 
-    issues = _parse_issues(response_with_location, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        response_with_location, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     issue = only(issues)
     assert issue.location[0].filename == "test.py"
     assert len(issue.location) > 0  # Should have found line ranges
@@ -268,25 +324,33 @@ def test_parse_issues_malformed_response_structure() -> None:
     # Test with non-dict response
     non_dict_response = json.dumps(["not", "a", "dict"])
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(non_dict_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            non_dict_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+        )
     assert len(issues) == 0
 
     # Test with missing `issues` key
     missing_key_response = json.dumps({"other_key": ["some value", "another value"]})
     # note that this doesn't log an error; the model validation allows "issues" to be missing, and fills in an empty list
-    issues = _parse_issues(missing_key_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        missing_key_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     assert len(issues) == 0
 
     # Test with missing everything
     missing_everything_response = json.dumps({})
     # note that this doesn't log an error; the model validation allows "issues" to be missing, and fills in an empty list
-    issues = _parse_issues(missing_everything_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        missing_everything_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
     assert len(issues) == 0
 
     # Test with non-list `issues` value
     non_list_response = json.dumps({"issues": "not a list"})
     with expect_exact_logged_errors(["Response does not match the expected schema"]):
-        issues = _parse_issues(non_list_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+        issues = _parse_issues(
+            non_list_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+        )
     assert len(issues) == 0
 
 
@@ -314,7 +378,9 @@ Exceptions:
     - Exception 1
     - Exception 2"""
 
-    minimal_guide = IssueIdentificationGuide(issue_code=IssueCode.LOGIC_ERROR, guide="Only has a guide.")
+    minimal_guide = IssueIdentificationGuide(
+        issue_code=IssueCode.LOGIC_ERROR, guide="Only has a guide."
+    )
     expected_formatted_minimal_guide = """Guidelines:
     Only has a guide."""
 
@@ -327,7 +393,9 @@ Exceptions:
 
 def test_strips_absolute_filenames() -> None:
     project_context = BaseProjectContext(
-        file_contents_by_path=FrozenDict({"test.py": "def test():\n    while True:\n        pass"}),
+        file_contents_by_path=FrozenDict(
+            {"test.py": "def test():\n    while True:\n        pass"}
+        ),
         cached_prompt_prefix="test",
         repo_path=Path("/code"),
     )
@@ -347,7 +415,9 @@ def test_strips_absolute_filenames() -> None:
         }
     )
 
-    issues = _parse_issues(valid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    issues = _parse_issues(
+        valid_response, project_context, ISSUE_CODES_FOR_CORRECTNESS_CHECK
+    )
 
     issue = only(issues)
     assert issue.description == "Infinite loop detected"

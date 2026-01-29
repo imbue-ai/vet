@@ -20,7 +20,9 @@ from imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 from imbue_core.agents.llm_apis.together_api import TogetherAPI
 
 
-def build_language_model_from_config(config: LanguageModelGenerationConfig) -> LanguageModelAPI:
+def build_language_model_from_config(
+    config: LanguageModelGenerationConfig,
+) -> LanguageModelAPI:
     if isinstance(config, MockedLanguageModelGenerationConfig):
         return FileBasedLanguageModelMock(cache_path=config.mock_responses_path)
 
