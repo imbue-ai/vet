@@ -34,6 +34,11 @@ include = ["imbue_verify*"]
 imbue_core = { path = "./imbue_core", editable = true }
 imbue_tools = { path = "./imbue_tools", editable = true }
 
+[dependency-groups]
+dev = [
+    "black",
+]
+
 [tool.black]
 line-length = 120
 target-version = ['py311']
