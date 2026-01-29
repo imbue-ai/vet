@@ -577,12 +577,8 @@ class AnthropicAPI(LanguageModelAPI):
                         max_tokens=params.max_tokens,
                     )
                     detailed_caching_data = AnthropicCachingInfo(
-                        written_5m=api_result.usage.cache_creation[
-                            "ephemeral_5m_input_tokens"
-                        ],
-                        written_1h=api_result.usage.cache_creation[
-                            "ephemeral_1h_input_tokens"
-                        ],
+                        written_5m=api_result.usage.cache_creation.ephemeral_5m_input_tokens,
+                        written_1h=api_result.usage.cache_creation.ephemeral_1h_input_tokens,
                     )
                 text = only(api_result.content).text
                 if api_result.stop_reason:
@@ -667,12 +663,8 @@ class AnthropicAPI(LanguageModelAPI):
                     model_name = self.model_name
                     stream_fn = lambda **kwargs: client.messages.stream(**kwargs)
                     cache_info_maker = lambda api_result: AnthropicCachingInfo(
-                        written_5m=api_result.usage.cache_creation[
-                            "ephemeral_5m_input_tokens"
-                        ],
-                        written_1h=api_result.usage.cache_creation[
-                            "ephemeral_1h_input_tokens"
-                        ],
+                        written_5m=api_result.usage.cache_creation.ephemeral_5m_input_tokens,
+                        written_1h=api_result.usage.cache_creation.ephemeral_1h_input_tokens,
                     )
                 async with stream_fn(
                     max_tokens=max_tokens,
