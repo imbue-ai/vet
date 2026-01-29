@@ -1,4 +1,4 @@
-"""ID types for imbue_verify."""
+"""ID types for vet."""
 
 from abc import ABC
 from typing import Any

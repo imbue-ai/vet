@@ -12,10 +12,10 @@ from imbue_tools.get_conversation_history.input_data_types import IdentifierInpu
 from imbue_tools.get_conversation_history.input_data_types import (
     IdentifierInputsMissingError,
 )
-from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import (
+from vet.issue_identifiers.harnesses.conversation_single_prompt import (
     ConversationSinglePromptHarness,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
 

@@ -1,4 +1,4 @@
-"""Message types for imbue_verify conversation history.
+"""Message types for vet conversation history.
 
 These are simplified versions that avoid dependencies on external telemetry libraries.
 """

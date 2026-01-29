@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# The choice to use argparse was primarily driven by the idea that imbue-verify will be called by agents / llms.
+# The choice to use argparse was primarily driven by the idea that vet will be called by agents / llms.
 # Given this, we want to have the most standardized outputs possible.
 import argparse
 import json
@@ -15,29 +15,29 @@ from imbue_core.data_types import IssueCode
 from imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.api import find_issues
-from imbue_verify.cli.config.cli_config_schema import CLI_DEFAULTS
-from imbue_verify.cli.config.cli_config_schema import CliConfigPreset
-from imbue_verify.cli.config.loader import ConfigLoadError
-from imbue_verify.cli.config.loader import build_language_model_config
-from imbue_verify.cli.config.loader import get_cli_config_file_paths
-from imbue_verify.cli.config.loader import get_config_preset
-from imbue_verify.cli.config.loader import get_max_output_tokens_for_model
-from imbue_verify.cli.config.loader import load_cli_config
-from imbue_verify.cli.config.loader import load_models_config
-from imbue_verify.cli.config.loader import validate_api_key_for_model
-from imbue_verify.cli.config.schema import ModelsConfig
-from imbue_verify.cli.models import DEFAULT_MODEL_ID
-from imbue_verify.cli.models import get_models_by_provider
-from imbue_verify.cli.models import validate_model_id
-from imbue_verify.formatters import OUTPUT_FIELDS
-from imbue_verify.formatters import OUTPUT_FORMATS
-from imbue_verify.formatters import format_issue_text
-from imbue_verify.formatters import issue_to_dict
-from imbue_verify.formatters import validate_output_fields
+from imbue_tools.types.vet_config import VetConfig
+from vet.api import find_issues
+from vet.cli.config.cli_config_schema import CLI_DEFAULTS
+from vet.cli.config.cli_config_schema import CliConfigPreset
+from vet.cli.config.loader import ConfigLoadError
+from vet.cli.config.loader import build_language_model_config
+from vet.cli.config.loader import get_cli_config_file_paths
+from vet.cli.config.loader import get_config_preset
+from vet.cli.config.loader import get_max_output_tokens_for_model
+from vet.cli.config.loader import load_cli_config
+from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import validate_api_key_for_model
+from vet.cli.config.schema import ModelsConfig
+from vet.cli.models import DEFAULT_MODEL_ID
+from vet.cli.models import get_models_by_provider
+from vet.cli.models import validate_model_id
+from vet.formatters import OUTPUT_FIELDS
+from vet.formatters import OUTPUT_FORMATS
+from vet.formatters import format_issue_text
+from vet.formatters import issue_to_dict
+from vet.formatters import validate_output_fields
 
-VERSION = version("imbue_verify")
+VERSION = version("vet")
 
 _ISSUE_CODE_FIELDS = frozenset({"enabled_issue_codes", "disabled_issue_codes"})
 _PATH_FIELDS = frozenset({"repo", "output"})
@@ -46,7 +46,7 @@ _PATH_LIST_FIELDS = frozenset({"extra_context"})
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="imbue-verify",
+        prog="vet",
         description="Identify issues in code changes using LLM-based analysis.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -85,7 +85,7 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         metavar="NAME",
-        help="Name of the configuration to use. Configurations are defined in imbue-verify.toml in your target project's root or ~/.config/imbue-verify/config.toml.",
+        help="Name of the configuration to use. Configurations are defined in vet.toml in your target project's root or ~/.config/vet/config.toml.",
     )
     parser.add_argument(
         "--list-configs",
@@ -447,7 +447,7 @@ def main(argv: list[str] | None = None) -> int:
     language_model_config = build_language_model_config(model_id, user_config)
     max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
 
-    config = ImbueVerifyConfig(
+    config = VetConfig(
         disabled_identifiers=("agentic_issue_identifier",),
         language_model_generation_config=language_model_config,
         enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),

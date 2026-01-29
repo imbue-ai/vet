@@ -39,10 +39,10 @@ from imbue_tools.llm_output_parsing.parse_model_json_response import (
     parse_model_json_response,
 )
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 
 class GeneratedIssueSchema(SerializableModel):

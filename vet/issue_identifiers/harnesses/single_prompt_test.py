@@ -21,16 +21,16 @@ from imbue_tools.get_conversation_history.input_data_types import (
     IdentifierInputsMissingError,
 )
 from imbue_tools.repo_utils.project_context import BaseProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.base import IssueIdentifier
-from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.base import IssueIdentifier
+from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
+from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 
 class SinglePromptHarnessMock(LanguageModelMock):
@@ -116,7 +116,7 @@ def test_get_prompt_structure() -> None:
         maybe_goal="Add hello world function",
         maybe_diff="+def hello():\n+    print('hello')",
     )
-    config = ImbueVerifyConfig()
+    config = VetConfig()
 
     prompt = identifier._get_prompt(project_context, config, commit_inputs)
 
@@ -150,7 +150,7 @@ def test_identify_issues_integration() -> None:
 
     mock_language_model = SinglePromptHarnessMock(response_text=response_text)
     with mock.patch(
-        "imbue_verify.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
+        "vet.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
         return_value=mock_language_model,
     ):
         project_context = BaseProjectContext(
@@ -158,7 +158,7 @@ def test_identify_issues_integration() -> None:
             cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context",
         )
         commit_inputs = IdentifierInputs(maybe_goal="Add hello function", maybe_diff="+print('hello')")
-        config = ImbueVerifyConfig()
+        config = VetConfig()
 
         inputs = identifier.to_required_inputs(commit_inputs)
         raw_issues_generator = identifier.identify_issues(inputs, project_context, config)

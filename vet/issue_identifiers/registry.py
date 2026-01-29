@@ -22,40 +22,40 @@ from imbue_tools.get_conversation_history.input_data_types import (
     IdentifierInputsMissingError,
 )
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_tools.types.imbue_verify_config import get_enabled_issue_codes
-from imbue_verify.issue_identifiers.agentic_issue_collation import (
+from imbue_tools.types.vet_config import VetConfig
+from imbue_tools.types.vet_config import get_enabled_issue_codes
+from vet.issue_identifiers.agentic_issue_collation import (
     collate_issues_with_agent,
 )
-from imbue_verify.issue_identifiers.base import IssueIdentifier
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import convert_to_issue_identifier_result
-from imbue_verify.issue_identifiers.harnesses.agentic import AgenticHarness
-from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.harnesses.conversation_single_prompt import (
+from vet.issue_identifiers.base import IssueIdentifier
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import convert_to_issue_identifier_result
+from vet.issue_identifiers.harnesses.agentic import AgenticHarness
+from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
+from vet.issue_identifiers.harnesses.conversation_single_prompt import (
     ConversationSinglePromptHarness,
 )
-from imbue_verify.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
+from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
 )
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.issue_identifiers.issue_deduplication import deduplicate_issues
-from imbue_verify.issue_identifiers.issue_evaluation import filter_issues
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
-from imbue_verify.issue_identifiers.utils import multiplex_generators
+from vet.issue_identifiers.issue_deduplication import deduplicate_issues
+from vet.issue_identifiers.issue_evaluation import filter_issues
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import multiplex_generators
 
 # Issue identifier harnesses together with certain default lists of issue codes.
 # This is intended as a transitionary structure to emulate the previous identifiers setup.
-# Eventually, we'll update ImbueVerifyConfig to no longer enable/disable specific identifiers, but instead
+# Eventually, we'll update VetConfig to no longer enable/disable specific identifiers, but instead
 # enable/disable harnesses and issue codes, and we'll pair up the enabled issue codes with the appropriate enabled
 # harnesses automatically.
 SINGLE_PROMPT_HARNESS = SinglePromptHarness()
@@ -104,7 +104,7 @@ def _convert_all_to_enum(
 
 
 def _get_enabled_identifier_names(
-    config: ImbueVerifyConfig,
+    config: VetConfig,
 ) -> set[IssueIdentifierType]:
     all_names = get_all_valid_identifier_names()
     explicitly_enabled = _convert_all_to_enum(config.enabled_identifiers or tuple(), all_names, IssueIdentifierType)
@@ -172,7 +172,7 @@ def _combine_issue_generator_debug_info(
 def run(
     identifier_inputs: IdentifierInputs,
     project_context: ProjectContext,
-    config: ImbueVerifyConfig,
+    config: VetConfig,
 ) -> Generator[IssueIdentifierResult, None, IssueIdentificationDebugInfo]:
     """
     Run all the registered and configured issue identifiers on the given inputs.

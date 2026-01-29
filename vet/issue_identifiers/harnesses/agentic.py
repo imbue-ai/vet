@@ -26,18 +26,18 @@ from imbue_core.data_types import LLMResponse
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.base import IssueIdentifier
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import extract_invocation_info_from_messages
-from imbue_verify.issue_identifiers.common import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.base import IssueIdentifier
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import extract_invocation_info_from_messages
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.common import generate_response_from_claude_code
-from imbue_verify.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.common import generate_response_from_claude_code
+from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
+from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
 
@@ -195,7 +195,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     def _get_prompt(
         self,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,  # unused
+        config: VetConfig,  # unused
         identifier_inputs: CommitInputs,
     ) -> str:
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -247,7 +247,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         self,
         identifier_inputs: CommitInputs,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,
+        config: VetConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         assert project_context.repo_path is not None, "Project context must have a valid repo_path, got None"
 

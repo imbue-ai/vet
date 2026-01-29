@@ -1,4 +1,4 @@
-"""Chat state types for imbue_verify."""
+"""Chat state types for vet."""
 
 from typing import Annotated
 from typing import Any

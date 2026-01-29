@@ -6,9 +6,9 @@ from imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from imbue_core.agents.llm_apis.together_api import TogetherAIModelName
-from imbue_verify.cli.config.loader import get_models_by_provider_from_config
-from imbue_verify.cli.config.loader import get_user_defined_model_ids
-from imbue_verify.cli.config.schema import ModelsConfig
+from vet.cli.config.loader import get_models_by_provider_from_config
+from vet.cli.config.loader import get_user_defined_model_ids
+from vet.cli.config.schema import ModelsConfig
 
 DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01.value
 

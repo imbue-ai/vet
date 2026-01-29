@@ -29,7 +29,7 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 test = [
-    "imbue-verify",
+    "vet",
 ]
 
 [tool.setuptools]
@@ -40,4 +40,4 @@ include = ["imbue_tools*"]
 
 [tool.uv.sources]
 imbue_core = { path = "../imbue_core", editable = true }
-imbue-verify = { path = "..", editable = true }
+vet = { path = "..", editable = true }

@@ -13,20 +13,20 @@ from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from imbue_core.data_types import LLMResponse
 from imbue_core.itertools import only
 from imbue_tools.repo_utils.context_utils import escape_prompt_markers
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
-from imbue_verify.issue_identifiers.common import GeneratedResponseSchema
-from imbue_verify.issue_identifiers.common import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import (
     extract_invocation_info_from_costed_response,
 )
-from imbue_verify.issue_identifiers.common import (
+from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
-from imbue_verify.issue_identifiers.common import generate_issues_from_response_texts
-from imbue_verify.issue_identifiers.identification_guides import (
+from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 DEDUPLICATION_PROMPT_TEMPLATE = """[ROLE=USER]
 You are reviewing the results from parallel code analysis for potential issues.
@@ -111,7 +111,7 @@ def _convert_parsed_issues_to_combined_string(
 
 def deduplicate_issues(
     issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
-    config: ImbueVerifyConfig,
+    config: VetConfig,
     enabled_issue_codes: Iterable[IssueCode],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
     """

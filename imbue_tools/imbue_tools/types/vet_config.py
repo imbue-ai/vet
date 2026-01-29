@@ -8,8 +8,8 @@ from imbue_core.pydantic_serialization import SerializableModel
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
 
 
-class ImbueVerifyConfig(SerializableModel):
-    """Configuration for the imbue_verify system."""
+class VetConfig(SerializableModel):
+    """Configuration for the vet system."""
 
     # If none, all registered identifiers are used.
     # Otherwise, only the identifiers in this tuple are used.
@@ -19,7 +19,7 @@ class ImbueVerifyConfig(SerializableModel):
     disabled_identifiers: tuple[str, ...] | None = None
 
     # Similar to the above, but for reporting specific types of issues.
-    # (Use the values from the imbue_verify.data_types.IssueCode enum.)
+    # (Use the values from the vet.data_types.IssueCode enum.)
     enabled_issue_codes: tuple[IssueCode, ...] | None = None
     disabled_issue_codes: tuple[IssueCode, ...] | None = ()
 
@@ -65,7 +65,7 @@ class ImbueVerifyConfig(SerializableModel):
         temperature: float = 0.5,
         retry_jitter_factor: float = 0.0,
         cache_full_prompt: bool = False,
-    ) -> "ImbueVerifyConfig":
+    ) -> "VetConfig":
         if not language_model_name:
             language_model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
         language_model_generation_config = LanguageModelGenerationConfig(
@@ -88,7 +88,7 @@ class ImbueVerifyConfig(SerializableModel):
         )
 
 
-def get_enabled_issue_codes(config: ImbueVerifyConfig) -> set[IssueCode]:
+def get_enabled_issue_codes(config: VetConfig) -> set[IssueCode]:
     all_issue_code_values = {item.value for item in IssueCode}
     explicitly_enabled = config.enabled_issue_codes or tuple()
     explicitly_disabled = config.disabled_issue_codes or tuple()

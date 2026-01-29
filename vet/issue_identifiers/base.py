@@ -11,8 +11,8 @@ from imbue_tools.get_conversation_history.input_data_types import (
     to_specific_inputs_type,
 )
 from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers.common import GeneratedIssueSchema
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.common import GeneratedIssueSchema
 
 T = TypeVar("T", bound=IdentifierInputs)
 
@@ -21,8 +21,8 @@ class IssueIdentifier(SerializableModel, abc.ABC, Generic[T]):
     """
     A protocol for identifying issues given certain inputs.
 
-    By implementing this protocol and registering the new instance in `imbue_verify/issue_identifiers/registry.py`,
-    one can create a new issue identifier and automatically expand the default abilities of imbue_verify.
+    By implementing this protocol and registering the new instance in `vet/issue_identifiers/registry.py`,
+    one can create a new issue identifier and automatically expand the default abilities of vet.
 
     """
 
@@ -31,7 +31,7 @@ class IssueIdentifier(SerializableModel, abc.ABC, Generic[T]):
         self,
         identifier_inputs: T,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,
+        config: VetConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         """
         Identify issues given the identifier inputs.
@@ -83,7 +83,7 @@ class IssueIdentifier(SerializableModel, abc.ABC, Generic[T]):
     def _get_prompt(
         self,
         project_context: ProjectContext,
-        config: ImbueVerifyConfig,
+        config: VetConfig,
         identifier_inputs: T,
     ) -> str:
         """

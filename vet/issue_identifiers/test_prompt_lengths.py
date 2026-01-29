@@ -3,27 +3,27 @@ from imbue_core.frozen_utils import FrozenDict
 from imbue_core.itertools import first
 from imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from imbue_tools.repo_utils.project_context import BaseProjectContext
-from imbue_tools.types.imbue_verify_config import ImbueVerifyConfig
-from imbue_verify.issue_identifiers import registry
-from imbue_verify.issue_identifiers.identification_guides import (
+from imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers import registry
+from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
-from imbue_verify.repo_utils import IMBUE_VERIFY_MAX_PROMPT_TOKENS
+from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 
 EMPTY_PROJECT_CONTEXT = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="")
-DEFAULT_IMBUE_VERIFY_CONFIG = ImbueVerifyConfig()
+DEFAULT_VET_CONFIG = VetConfig()
 
 
 # Helper functions to extract a base prompt for different identifier types.
 PROMPT_EXTRACTOR_FUNCTIONS = {
     IssueIdentifierType.BATCHED_COMMIT_CHECK: lambda identifier: identifier._get_prompt(
         EMPTY_PROJECT_CONTEXT,
-        DEFAULT_IMBUE_VERIFY_CONFIG,
+        DEFAULT_VET_CONFIG,
         CommitInputs(maybe_goal="", maybe_diff=""),
     ),
     IssueIdentifierType.CORRECTNESS_COMMIT_CLASSIFIER: lambda identifier: identifier._get_prompt(
         EMPTY_PROJECT_CONTEXT,
-        DEFAULT_IMBUE_VERIFY_CONFIG,
+        DEFAULT_VET_CONFIG,
         CommitInputs(maybe_goal="", maybe_diff=""),
     ),
 }
@@ -56,5 +56,5 @@ def test_prompt_lengths() -> None:
         prompt = extract_prompt(identifier)
         num_tokens = _estimate_tokens(prompt)
         assert (
-            num_tokens <= IMBUE_VERIFY_MAX_PROMPT_TOKENS
-        ), f"Prompt for {identifier_name} exceeds IMBUE_VERIFY_MAX_PROMPT_TOKENS. Consider increasing IMBUE_VERIFY_MAX_PROMPT_TOKENS or shortening the prompt. "
+            num_tokens <= VET_MAX_PROMPT_TOKENS
+        ), f"Prompt for {identifier_name} exceeds VET_MAX_PROMPT_TOKENS. Consider increasing VET_MAX_PROMPT_TOKENS or shortening the prompt. "
