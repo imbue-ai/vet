@@ -24,7 +24,6 @@ dependencies = [
     "inline-snapshot",
     "loguru",
     "pathspec",
-    "posthog==5.4.0",
     "prometheus-client>=0.20.0",
     "pydantic-settings",
     "pydantic>=2.11.4",
@@ -37,7 +36,6 @@ dependencies = [
     "pytest-mock",
     "syrupy",
     "python-gitlab>=4.5.0",
-    "sentry-sdk",
     "tblib==2.0.0", # pinning because Hammers code relies on "get_locals"
     "tenacity>=8.2.2",
     "toml",
