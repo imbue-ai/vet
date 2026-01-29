@@ -1,4 +1,5 @@
-from enum import StrEnum
+"""Chat state types for imbue_verify."""
+
 from typing import Annotated
 from typing import Any
 from typing import Literal
@@ -6,12 +7,11 @@ from typing import Literal
 from pydantic import Field
 from pydantic import Tag
 
-from imbue_core.agents.data_types.ids import AgentMessageID
-from imbue_core.agents.data_types.ids import TaskID
-from imbue_core.ids import ToolUseID
-from imbue_core.imbue_cli.action import ActionOutput as ImbueCLIActionOutput
 from imbue_core.pydantic_serialization import SerializableModel
 from imbue_core.pydantic_serialization import build_discriminator
+from vet_types.ids import TaskID
+from vet_types.ids import ToolUseID
+
 
 # ========================
 # Chat Type Definitions
@@ -100,27 +100,7 @@ class DiffToolContent(ToolResultContent):
     file_path: str = Field(..., description="The file that was modified")
 
 
-class ImbueCLIToolContent(ToolResultContent):
-    """Content for Imbue CLI MCP results that may be composed of multiple actions"""
-
-    content_type: Literal["imbue_cli"] = "imbue_cli"
-
-    action_outputs: list[ImbueCLIActionOutput] = Field(
-        ..., description="List of action outputs from the Imbue CLI tool"
-    )
-
-
-ToolResultContentType = GenericToolContent | DiffToolContent | ImbueCLIToolContent
-
-
-class ToolResultBlockSimple(ContentBlock):
-    object_type: str = "ToolResultBlockSimple"
-    type: Literal["tool_result_simple"] = "tool_result_simple"
-    tool_use_id: ToolUseID = Field(..., description="ID of the corresponding tool use")
-    tool_name: str = Field(..., description="Name of the tool that was used")
-    invocation_string: str = Field(..., description="String representation of how the tool was invoked")
-    content: SimpleToolContent | ImbueCLIToolContent = Field(..., description="Result content from the tool execution")
-    is_error: bool = Field(default=False, description="Whether the tool execution resulted in an error")
+ToolResultContentType = GenericToolContent | DiffToolContent
 
 
 class ToolResultBlock(ContentBlock):
@@ -171,18 +151,3 @@ ContentBlockTypes = Annotated[
     ),
     build_discriminator(),
 ]
-
-
-class ChatMessageRole(StrEnum):
-    USER = "USER"
-    ASSISTANT = "ASSISTANT"
-
-
-class ChatMessage(SerializableModel):
-    """Chat message with content blocks. A ChatMessage corresponds to a single turn in the conversation."""
-
-    role: ChatMessageRole
-    id: AgentMessageID
-    content: tuple[ContentBlockTypes, ...]
-    snapshot_id: str | None = None
-    did_snapshot_fail: bool = False

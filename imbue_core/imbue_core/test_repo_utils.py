@@ -23,20 +23,14 @@ def make_simple_test_git_repo() -> Generator[Path, None, None]:
             cwd=repo_path,
             check=True,
         )
-        subprocess.run(
-            ["git", "config", "user.name", "Test User"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_path, check=True)
 
         # Create initial commit
         (repo_path / "file1.txt").write_text("initial content")
         subprocess.run(["git", "add", "file1.txt"], cwd=repo_path, check=True)
-        subprocess.run(
-            ["git", "commit", "-m", "Initial commit"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_path, check=True)
         (repo_path / "file2.txt").write_text("initial content file 2")
         subprocess.run(["git", "add", "file2.txt"], cwd=repo_path, check=True)
-        subprocess.run(
-            ["git", "commit", "-m", "Initial commit file2"], cwd=repo_path, check=True
-        )
+        subprocess.run(["git", "commit", "-m", "Initial commit file2"], cwd=repo_path, check=True)
 
         yield repo_path

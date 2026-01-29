@@ -5,7 +5,7 @@ from imbue_core.agents.llm_apis.build_apis import build_language_model_from_conf
 from imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
 from imbue_core.itertools import only
-from imbue_core.sculptor.state.messages import ConversationMessageUnion
+from vet_types.messages import ConversationMessageUnion
 from imbue_tools.get_conversation_history.get_conversation_history import (
     format_conversation_history_for_prompt,
 )

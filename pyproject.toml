@@ -18,6 +18,7 @@ dependencies = [
     "pytest",
     "syrupy",
     "together>=1.5.35",
+    "vet_types",
 ]
 requires-python = ">=3.11"
 
@@ -33,6 +34,7 @@ include = ["imbue_verify*"]
 [tool.uv.sources]
 imbue_core = { path = "./imbue_core", editable = true }
 imbue_tools = { path = "./imbue_tools", editable = true }
+vet_types = { path = "./vet_types", editable = true }
 
 [dependency-groups]
 dev = [
