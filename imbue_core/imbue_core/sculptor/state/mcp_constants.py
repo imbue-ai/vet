@@ -1,0 +1,10 @@
+IMBUE_CLI_INTERNAL_MCP_SERVER_NAME = "imbue"
+IMBUE_CLI_USER_MCP_SERVER_NAME = "imbue_tools"
+
+IMBUE_CLI_MCP_TOOL_PREFIXES = [
+    f"mcp__{name}"
+    for name in (
+        IMBUE_CLI_INTERNAL_MCP_SERVER_NAME,
+        IMBUE_CLI_USER_MCP_SERVER_NAME,
+    )
+]

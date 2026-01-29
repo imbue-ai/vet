@@ -257,30 +257,30 @@ wheels = [
 
 [[package]]
 name = "boto3"
-version = "1.42.36"
+version = "1.42.37"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
     { name = "jmespath" },
     { name = "s3transfer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/54/06/50ff808cf4f40efada8edc20f9d563ab287864423c874dfb94f755a60c52/boto3-1.42.36.tar.gz", hash = "sha256:a4eb51105c8c5d7b2bc2a9e2316e69baf69a55611275b9f189c0cf59f1aae171", size = 112839, upload-time = "2026-01-27T20:38:26.992Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a9/ef/0d6ceb88ae2b3638b956190a431e4a8a3697d5769d4bbbede8efcccacaea/boto3-1.42.37.tar.gz", hash = "sha256:d8b6c52c86f3bf04f71a5a53e7fb4d1527592afebffa5170cf3ef7d70966e610", size = 112830, upload-time = "2026-01-28T20:38:43.339Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/d1/35d12f04a7792e2f5e9ddff3c7b60493a32027761380dee7f24ee8ae80cc/boto3-1.42.36-py3-none-any.whl", hash = "sha256:e0ff6f2747bfdec63405b35ea185a7aea35239c3f4fe99e4d29368a6de9c4a84", size = 140604, upload-time = "2026-01-27T20:38:25.349Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/a4/cd334f74498acc6ad42a69c48e8c495f6f721d8abe13f8ef0d4b862fb1c0/boto3-1.42.37-py3-none-any.whl", hash = "sha256:e1e38fd178ffc66cfbe9cb6838b8c460000c3eb741e5f40f57eb730780ef0ed4", size = 140604, upload-time = "2026-01-28T20:38:42.135Z" },
 ]
 
 [[package]]
 name = "botocore"
-version = "1.42.36"
+version = "1.42.37"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/66/4e/b24089cf7a77d38886ac4fbae300a3c4c6d68c1b9ccb66af03cb07b6c35c/botocore-1.42.36.tar.gz", hash = "sha256:2ebd89cc75927944e2cee51b7adce749f38e0cb269a758a6464a27f8bcca65fb", size = 14909073, upload-time = "2026-01-27T20:38:16.621Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/4d/94292e7686e64d2ede8dae7102bbb11a1474e407c830de4192f2518e6cff/botocore-1.42.37.tar.gz", hash = "sha256:3ec58eb98b0857f67a2ae6aa3ded51597e7335f7640be654e0e86da4f173b5b2", size = 14914621, upload-time = "2026-01-28T20:38:34.586Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/e8/f14d25bd768187424b385bc6a44e2ed5e96964e461ba019add03e48713c7/botocore-1.42.36-py3-none-any.whl", hash = "sha256:2cfae4c482e5e87bd835ab4289b711490c161ba57e852c06b65a03e7c25e08eb", size = 14583066, upload-time = "2026-01-27T20:38:14.02Z" },
+    { url = "https://files.pythonhosted.org/packages/72/30/54042dd3ad8161964f8f47aa418785079bd8d2f17053c40d65bafb9f6eed/botocore-1.42.37-py3-none-any.whl", hash = "sha256:f13bb8b560a10714d96fb7b0c7f17828dfa6e6606a1ead8c01c6ebb8765acbd8", size = 14589390, upload-time = "2026-01-28T20:38:31.306Z" },
 ]
 
 [[package]]
@@ -855,7 +855,7 @@ wheels = [
 [[package]]
 name = "imbue-core"
 version = "0.0.9"
-source = { editable = "imbue_core" }
+source = { editable = "../imbue_core" }
 dependencies = [
     { name = "anthropic" },
     { name = "anyio" },
@@ -943,7 +943,7 @@ dev = [{ name = "moto", specifier = ">=4.1.12" }]
 [[package]]
 name = "imbue-tools"
 version = "0.1.0"
-source = { editable = "imbue_tools" }
+source = { editable = "." }
 dependencies = [
     { name = "anyio" },
     { name = "async-lru" },
@@ -963,13 +963,18 @@ dependencies = [
     { name = "syrupy" },
 ]
 
+[package.optional-dependencies]
+test = [
+    { name = "imbue-verify" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "anyio" },
     { name = "async-lru" },
     { name = "attrs" },
-    { name = "imbue-core", editable = "imbue_core" },
-    { name = "imbue-verify", marker = "extra == 'test'", editable = "." },
+    { name = "imbue-core", editable = "../imbue_core" },
+    { name = "imbue-verify", marker = "extra == 'test'", editable = "../" },
     { name = "jinja2" },
     { name = "libcst" },
     { name = "loguru" },
@@ -988,7 +993,7 @@ provides-extras = ["test"]
 [[package]]
 name = "imbue-verify"
 version = "0.1.0"
-source = { editable = "." }
+source = { editable = "../" }
 dependencies = [
     { name = "aiohttp" },
     { name = "click" },
@@ -1007,8 +1012,8 @@ dependencies = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.8.0" },
     { name = "click" },
-    { name = "imbue-core", editable = "imbue_core" },
-    { name = "imbue-tools", editable = "imbue_tools" },
+    { name = "imbue-core", editable = "../imbue_core" },
+    { name = "imbue-tools", editable = "." },
     { name = "jinja2" },
     { name = "loguru" },
     { name = "pydantic" },
