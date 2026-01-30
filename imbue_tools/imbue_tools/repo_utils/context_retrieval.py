@@ -1,9 +1,6 @@
-import asyncio
 import threading
 import time
-from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 from typing import Generator
 
 import pygit2
@@ -12,7 +9,6 @@ from pygit2.enums import ObjectType
 from pygit2.repository import Repository
 
 from imbue_core.async_utils import make_async
-from imbue_core.git import LocalGitRepo
 from imbue_tools.repo_utils.diff_utils import apply_diffs_to_files
 from imbue_tools.repo_utils.file_system import FileContents
 from imbue_tools.repo_utils.file_system import InMemoryFileSystem
@@ -34,8 +30,6 @@ class RepoContextManager:
         # We need the sync lock due to pygit2 being synchronous.
         # It is mostly used for the blob data cache, but also for the repo contents by git hash cache.
         self._lock = threading.Lock()
-        # We need the async lock for tests TODO: we can probably remove this
-        self._local_repo_async_lock: asyncio.Lock = asyncio.Lock()
 
     @classmethod
     def build(cls, repo_path: Path) -> "RepoContextManager":
@@ -43,17 +37,23 @@ class RepoContextManager:
             # make sure we are in a git repo
             Repository(path=str(repo_path))
         except pygit2.GitError as e:
-            raise RepoContextManagerError(f"Failed to initialize git repo at {repo_path}") from e
+            raise RepoContextManagerError(
+                f"Failed to initialize git repo at {repo_path}"
+            ) from e
 
         repo_context_manager = cls(repo_path=repo_path, project_name=repo_path.name)
         return repo_context_manager
 
-    async def get_full_repo_contents_at_repo_state(self, git_hash: str, diff: str) -> InMemoryFileSystem:
+    async def get_full_repo_contents_at_repo_state(
+        self, git_hash: str, diff: str
+    ) -> InMemoryFileSystem:
         final_contents = await self.get_full_repo_contents_at_commit(git_hash)
         final_contents = await apply_diffs_to_files(final_contents, (diff,))
         return final_contents
 
-    def get_full_repo_contents_at_commit_sync(self, git_hash: str) -> InMemoryFileSystem:
+    def get_full_repo_contents_at_commit_sync(
+        self, git_hash: str
+    ) -> InMemoryFileSystem:
         # NOTE: most of the time we want to get the contents at a repo state, not a git hash.
         #   Call get_full_repo_contents_at_repo_state instead in that case.
         with self._lock:
@@ -62,9 +62,13 @@ class RepoContextManager:
             # Assert against use of HEAD specifically because there could be some existing code
             # that uses it, and we want to catch that. It would fail below as well with a KeyError,
             # but this assert makes the exception message more explicit.
-            assert git_hash != "HEAD", "Only proper commit hashes are supported, not HEAD"
+            assert git_hash != "HEAD", (
+                "Only proper commit hashes are supported, not HEAD"
+            )
             commit = self._repo[git_hash]
-            assert isinstance(commit, pygit2.Commit), f"Expected a pygit2.Commit, got {type(commit)}"
+            assert isinstance(commit, pygit2.Commit), (
+                f"Expected a pygit2.Commit, got {type(commit)}"
+            )
 
             full_repo_contents = self._read_blobs_from_commit(commit)
 
@@ -84,10 +88,14 @@ class RepoContextManager:
         """Read all blobs in a given commit."""
         file_system_dict: dict[str, FileContents] = {}
 
-        for path, blob in self._list_blobs_from_tree(commit.tree, skip_binary=False, skip_symlinks=False):
+        for path, blob in self._list_blobs_from_tree(
+            commit.tree, skip_binary=False, skip_symlinks=False
+        ):
             if blob.filemode == 0o120000:
                 # Blob is a symbolic link. Its contents in git represent the target path.
-                file_system_dict[path] = SymlinkContents(target_path=blob.data.decode("utf-8"))
+                file_system_dict[path] = SymlinkContents(
+                    target_path=blob.data.decode("utf-8")
+                )
             else:
                 file_system_dict[path] = blob.data
         return InMemoryFileSystem.build(file_system_dict)
@@ -125,12 +133,3 @@ class RepoContextManager:
 
             else:
                 raise ValueError(f"Unexpected entry type in git tree: {entry.type}")
-
-    @asynccontextmanager
-    async def tmp_repo_context(self) -> AsyncGenerator[LocalGitRepo, None]:
-        """
-        This function is only used in tests
-        TODO: we can probably remove it
-        """
-        async with self._local_repo_async_lock:
-            yield LocalGitRepo(self.repo_path)

@@ -21,11 +21,3 @@ class RunCommandError(subprocess.CalledProcessError):
 
     def __str__(self) -> str:
         return f"Command `{self.cmd}` returned non-zero exit status {self.returncode}.\nOutput: {self.stdout}\nError: {self.stderr}\nCWD: {self.cwd}"
-
-
-class PatchApplicationError(Exception):
-    """Custom exception for errors encountered during patch application."""
-
-
-class FailedToMakeCommitError(Exception):
-    """Custom exception for errors encountered during commit creation."""
