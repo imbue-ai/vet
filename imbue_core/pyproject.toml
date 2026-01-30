@@ -11,7 +11,6 @@ authors = [
   { name="Imbue", email="imbue@imbue.com" },
 ]
 license = "MIT"
-# NOTE: This list is replicated in sculptor/pyproject.toml, and the copy there must be kept in sync.
 dependencies = [
     "anyio",
     "attrs",

@@ -1,4 +1,4 @@
-"""This file implements a subset of the functionality found in git.py and compute_environment.py, but everything is synchronous."""
+"""Git utilities for vet."""
 
 import shlex
 import subprocess
@@ -6,25 +6,19 @@ import time
 from pathlib import Path
 from typing import Sequence
 
+import anyio
 from loguru import logger
 
 from imbue_core.async_monkey_patches import log_exception
-from imbue_core.computing_environment.data_types import AnyPath
-from imbue_core.computing_environment.data_types import RunCommandError
+from vet.errors import RunCommandError
+
+# Flexible path type alias
+AnyPath = Path | str | anyio.Path
 
 
 class SyncLocalGitRepo:
     """
     Provides different operations that you can perform over a git repository.
-
-    Implements a subset of our async LocalGitRepo, but also pulls in some of the functions from computing_environment.py
-    that normally would operate on a LocalGitRepo.
-
-    Over time, we can probably replace LocalGitRepo and computing_environment more or less fully, as we're migrating
-    code away from asyncio.
-
-    Feel free to move additional functions from computing_environment.py into this class as needed. Usually, you just need
-    to remove async/await keywords, and replace calls to compute_environment. member functions with self. calls.
     """
 
     _base_path: Path
@@ -55,7 +49,9 @@ class SyncLocalGitRepo:
         """
         command = ["git"] + list(command)
         if not retry_on_git_lock_error:
-            result = self.run_command(command, check=check, is_error_logged=is_error_logged, cwd=cwd)
+            result = self.run_command(
+                command, check=check, is_error_logged=is_error_logged, cwd=cwd
+            )
         else:
             result = self._run_command_with_retry_on_git_lock_error(
                 command, check=check, is_error_logged=is_error_logged, cwd=cwd
@@ -140,10 +136,14 @@ class SyncLocalGitRepo:
 
     def get_untracked_files(self) -> tuple[str, ...]:
         """Get the untracked files in the repo."""
-        result = self.run_git(["ls-files", "--others", "--exclude-standard"], is_error_logged=False)
+        result = self.run_git(
+            ["ls-files", "--others", "--exclude-standard"], is_error_logged=False
+        )
         return tuple([line.strip() for line in result.splitlines() if line.strip()])
 
-    def get_untracked_file_diff(self, file_path: str, include_binary: bool = True) -> str:
+    def get_untracked_file_diff(
+        self, file_path: str, include_binary: bool = True
+    ) -> str:
         """Get the diff for a untracked file.
 
         Note this function will raise a RunCommandError if the there is no diff for the untracked file or if there
@@ -184,7 +184,9 @@ class SyncLocalGitRepo:
 
         The merge base is the most recent commit that is on both branches.
         """
-        return self.run_git(["merge-base", branch_name, target_branch], is_error_logged=False)
+        return self.run_git(
+            ["merge-base", branch_name, target_branch], is_error_logged=False
+        )
 
     def _run_command_with_retry_on_git_lock_error(
         self,
@@ -206,10 +208,40 @@ class SyncLocalGitRepo:
                 )
             except RunCommandError as e:
                 error_message = str(e)
-                if "fatal: Unable to create" in error_message and ".git/index.lock': File exists" in error_message:
+                if (
+                    "fatal: Unable to create" in error_message
+                    and ".git/index.lock': File exists" in error_message
+                ):
                     if retry_count >= max_retries:
                         raise
                     time.sleep(retry_delay)
                     retry_count += 1
                 else:
                     raise
+
+
+def find_relative_to_commit_hash(relative_to: str, repo_path: Path) -> str:
+    """
+    Find the commit hash to use as the source to compare against.
+    - If relative_to is "HEAD", it will return the current commit hash.
+    - If relative_to is a branch name, it will find the last common ancestor between that branch and the current state.
+    - If relative_to is a commit hash or tag, it will return that commit hash.
+    """
+    repo = SyncLocalGitRepo(repo_path)
+    if relative_to.startswith("HEAD"):
+        # The current commit hash or relative to it (e.g. "HEAD~1")
+        base_commit = repo.run_git(["rev-parse", relative_to], check=True)
+    else:
+        # Check if relative_to is the name of a branch.
+        is_branch = repo.is_commit_a_branch(relative_to)
+        if is_branch:
+            # Yes, it's a branch.
+            # Since we're comparing to a branch, this command will find the last common ancestor
+            # between that branch and the current state. This is typically what we want for branches.
+            # (Think of this as getting the diff that would be applied if this branch was to be merged into relative_to.)
+            base_commit = repo.get_merge_base(relative_to, "HEAD")
+        else:
+            # Not a branch. relative_to might be a commit hash or tag.
+            base_commit = relative_to
+
+    return base_commit
