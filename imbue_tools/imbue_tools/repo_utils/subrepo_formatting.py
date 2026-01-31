@@ -1,5 +1,4 @@
 import functools
-from collections import defaultdict
 from enum import Enum
 from typing import Annotated
 from typing import Iterable
@@ -237,28 +236,6 @@ def format_all_for_agent(repo_contents: tuple[FileContext, ...]) -> dict[str, st
 def format_subrepo(formatted_repo_contents: Mapping[str, str]) -> str:
     repo_context_str = "".join([contents for contents in formatted_repo_contents.values() if contents is not None])
     return escape_all_jinja_variables(escape_prompt_markers(repo_context_str))
-
-
-def format_subrepo_context_full(repo: Mapping[str, str]) -> str:
-    """Like get_repo_context but there's no checking for context limits (so we can use the api checks instead)
-    and the selected strategy is always the full repo contents."""
-    formatted_repo_context = format_subrepo(
-        format_all_for_agent(
-            format_subrepo_context_into_filecontexts(
-                full_repo_contents=repo,
-                path_to_format_style=defaultdict(lambda: ContextFormatStyle.FULL_FILE, {}),
-            )
-        )
-    )
-
-    repo_context_core_prompt = formatted_subrepo_to_prompt(
-        repo_context_str=formatted_repo_context,
-        is_shortened=False,
-        has_hidden_files=False,
-        template=BASE_REPO_CONTEXT_TEMPLATE,
-    )
-
-    return repo_context_core_prompt
 
 
 def formatted_subrepo_to_prompt(

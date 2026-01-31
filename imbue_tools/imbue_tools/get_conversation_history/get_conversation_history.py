@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import assert_never
 
 from loguru import logger
@@ -10,9 +9,6 @@ from vet_types.chat_state import ContentBlockTypes
 from vet_types.messages import ChatInputUserMessage
 from vet_types.messages import ConversationMessageUnion
 from vet_types.messages import ResponseBlockAgentMessage
-
-CONVERSATION_FILE_ENV_VAR = "CONVERSATION_FILE"
-TASK_SOURCE_BRANCH_ENV_VAR = "TASK_SOURCE_BRANCH"
 
 
 class ConversationLoadingError(Exception):
@@ -56,14 +52,6 @@ def format_conversation_history_for_prompt(
 
 
 # === loading from file ===
-
-
-def load_conversation_history(
-    conversation_file_path: Path,
-) -> tuple[ConversationMessageUnion, ...]:
-    """Load a jsonl file into a list of conversation messages"""
-    file_contents = conversation_file_path.read_text()
-    return parse_conversation_history(file_contents)
 
 
 def parse_conversation_history(

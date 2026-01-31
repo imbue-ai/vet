@@ -39,7 +39,7 @@ class IssueIdentifier(SerializableModel, abc.ABC, Generic[T]):
         Args:
             identifier_inputs: The inputs which determine the content provided to the identifier.
             project_context: Loaded data corresponding to the inputs, e.g. diffs or files.
-            config: Settings for imbue verify.
+            config: Settings
 
         Returns:
             A generator of identified issues. When done iterating, returns the debug info.

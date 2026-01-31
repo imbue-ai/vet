@@ -37,23 +37,17 @@ class RepoContextManager:
             # make sure we are in a git repo
             Repository(path=str(repo_path))
         except pygit2.GitError as e:
-            raise RepoContextManagerError(
-                f"Failed to initialize git repo at {repo_path}"
-            ) from e
+            raise RepoContextManagerError(f"Failed to initialize git repo at {repo_path}") from e
 
         repo_context_manager = cls(repo_path=repo_path, project_name=repo_path.name)
         return repo_context_manager
 
-    async def get_full_repo_contents_at_repo_state(
-        self, git_hash: str, diff: str
-    ) -> InMemoryFileSystem:
+    async def get_full_repo_contents_at_repo_state(self, git_hash: str, diff: str) -> InMemoryFileSystem:
         final_contents = await self.get_full_repo_contents_at_commit(git_hash)
         final_contents = await apply_diffs_to_files(final_contents, (diff,))
         return final_contents
 
-    def get_full_repo_contents_at_commit_sync(
-        self, git_hash: str
-    ) -> InMemoryFileSystem:
+    def get_full_repo_contents_at_commit_sync(self, git_hash: str) -> InMemoryFileSystem:
         # NOTE: most of the time we want to get the contents at a repo state, not a git hash.
         #   Call get_full_repo_contents_at_repo_state instead in that case.
         with self._lock:
@@ -62,13 +56,9 @@ class RepoContextManager:
             # Assert against use of HEAD specifically because there could be some existing code
             # that uses it, and we want to catch that. It would fail below as well with a KeyError,
             # but this assert makes the exception message more explicit.
-            assert git_hash != "HEAD", (
-                "Only proper commit hashes are supported, not HEAD"
-            )
+            assert git_hash != "HEAD", "Only proper commit hashes are supported, not HEAD"
             commit = self._repo[git_hash]
-            assert isinstance(commit, pygit2.Commit), (
-                f"Expected a pygit2.Commit, got {type(commit)}"
-            )
+            assert isinstance(commit, pygit2.Commit), f"Expected a pygit2.Commit, got {type(commit)}"
 
             full_repo_contents = self._read_blobs_from_commit(commit)
 
@@ -88,14 +78,10 @@ class RepoContextManager:
         """Read all blobs in a given commit."""
         file_system_dict: dict[str, FileContents] = {}
 
-        for path, blob in self._list_blobs_from_tree(
-            commit.tree, skip_binary=False, skip_symlinks=False
-        ):
+        for path, blob in self._list_blobs_from_tree(commit.tree, skip_binary=False, skip_symlinks=False):
             if blob.filemode == 0o120000:
                 # Blob is a symbolic link. Its contents in git represent the target path.
-                file_system_dict[path] = SymlinkContents(
-                    target_path=blob.data.decode("utf-8")
-                )
+                file_system_dict[path] = SymlinkContents(target_path=blob.data.decode("utf-8"))
             else:
                 file_system_dict[path] = blob.data
         return InMemoryFileSystem.build(file_system_dict)

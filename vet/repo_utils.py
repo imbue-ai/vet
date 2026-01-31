@@ -22,18 +22,14 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
     try:
         base_commit = find_relative_to_commit_hash(relative_to, repo_path=repo_path)
     except RunCommandError as e:
-        raise GitException(
-            f"Unable to determine base commit for code verification: {e}"
-        ) from e
+        raise GitException(f"Unable to determine base commit for code verification: {e}") from e
 
     repo = SyncLocalGitRepo(repo_path)
 
     # Get the combined diff which includes all changes; staged, unstaged, and untracked.
     try:
         combined_diff = repo.get_git_diff(commit_hash=base_commit)
-        combined_diff_no_binary = repo.get_git_diff(
-            commit_hash=base_commit, include_binary=False
-        )
+        combined_diff_no_binary = repo.get_git_diff(commit_hash=base_commit, include_binary=False)
     except RunCommandError as e:
         raise GitException(f"Unable to get diff to {base_commit}: {e}") from e
 
@@ -49,9 +45,7 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
     for file_path in untracked_files:
         if file_path:  # Skip empty lines
             try:
-                untracked_diff = repo.get_untracked_file_diff(
-                    file_path, include_binary=True
-                )
+                untracked_diff = repo.get_untracked_file_diff(file_path, include_binary=True)
                 untracked_diffs.append(untracked_diff)
             except RunCommandError as e:
                 log_exception(
@@ -61,9 +55,7 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
                 )
 
             try:
-                untracked_diff_no_binary = repo.get_untracked_file_diff(
-                    file_path, include_binary=False
-                )
+                untracked_diff_no_binary = repo.get_untracked_file_diff(file_path, include_binary=False)
                 untracked_diffs_no_binary.append(untracked_diff_no_binary)
             except RunCommandError as e:
                 log_exception(

@@ -17,16 +17,6 @@ def check_on_body(stmt: cst.CSTNode, check: Callable[[cst.CSTNode], bool]) -> bo
     return check(first_body_item)
 
 
-def is_assign(stmt: cst.CSTNode) -> bool:
-    if not m.matches(stmt, m.SimpleStatementLine()):
-        return False
-    # pyre-ignore[16]: m.SimpleStatementLine has a body attribute which is a Sequence
-    first_body_item = stmt.body[0]
-    if m.matches(first_body_item, m.Assign()):
-        return True
-    return False
-
-
 class CompressTransformer(cst.CSTTransformer):
     DESCRIPTION = str = "Replaces function body with ..."
     replacement_string = '"__FUNC_BODY_REPLACEMENT_STRING__"'
