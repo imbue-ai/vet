@@ -15,7 +15,6 @@ import threading
 from typing import Any
 from typing import Callable
 from typing import Generic
-from typing import TypeGuard
 from typing import TypeVar
 from typing import cast
 
@@ -27,6 +26,8 @@ from imbue_core.pydantic_utils import model_update
 
 _T = TypeVar("_T")
 ObjectType = TypeVar("ObjectType")
+
+_threading_local = threading.local()
 
 
 def evolver(obj: _T) -> _T:
@@ -58,42 +59,6 @@ def chill(evolver: _T) -> _T:
     assert isinstance(evolver, _Evolver)  # Tricked you, type system!
     cast_evolver = cast(_Evolver[_T], evolver)
     return cast_evolver.chill()
-
-
-_threading_local = threading.local()
-
-
-# TODO: since mutate and thaw are stateful, if you call one without the other, you run into problems.
-def thaw(obj: _T) -> _T:
-    global _threading_local
-    if hasattr(_threading_local, "evolved_obj"):
-        raise ValueError("Thaw does not support nested thawing.")
-    # pyre-ignore[16]: we're deliberately setting evolved_obj for the first time here
-    _threading_local.evolved_obj = evolver(obj)
-    return _threading_local.evolved_obj
-
-
-# TODO: mypy complains because the input isn't anything related to ObjectType, but the output is.
-# This also means the type checking doesn't quite work since it can't infer the return type of this function correctly
-def mutate(dest: _T, src: Callable[[], _T]) -> ObjectType:  # type: ignore
-    assign(dest, src)
-    try:
-        # pyre-ignore[34]: we don't have generic functions yet, so pyre complains that ObjectType isn't in the input
-        evolved_obj: ObjectType = _threading_local.evolved_obj  # pyre-ignore[16]: pyre doesn't know about evolved_obj
-        return chill(evolved_obj)
-    except AttributeError as e:
-        raise ValueError("You must call mutate on a thawed object") from e
-    finally:
-        delattr(_threading_local, "evolved_obj")
-
-
-def mutate_from_dict(dest: ObjectType, src: dict[str, Any]) -> ObjectType:
-    # Warning: using this function doesn't provide mypy type checking at the call site, but it allows a single interface for attrs and pydantic classes
-    # In most cases the above function should be used instead
-    evolved_obj = evolver(dest)
-    for key, value in src.items():
-        assign(getattr(evolved_obj, key), lambda: value)
-    return chill(evolved_obj)
 
 
 class _RegularValue:

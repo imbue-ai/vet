@@ -1,19 +1,13 @@
 import asyncio
 import functools
 import threading
-from contextlib import AbstractAsyncContextManager
-from contextlib import AbstractContextManager
-from contextlib import contextmanager
-from typing import Any
 from typing import Awaitable
 from typing import Callable
-from typing import Generator
 from typing import ParamSpec
 from typing import TypeVar
 
 P = ParamSpec("P")
 R = TypeVar("R")
-S = TypeVar("S")
 
 
 def sync(func: Callable[P, Awaitable[R]]) -> Callable[P, R]:
@@ -25,35 +19,6 @@ def sync(func: Callable[P, Awaitable[R]]) -> Callable[P, R]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         loop = _get_or_create_event_loop()
         return asyncio.run_coroutine_threadsafe(func(*args, **kwargs), loop).result()
-
-    return wrapper
-
-
-@contextmanager
-# pyre-ignore[24]: pyre doesn't understand AbstractAsyncContextManager
-def sync_contextmanager(
-    async_context_manager: AbstractAsyncContextManager[S],
-) -> Generator[S, None, None]:
-    sync_aenter = sync(async_context_manager.__aenter__)
-    sync_aexit = sync(async_context_manager.__aexit__)
-
-    enter_result = sync_aenter()
-    try:
-        yield enter_result
-    except BaseException as e:
-        if not sync_aexit(e.__class__, e, e.__traceback__):
-            raise
-    else:
-        sync_aexit(None, None, None)
-
-
-# pyre doesn't understand AbstractAsyncContextManager
-def sync_contextmanager_func(
-    cm_func: Callable[P, AbstractAsyncContextManager[S]],  # pyre-ignore[24]
-) -> Callable[P, AbstractContextManager[S]]:  # pyre-ignore[24]
-    @functools.wraps(cm_func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> AbstractContextManager[S]:  # pyre-ignore[24]
-        return sync_contextmanager(cm_func(*args, **kwargs))
 
     return wrapper
 

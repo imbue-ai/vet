@@ -1,6 +1,5 @@
 import builtins
 import datetime
-import inspect
 import json
 from enum import Enum
 from functools import cached_property
@@ -10,7 +9,6 @@ from pathlib import PosixPath
 from traceback import format_tb
 from types import TracebackType
 from typing import Any
-from typing import Callable
 from typing import Hashable
 from typing import Iterable
 from typing import Mapping
