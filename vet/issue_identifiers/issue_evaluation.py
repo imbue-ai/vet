@@ -266,7 +266,7 @@ def filter_issues(
         results: The issues to filter.
         inputs: The inputs which determine the content provided to the evaluator.
         project_context: Loaded data corresponding to the inputs, e.g. diffs or files.
-        config: Settings for imbue verify.
+        config: Settings
 
     Returns:
         A generator of issues with the passes_filtration flag set.

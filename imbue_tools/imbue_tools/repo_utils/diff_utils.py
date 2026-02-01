@@ -8,7 +8,6 @@ from async_lru import alru_cache  # type: ignore[undefined-attribute]: pyre on m
 from loguru import logger
 
 from imbue_tools.repo_utils.errors import DiffApplicationError
-from imbue_tools.repo_utils.errors import DiffCalculationError
 from imbue_tools.repo_utils.file_system import FileContents
 from imbue_tools.repo_utils.file_system import InMemoryFileSystem
 from imbue_tools.repo_utils.file_system import SymlinkContents
@@ -18,65 +17,6 @@ from imbue_tools.repo_utils.file_system_utils import (
 from imbue_tools.repo_utils.file_system_utils import (
     temporary_local_dir_from_in_memory_file_system,
 )
-from imbue_tools.repo_utils.file_system_utils import write_file_contents_to_dir
-
-
-class NonZeroReturncodeError(Exception):
-    pass
-
-
-async def get_diff_between_files(old_file_contents: InMemoryFileSystem, new_file_contents: InMemoryFileSystem) -> str:
-    with (
-        tempfile.TemporaryDirectory() as old_repo_dir,
-        tempfile.TemporaryDirectory() as new_repo_dir,
-    ):
-        # Get all changed file contents to prevent writing more than necessary
-        changed_old_file_contents_dict = {}
-        changed_new_file_contents_dict = {}
-        old_file_contents_dict = old_file_contents.files
-        new_file_contents_dict = new_file_contents.files
-        for file_path in old_file_contents_dict.keys() | new_file_contents_dict.keys():
-            if file_path not in old_file_contents_dict:
-                changed_new_file_contents_dict[file_path] = new_file_contents_dict[file_path]
-            elif file_path not in new_file_contents_dict:
-                changed_old_file_contents_dict[file_path] = old_file_contents_dict[file_path]
-            elif old_file_contents_dict[file_path] != new_file_contents_dict[file_path]:
-                changed_old_file_contents_dict[file_path] = old_file_contents_dict[file_path]
-                changed_new_file_contents_dict[file_path] = new_file_contents_dict[file_path]
-
-        changed_old_file_contents = InMemoryFileSystem.build(changed_old_file_contents_dict)
-        changed_new_file_contents = InMemoryFileSystem.build(changed_new_file_contents_dict)
-
-        await write_file_contents_to_dir(changed_old_file_contents, old_repo_dir)
-        await write_file_contents_to_dir(changed_new_file_contents, new_repo_dir)
-
-        try:
-            result = subprocess.run(
-                (
-                    "git",
-                    "diff",
-                    "--no-index",
-                    "--relative",
-                    "--full-index",
-                    "--binary",
-                    old_repo_dir,
-                    new_repo_dir,
-                ),
-                capture_output=True,
-                text=True,
-                timeout=10.0,
-            )
-            if result.returncode == 0 or result.returncode == 1:
-                diff = result.stdout
-            else:
-                raise NonZeroReturncodeError(f"git diff process returned with non-zero returncode {result.returncode}")
-        except Exception as e:
-            raise DiffCalculationError from e
-
-        diff = diff.replace(old_repo_dir, "")
-        diff = diff.replace(new_repo_dir, "")
-
-        return diff
 
 
 @alru_cache

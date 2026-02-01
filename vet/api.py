@@ -39,7 +39,7 @@ def get_issues_with_raw_responses(
         # should be not None and not empty
         if conversation_history:
             try:
-                # TODO: we use the imbue verify config here, but we may want to configure this separately
+                # TODO: we use the config here, but we may want to configure this separately
                 goal = get_goal_from_conversation(conversation_history, config.language_model_generation_config)
                 logger.info("Generated goal from conversation history: {}", goal)
             except Exception as e:

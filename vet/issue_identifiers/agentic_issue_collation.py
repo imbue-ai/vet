@@ -132,7 +132,7 @@ def collate_issues_with_agent(
         issues: The issues to collate.
         identifier_inputs: The inputs which determine the content provided to the identifiers.
         project_context: Loaded data corresponding to the inputs, e.g. diffs or files.
-        config: Settings for imbue verify.
+        config: Settings
         enabled_issue_codes: The issue types used by the issue identifiers.
 
     Returns:

@@ -2,8 +2,6 @@
 
 One of the design goals is that mypy, autocomplete, and automatic refactoring work for the assignments made into these nested structures.
 
-See: https://imbue-ai.slack.com/archives/C05D0SM2RT5/p1726185313480779?thread_ts=1722865932.537289&cid=C05D0SM2RT5
-
 If you make changes here and then the tests fail with:
 ```
 E   RecursionError: maximum recursion depth exceeded
@@ -17,7 +15,6 @@ import threading
 from typing import Any
 from typing import Callable
 from typing import Generic
-from typing import TypeGuard
 from typing import TypeVar
 from typing import cast
 
@@ -28,7 +25,8 @@ from imbue_core.frozen_utils import FrozenDict
 from imbue_core.pydantic_utils import model_update
 
 _T = TypeVar("_T")
-ObjectType = TypeVar("ObjectType")
+
+_threading_local = threading.local()
 
 
 def evolver(obj: _T) -> _T:
@@ -60,47 +58,6 @@ def chill(evolver: _T) -> _T:
     assert isinstance(evolver, _Evolver)  # Tricked you, type system!
     cast_evolver = cast(_Evolver[_T], evolver)
     return cast_evolver.chill()
-
-
-_threading_local = threading.local()
-
-
-# TODO: since mutate and thaw are stateful, if you call one without the other, you run into problems.
-def thaw(obj: _T) -> _T:
-    global _threading_local
-    if hasattr(_threading_local, "evolved_obj"):
-        raise ValueError("Thaw does not support nested thawing.")
-    # pyre-ignore[16]: we're deliberately setting evolved_obj for the first time here
-    _threading_local.evolved_obj = evolver(obj)
-    return _threading_local.evolved_obj
-
-
-# TODO: mypy complains because the input isn't anything related to ObjectType, but the output is.
-# This also means the type checking doesn't quite work since it can't infer the return type of this function correctly
-def mutate(dest: _T, src: Callable[[], _T]) -> ObjectType:  # type: ignore
-    assign(dest, src)
-    try:
-        # pyre-ignore[34]: we don't have generic functions yet, so pyre complains that ObjectType isn't in the input
-        evolved_obj: ObjectType = _threading_local.evolved_obj  # pyre-ignore[16]: pyre doesn't know about evolved_obj
-        return chill(evolved_obj)
-    except AttributeError as e:
-        raise ValueError("You must call mutate on a thawed object") from e
-    finally:
-        delattr(_threading_local, "evolved_obj")
-
-
-def mutate_from_dict(dest: ObjectType, src: dict[str, Any]) -> ObjectType:
-    # Warning: using this function doesn't provide mypy type checking at the call site, but it allows a single interface for attrs and pydantic classes
-    # In most cases the above function should be used instead
-    evolved_obj = evolver(dest)
-    for key, value in src.items():
-        assign(getattr(evolved_obj, key), lambda: value)
-    return chill(evolved_obj)
-
-
-def evolver_isinstance(evolver: Any, cls: type[_T]) -> TypeGuard[_T]:
-    assert isinstance(evolver, _Evolver)  # Tricked you, type system!
-    return evolver.isinstance(cls)
 
 
 class _RegularValue:
@@ -146,7 +103,13 @@ class _FrozenDictValue:
 
 class _Evolver(Generic[_T]):
     # pyre-ignore[13]: pyre is confused by the trickery here
-    _value: _RegularValue | _AttrValue | _TupleValue | _FrozenDictValue | _PydanticModelValue
+    _value: (
+        _RegularValue
+        | _AttrValue
+        | _TupleValue
+        | _FrozenDictValue
+        | _PydanticModelValue
+    )
 
     def __init__(self, initial_value: _T) -> None:
         super().__init__()
@@ -174,14 +137,18 @@ class _Evolver(Generic[_T]):
                 if item not in value.child_evolver_by_name:
                     child_obj = getattr(value.attr_value, item)
                     result = evolver(child_obj)
-                    assert isinstance(result, _Evolver), "Expose a lie to the type system."
+                    assert isinstance(result, _Evolver), (
+                        "Expose a lie to the type system."
+                    )
                     value.child_evolver_by_name[item] = result
                 return value.child_evolver_by_name[item]
             elif isinstance(value, _PydanticModelValue):
                 if item not in value.child_evolver_by_name:
                     child_obj = getattr(value.pydantic_model_value, item)
                     result = evolver(child_obj)
-                    assert isinstance(result, _Evolver), "Expose a lie to the type system."
+                    assert isinstance(result, _Evolver), (
+                        "Expose a lie to the type system."
+                    )
                     value.child_evolver_by_name[item] = result
                 return value.child_evolver_by_name[item]
             raise TypeError(
@@ -204,7 +171,9 @@ class _Evolver(Generic[_T]):
         elif isinstance(value, _FrozenDictValue):
             if key not in value.frozen_dict_evolvers:
                 # Presumably we're going to evolver_assign to this very soon.
-                cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key] = _Evolver(_RegularValue(None))
+                cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key] = (
+                    _Evolver(_RegularValue(None))
+                )
             return cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key]
         raise TypeError(
             f"You're using [square_brackets] access {key=} on an object of {type(self._value)=} that doesn't support this (should have been a mypy error)."
@@ -214,38 +183,38 @@ class _Evolver(Generic[_T]):
         """Recursively apply the recorded changes to the original object and return a new frozen instance."""
         if isinstance(self._value, _AttrValue):
             new_children: dict[str, Any] = {
-                name: chill(child) for name, child in self._value.child_evolver_by_name.items()
+                name: chill(child)
+                for name, child in self._value.child_evolver_by_name.items()
             }
             assert attr.has(self._value.attr_value.__class__)
             return cast(
                 _T,
-                attr.evolve(cast(Any, cast(_AttrValue, self._value).attr_value), **new_children),
+                attr.evolve(
+                    cast(Any, cast(_AttrValue, self._value).attr_value), **new_children
+                ),
             )
         elif isinstance(self._value, _PydanticModelValue):
             return cast(
                 _T,
                 model_update(
                     self._value.pydantic_model_value,
-                    update={name: chill(child) for name, child in self._value.child_evolver_by_name.items()},
+                    update={
+                        name: chill(child)
+                        for name, child in self._value.child_evolver_by_name.items()
+                    },
                 ),
             )
         elif isinstance(self._value, _TupleValue):
-            return cast(_T, tuple(evolver.chill() for evolver in self._value.tuple_evolvers))
+            return cast(
+                _T, tuple(evolver.chill() for evolver in self._value.tuple_evolvers)
+            )
         elif isinstance(self._value, _RegularValue):
             return cast(_T, self._value.regular_value)
         elif isinstance(self._value, _FrozenDictValue):
             return cast(
                 _T,
-                FrozenDict({k: v.chill() for k, v in self._value.frozen_dict_evolvers.items()}),
+                FrozenDict(
+                    {k: v.chill() for k, v in self._value.frozen_dict_evolvers.items()}
+                ),
             )
         raise ValueError(f"This Evolver has no value to evolve, {type(self._value)=}.")
-
-    def isinstance(self, cls: type[_T]) -> bool:
-        """Check if the object being evolved is an instance of the given class."""
-        if isinstance(self._value, _AttrValue):
-            return isinstance(self._value.attr_value, cls)
-        elif isinstance(self._value, _PydanticModelValue):
-            return isinstance(self._value.pydantic_model_value, cls)
-        elif isinstance(self._value, _FrozenDictValue):
-            return cls == FrozenDict
-        return False

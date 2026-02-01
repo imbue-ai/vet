@@ -4,7 +4,6 @@ from typing import Mapping
 from imbue_core.frozen_utils import FrozenDict
 from imbue_core.frozen_utils import deep_freeze_mapping
 from imbue_core.pydantic_serialization import SerializableModel
-from imbue_tools.repo_utils.subrepo_formatting import BaseFilenamePattern
 
 
 class SymlinkContents(SerializableModel):
@@ -70,33 +69,3 @@ def _try_decode_file_contents(contents: FileContents) -> DecodedTextFileContents
             return contents.decode("utf-8")
         except UnicodeDecodeError:
             return None
-
-
-def filter_files_patterns(
-    file_system: InMemoryFileSystem,
-    include_patterns: tuple[str, ...] | None = None,
-    exclude_patterns: tuple[str, ...] | None = None,
-) -> InMemoryFileSystem:
-    """Filter all files based on include/exclude patterns.
-    If an include pattern is provided, only files that match the include pattern will be included.
-    If an exclude pattern is provided, files that match the exclude pattern will be excluded. If no include or exclude patterns are provided, all files will be included.
-
-    Args:
-        file_system: The file system to filter
-        include_patterns: Glob patterns for files to include
-        exclude_patterns: Glob patterns for files to exclude
-
-    Returns:
-        Filtered InMemoryFileSystem
-    """
-    include_spec = BaseFilenamePattern.from_lines(include_patterns or ())
-    exclude_spec = BaseFilenamePattern.from_lines(exclude_patterns or ())
-    filtered_files = {
-        file_path: content
-        for file_path, content in file_system.files.items()
-        if (
-            (not include_patterns or include_spec.match_file(file_path))
-            and (not exclude_patterns or not exclude_spec.match_file(file_path))
-        )
-    }
-    return InMemoryFileSystem.build(filtered_files)

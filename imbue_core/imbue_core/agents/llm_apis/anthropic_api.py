@@ -781,13 +781,9 @@ class AnthropicAPI(LanguageModelAPI):
 
 def _get_api_key_or_auth_token() -> tuple[str | None, str | None]:
     api_key = get_secret("ANTHROPIC_API_KEY")
-    # The standard environment variable for this is ANTHROPIC_AUTH_TOKEN,
-    # but we don't use it since it has some bad interactions with Claude Code.
-    auth_token = get_secret("IMBUE_ANTHROPIC_AUTH_TOKEN")
+    auth_token = get_secret("ANTHROPIC_AUTH_TOKEN")
     if not api_key and not auth_token:
-        raise MissingAPIKeyError(
-            "Neither of ANTHROPIC_API_KEY and IMBUE_ANTHROPIC_AUTH_TOKEN environment variables is set"
-        )
+        raise MissingAPIKeyError("Neither ANTHROPIC_API_KEY nor ANTHROPIC_AUTH_TOKEN environment variable is set")
     return api_key, auth_token
 
 

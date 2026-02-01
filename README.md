@@ -1,4 +1,4 @@
-# Vet : Verify EveryThing
+# Vet : Verify Everything
 
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
@@ -7,7 +7,7 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 ## Installation
 
 ```bash
-pip install vet
+pip install verify-everything
 ```
 
 ## Quickstart

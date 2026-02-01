@@ -119,7 +119,7 @@ def deduplicate_issues(
 
     Args:
         issues: The issues to deduplicate.
-        config: Settings for imbue verify.
+        config: Settings
         enabled_issue_codes: The issue types used by the issue identifiers.
 
     Returns:

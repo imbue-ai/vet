@@ -61,21 +61,6 @@ def parse_secrets_file(filepath: str | pathlib.Path) -> dict[str, str]:
     return out
 
 
-# TODO: this is gross and bad--we should make better handling for secrets.
-#  Right now we read the necessary secrets out of the bashenv files
 def get_secret(secret_name: str) -> str | None:
-    value = os.environ.get(secret_name)
-    if value is not None:
-        return value
-    secrets_files = (
-        "science/secrets/environment_vars/bashenv.sh",
-        "science/secrets/environment_vars/bashenv_secrets.sh",
-        "science/secrets/environment_vars/common_vars.sh",
-    )
-    for file in secrets_files:
-        if os.path.exists(file):
-            secrets = parse_secrets_file(file)
-            value = secrets.get(secret_name, None)
-            if value is not None:
-                return value
-    return None
+    """Get a secret from environment variables."""
+    return os.environ.get(secret_name)

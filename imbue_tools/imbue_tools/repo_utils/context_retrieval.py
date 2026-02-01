@@ -1,9 +1,6 @@
-import asyncio
 import threading
 import time
-from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
 from typing import Generator
 
 import pygit2
@@ -12,7 +9,6 @@ from pygit2.enums import ObjectType
 from pygit2.repository import Repository
 
 from imbue_core.async_utils import make_async
-from imbue_core.git import LocalGitRepo
 from imbue_tools.repo_utils.diff_utils import apply_diffs_to_files
 from imbue_tools.repo_utils.file_system import FileContents
 from imbue_tools.repo_utils.file_system import InMemoryFileSystem
@@ -34,8 +30,6 @@ class RepoContextManager:
         # We need the sync lock due to pygit2 being synchronous.
         # It is mostly used for the blob data cache, but also for the repo contents by git hash cache.
         self._lock = threading.Lock()
-        # We need the async lock for tests TODO: we can probably remove this
-        self._local_repo_async_lock: asyncio.Lock = asyncio.Lock()
 
     @classmethod
     def build(cls, repo_path: Path) -> "RepoContextManager":
@@ -125,12 +119,3 @@ class RepoContextManager:
 
             else:
                 raise ValueError(f"Unexpected entry type in git tree: {entry.type}")
-
-    @asynccontextmanager
-    async def tmp_repo_context(self) -> AsyncGenerator[LocalGitRepo, None]:
-        """
-        This function is only used in tests
-        TODO: we can probably remove it
-        """
-        async with self._local_repo_async_lock:
-            yield LocalGitRepo(self.repo_path)

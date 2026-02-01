@@ -155,7 +155,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
 
         if "PYTEST_CURRENT_TEST" not in os.environ:
             logger.warning(
-                "You are trying to call a language model from outside of a hammer with no global resource limits set. That is a bad idea because the spend will not be restricted, and you may end up accidentally spending much more than you expected."
+                "You are trying to call a language model with no global resource limits set. That is a bad idea because the spend will not be restricted, and you may end up accidentally spending much more than you expected."
             )
         return None
 

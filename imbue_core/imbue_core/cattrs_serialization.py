@@ -868,10 +868,9 @@ def _serialize_to_json_dumpable_object(
         # with `is_reversible=False` since we won't know the type to be able to recreate the object.
         assert is_reversible, "Cannot restructure inputs if is_reversible=False"
 
-    # TODO: this is a hack to make it possible to serialize ExecutionContexts for class method hammers.
+    # TODO: this is a hack to make it possible to serialize ExecutionContexts for class methods.
     #  This lets us serialize ExecutionContexts for calls to class methods without serializing the class itself.
-    #  The long-term solutions are 1) either get rid of all class method hammers,
-    #  or 2) write a custom hook that can serialize type objects.
+    #  The long-term solution is to write a custom hook that can serialize type objects.
     if type(obj) is dict and "__class__" in obj:
         del obj["__class__"]
 
@@ -988,26 +987,5 @@ def deserialize_from_dict(
             use_defaults_for_unserializable_fields=use_defaults_for_unserializable_fields,
         )
         return _deserialize_using_type_marker(data, as_type, converter=converter)
-    except Exception as e:
-        raise SerializationError(str(e)) from e
-
-
-def deserialize_from_dict_with_type(data: dict[str, Any], obj_type: type[T]) -> T:
-    try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
-        result = converter.structure(data, obj_type)
-        assert isinstance(result, obj_type), f"Expected an object of type {obj_type}, but got {result}"
-        return result
-    except Exception as e:
-        raise SerializationError(str(e)) from e
-
-
-def deserialize_from_json_with_type(data: str | bytes | bytearray, obj_type: type[T]) -> T:
-    try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
-        return cast(
-            T,
-            _deserialize_serialized_object(json.loads(data), obj_type, converter=converter),
-        )
     except Exception as e:
         raise SerializationError(str(e)) from e
