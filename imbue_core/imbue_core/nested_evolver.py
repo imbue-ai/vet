@@ -25,7 +25,6 @@ from imbue_core.frozen_utils import FrozenDict
 from imbue_core.pydantic_utils import model_update
 
 _T = TypeVar("_T")
-ObjectType = TypeVar("ObjectType")
 
 _threading_local = threading.local()
 
@@ -104,7 +103,13 @@ class _FrozenDictValue:
 
 class _Evolver(Generic[_T]):
     # pyre-ignore[13]: pyre is confused by the trickery here
-    _value: _RegularValue | _AttrValue | _TupleValue | _FrozenDictValue | _PydanticModelValue
+    _value: (
+        _RegularValue
+        | _AttrValue
+        | _TupleValue
+        | _FrozenDictValue
+        | _PydanticModelValue
+    )
 
     def __init__(self, initial_value: _T) -> None:
         super().__init__()
@@ -132,14 +137,18 @@ class _Evolver(Generic[_T]):
                 if item not in value.child_evolver_by_name:
                     child_obj = getattr(value.attr_value, item)
                     result = evolver(child_obj)
-                    assert isinstance(result, _Evolver), "Expose a lie to the type system."
+                    assert isinstance(result, _Evolver), (
+                        "Expose a lie to the type system."
+                    )
                     value.child_evolver_by_name[item] = result
                 return value.child_evolver_by_name[item]
             elif isinstance(value, _PydanticModelValue):
                 if item not in value.child_evolver_by_name:
                     child_obj = getattr(value.pydantic_model_value, item)
                     result = evolver(child_obj)
-                    assert isinstance(result, _Evolver), "Expose a lie to the type system."
+                    assert isinstance(result, _Evolver), (
+                        "Expose a lie to the type system."
+                    )
                     value.child_evolver_by_name[item] = result
                 return value.child_evolver_by_name[item]
             raise TypeError(
@@ -162,7 +171,9 @@ class _Evolver(Generic[_T]):
         elif isinstance(value, _FrozenDictValue):
             if key not in value.frozen_dict_evolvers:
                 # Presumably we're going to evolver_assign to this very soon.
-                cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key] = _Evolver(_RegularValue(None))
+                cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key] = (
+                    _Evolver(_RegularValue(None))
+                )
             return cast(_FrozenDictValue, self._value).frozen_dict_evolvers[key]
         raise TypeError(
             f"You're using [square_brackets] access {key=} on an object of {type(self._value)=} that doesn't support this (should have been a mypy error)."
@@ -172,38 +183,38 @@ class _Evolver(Generic[_T]):
         """Recursively apply the recorded changes to the original object and return a new frozen instance."""
         if isinstance(self._value, _AttrValue):
             new_children: dict[str, Any] = {
-                name: chill(child) for name, child in self._value.child_evolver_by_name.items()
+                name: chill(child)
+                for name, child in self._value.child_evolver_by_name.items()
             }
             assert attr.has(self._value.attr_value.__class__)
             return cast(
                 _T,
-                attr.evolve(cast(Any, cast(_AttrValue, self._value).attr_value), **new_children),
+                attr.evolve(
+                    cast(Any, cast(_AttrValue, self._value).attr_value), **new_children
+                ),
             )
         elif isinstance(self._value, _PydanticModelValue):
             return cast(
                 _T,
                 model_update(
                     self._value.pydantic_model_value,
-                    update={name: chill(child) for name, child in self._value.child_evolver_by_name.items()},
+                    update={
+                        name: chill(child)
+                        for name, child in self._value.child_evolver_by_name.items()
+                    },
                 ),
             )
         elif isinstance(self._value, _TupleValue):
-            return cast(_T, tuple(evolver.chill() for evolver in self._value.tuple_evolvers))
+            return cast(
+                _T, tuple(evolver.chill() for evolver in self._value.tuple_evolvers)
+            )
         elif isinstance(self._value, _RegularValue):
             return cast(_T, self._value.regular_value)
         elif isinstance(self._value, _FrozenDictValue):
             return cast(
                 _T,
-                FrozenDict({k: v.chill() for k, v in self._value.frozen_dict_evolvers.items()}),
+                FrozenDict(
+                    {k: v.chill() for k, v in self._value.frozen_dict_evolvers.items()}
+                ),
             )
         raise ValueError(f"This Evolver has no value to evolve, {type(self._value)=}.")
-
-    def isinstance(self, cls: type[_T]) -> bool:
-        """Check if the object being evolved is an instance of the given class."""
-        if isinstance(self._value, _AttrValue):
-            return isinstance(self._value.attr_value, cls)
-        elif isinstance(self._value, _PydanticModelValue):
-            return isinstance(self._value.pydantic_model_value, cls)
-        elif isinstance(self._value, _FrozenDictValue):
-            return cls == FrozenDict
-        return False

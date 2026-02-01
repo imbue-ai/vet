@@ -23,7 +23,9 @@ class EvolvableModel:
     # pyre-ignore[47]: pyre is not so easily tricked
     def evolve(self: T, attribute: V, new_value: V) -> T:
         # pyre-ignore[16]: pyre doesn't know about evolved_obj
-        assert _threading_local.evolved_obj is not None, ".ref() must be called before evolve"
+        assert _threading_local.evolved_obj is not None, (
+            ".ref() must be called before evolve"
+        )
 
         assert isinstance(attribute, _Evolver)  # Tricked you, type system!
         dest_evolver: _Evolver[T] = cast(_Evolver[T], attribute)
@@ -38,20 +40,6 @@ class EvolvableModel:
         # pyre-ignore[16]: pyre doesn't know about evolved_obj
         _threading_local.evolved_obj = evolver(self)
         return _threading_local.evolved_obj
-
-
-class FrozenModel(EvolvableModel, BaseModel):
-    """
-    The base class for most internal data (that does not need to be serialized).
-
-    We generally prefer to keep data immutable in order to avoid side effects, race conditions, etc
-    """
-
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-        arbitrary_types_allowed=False,
-    )
 
 
 class MutableModel(BaseModel):
