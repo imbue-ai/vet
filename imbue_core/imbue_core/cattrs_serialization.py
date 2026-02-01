@@ -989,24 +989,3 @@ def deserialize_from_dict(
         return _deserialize_using_type_marker(data, as_type, converter=converter)
     except Exception as e:
         raise SerializationError(str(e)) from e
-
-
-def deserialize_from_dict_with_type(data: dict[str, Any], obj_type: type[T]) -> T:
-    try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
-        result = converter.structure(data, obj_type)
-        assert isinstance(result, obj_type), f"Expected an object of type {obj_type}, but got {result}"
-        return result
-    except Exception as e:
-        raise SerializationError(str(e)) from e
-
-
-def deserialize_from_json_with_type(data: str | bytes | bytearray, obj_type: type[T]) -> T:
-    try:
-        converter = CONVERTER_FACTORY.get_converter(for_javascript=False, exclude_dont_serialize_fields=False)
-        return cast(
-            T,
-            _deserialize_serialized_object(json.loads(data), obj_type, converter=converter),
-        )
-    except Exception as e:
-        raise SerializationError(str(e)) from e

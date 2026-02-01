@@ -6,10 +6,7 @@ from typing import Any
 from typing import Iterable
 from typing import Mapping
 from typing import NoReturn
-from typing import Protocol
-from typing import Sequence
 from typing import TYPE_CHECKING
-from typing import TypeAlias
 from typing import TypeVar
 from typing import cast
 
@@ -17,13 +14,8 @@ if TYPE_CHECKING:
     from _typeshed import SupportsKeysAndGetItem
 
 
-class _SupportsLessThan(Protocol):
-    def __lt__(self, __other: Any) -> bool: ...
-
-
 T = TypeVar("T")
 TV = TypeVar("TV")
-TK = TypeVar("TK", bound=_SupportsLessThan)
 
 
 class FrozenMapping(Mapping[T, TV], ABC):
@@ -91,10 +83,6 @@ class FrozenDict(dict[T, TV], FrozenMapping[T, TV]):
         return (FrozenDict, (dict(self),))
 
 
-def empty_mapping() -> FrozenDict[Any, Any]:
-    return FrozenDict()
-
-
 def deep_freeze_mapping(mapping: Mapping[T, TV]) -> FrozenDict[T, Any]:
     return FrozenDict({key: cast(TV, _deep_freeze_any(value)) for key, value in mapping.items()})
 
@@ -118,24 +106,3 @@ def _deep_freeze_any(input_object: object) -> object:
         return tuple(_freeze_iterable_values(input_object))
 
     return input_object
-
-
-def deep_freeze_sequence(sequence: Sequence[T]) -> tuple[Any, ...]:
-    return tuple(_freeze_iterable_values(sequence))
-
-
-# Recursive type alias that captures the possible types of JSON objects (e.g. from json.loads).
-JSON: TypeAlias = "str | int | bool | float | None | dict[str, JSON] | list[JSON]"
-
-
-# Immutable version of JSON.
-FrozenJSON: TypeAlias = "str | int | bool | float | None | FrozenDict[str, FrozenJSON] | tuple[FrozenJSON, ...]"
-
-
-def deep_freeze_json(json: JSON) -> FrozenJSON:
-    if isinstance(json, dict):
-        return FrozenDict({k: deep_freeze_json(v) for k, v in json.items()})
-    elif isinstance(json, list):
-        return tuple(deep_freeze_json(v) for v in json)
-    else:
-        return json

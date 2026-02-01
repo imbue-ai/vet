@@ -96,11 +96,6 @@ def mutate_from_dict(dest: ObjectType, src: dict[str, Any]) -> ObjectType:
     return chill(evolved_obj)
 
 
-def evolver_isinstance(evolver: Any, cls: type[_T]) -> TypeGuard[_T]:
-    assert isinstance(evolver, _Evolver)  # Tricked you, type system!
-    return evolver.isinstance(cls)
-
-
 class _RegularValue:
     regular_value: Any
 

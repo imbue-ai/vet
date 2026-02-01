@@ -434,29 +434,3 @@ def deserialize_from_dict(data: dict[str, Any]) -> Any:
         return DESERIALIZER.deserialize(data)  # pyre-ignore[20]: pyre doesn't understand deserialize
     except Exception as e:
         raise SerializationError(str(e)) from e
-
-
-def deserialize_from_dict_with_type(data: dict[str, Any], obj_type: type[T]) -> T:
-    try:
-        result = DESERIALIZER.deserialize(data, obj_type=obj_type)
-        assert isinstance(result, obj_type), f"Expected an object of type {obj_type}, but got {result}"
-        return result
-    except Exception as e:
-        raise SerializationError(str(e)) from e
-
-
-def deserialize_from_json_with_type(data: str | bytes | bytearray, obj_type: type[T]) -> T:
-    try:
-        return deserialize_from_dict_with_type(json.loads(data), obj_type=obj_type)
-    except Exception as e:
-        raise SerializationError(str(e)) from e
-
-
-def get_serializable_properties(obj: Any) -> dict[str, Any]:
-    members = inspect.getmembers(type(obj))
-    marked_members = [name for name, member in members if is_serializable_property(member)]
-    return {name: getattr(obj, name) for name in marked_members}
-
-
-def is_serializable_property(func: Callable) -> bool:
-    return getattr(func, "_imbue_is_serializable_property", False)
