@@ -110,7 +110,6 @@ def test_get_builtin_models_by_provider_returns_dict_with_expected_providers() -
     assert "openai" in providers
     assert "gemini" in providers
     assert "groq" in providers
-    assert "together" in providers
 
 
 def test_get_builtin_models_by_provider_all_values_are_lists_of_strings() -> None:

@@ -16,8 +16,6 @@ from vet.imbue_core.agents.llm_apis.mock_api import MockModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIChatAPI
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import OpenAICompatibleAPI
-from vet.imbue_core.agents.llm_apis.together_api import TogetherAIModelName
-from vet.imbue_core.agents.llm_apis.together_api import TogetherAPI
 
 
 def build_language_model_from_config(
@@ -67,18 +65,6 @@ def build_language_model_from_config(
             model_name=config.model_name,
             cache_path=config.cache_path,
             count_tokens_cache_path=config.count_tokens_cache_path,
-            is_caching_inputs=config.is_caching_inputs,
-            is_running_offline=config.is_running_offline,
-            is_conversational=True,
-            is_using_logprobs=config.is_using_logprobs,
-            retry_jitter_factor=config.retry_jitter_factor,
-        )
-    if config.model_name in (v for v in TogetherAIModelName):
-        return TogetherAPI(
-            model_name=config.model_name,
-            cache_path=config.cache_path,
-            # count tokens is not supported for Together API
-            # count_tokens_cache_path=config.count_tokens_cache_path,
             is_caching_inputs=config.is_caching_inputs,
             is_running_offline=config.is_running_offline,
             is_conversational=True,
