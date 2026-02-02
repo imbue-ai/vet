@@ -1,13 +1,11 @@
 from enum import Enum
 from typing import Callable
-from typing import TYPE_CHECKING
 
 from loguru import logger
 
 from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 
-if TYPE_CHECKING:
-    from vet.imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.types.vet_config import VetConfig
 
 
 class ContentBudget(Enum):
