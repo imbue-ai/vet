@@ -25,9 +25,7 @@ class CompressTransformer(cst.CSTTransformer):
         self.keep_constant = keep_constant
         self.keep_indent = keep_indent
 
-    def leave_Module(
-        self, original_node: cst.Module, updated_node: cst.Module
-    ) -> cst.Module:
+    def leave_Module(self, original_node: cst.Module, updated_node: cst.Module) -> cst.Module:
         new_body = [
             stmt
             for stmt in updated_node.body
@@ -35,16 +33,12 @@ class CompressTransformer(cst.CSTTransformer):
             or m.matches(stmt, m.FunctionDef())
             or (
                 self.keep_constant
-                and check_on_body(
-                    stmt, lambda first_body_item: m.matches(first_body_item, m.Assign())
-                )
+                and check_on_body(stmt, lambda first_body_item: m.matches(first_body_item, m.Assign()))
             )
         ]
         return updated_node.with_changes(body=new_body)
 
-    def leave_ClassDef(
-        self, original_node: cst.ClassDef, updated_node: cst.ClassDef
-    ) -> cst.ClassDef:
+    def leave_ClassDef(self, original_node: cst.ClassDef, updated_node: cst.ClassDef) -> cst.ClassDef:
         # Remove docstring in the class body
         new_body = [
             stmt
@@ -52,18 +46,13 @@ class CompressTransformer(cst.CSTTransformer):
             if not check_on_body(
                 stmt,
                 lambda first_body_item: m.matches(first_body_item, m.Expr())
-                or (
-                    hasattr(first_body_item, "value")
-                    and m.matches(first_body_item.value, m.SimpleString())
-                ),
+                or (hasattr(first_body_item, "value") and m.matches(first_body_item.value, m.SimpleString())),
             )
         ]
         # pyre-fixme[6]: cst.IndentedBlock has a body attribute which is a Sequence[BaseStatement], not a Sequence[BaseSmallStatement] like new_body
         return updated_node.with_changes(body=cst.IndentedBlock(body=new_body))
 
-    def leave_FunctionDef(
-        self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
-    ) -> cst.BaseStatement:
+    def leave_FunctionDef(self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef) -> cst.BaseStatement:
         if not self.keep_indent:
             # replace with unindented statement
             new_expr = cst.Expr(value=cst.SimpleString(value=self.replacement_string))
@@ -76,9 +65,7 @@ class CompressTransformer(cst.CSTTransformer):
             new_expr = [
                 cst.Expr(value=cst.SimpleString(value=self.replacement_string)),
             ]
-            return updated_node.with_changes(
-                body=cst.IndentedBlock(body=[cst.SimpleStatementLine(body=new_expr)])
-            )
+            return updated_node.with_changes(body=cst.IndentedBlock(body=[cst.SimpleStatementLine(body=new_expr)]))
 
 
 def stubify_code_file(
