@@ -23,9 +23,7 @@ class EvolvableModel:
     # pyre-ignore[47]: pyre is not so easily tricked
     def evolve(self: T, attribute: V, new_value: V) -> T:
         # pyre-ignore[16]: pyre doesn't know about evolved_obj
-        assert _threading_local.evolved_obj is not None, (
-            ".ref() must be called before evolve"
-        )
+        assert _threading_local.evolved_obj is not None, ".ref() must be called before evolve"
 
         assert isinstance(attribute, _Evolver)  # Tricked you, type system!
         dest_evolver: _Evolver[T] = cast(_Evolver[T], attribute)

@@ -55,7 +55,7 @@ dependencies = [
     "psycopg[binary]",
     "requests",
 ]
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.11"
 
 [project.scripts]
 vet = "vet.cli.main:main"
