@@ -13,9 +13,7 @@ from vet.imbue_core.agents.llm_apis.openai_api import (
     get_model_info as get_openai_model_info,
 )
 
-ModelName = (
-    AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
-)
+ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:
