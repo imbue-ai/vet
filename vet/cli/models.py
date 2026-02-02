@@ -5,7 +5,6 @@ from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.schema import ModelsConfig
@@ -30,7 +29,9 @@ def is_valid_model_id(model_id: str, user_config: ModelsConfig | None = None) ->
     return model_id in get_all_model_ids(user_config)
 
 
-def is_user_defined_model(model_id: str, user_config: ModelsConfig | None = None) -> bool:
+def is_user_defined_model(
+    model_id: str, user_config: ModelsConfig | None = None
+) -> bool:
     if user_config is None:
         return False
     return model_id in get_user_defined_model_ids(user_config)
@@ -38,7 +39,9 @@ def is_user_defined_model(model_id: str, user_config: ModelsConfig | None = None
 
 def validate_model_id(model_id: str, user_config: ModelsConfig | None = None) -> str:
     if not is_valid_model_id(model_id, user_config):
-        raise ValueError(f"Unknown model: {model_id}. Use --list-models to see available models.")
+        raise ValueError(
+            f"Unknown model: {model_id}. Use --list-models to see available models."
+        )
     return model_id
 
 
@@ -48,7 +51,6 @@ def get_builtin_models_by_provider() -> dict[str, list[str]]:
         "openai": [m.value for m in OpenAIModelName],
         "gemini": [m.value for m in GeminiModelName],
         "groq": [m.value for m in GroqSupportedModelName],
-        "together": [m.value for m in TogetherAIModelName],
     }
 
 
