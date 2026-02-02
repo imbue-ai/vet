@@ -14,17 +14,18 @@ class IdentifierInputsMissingError(Exception):
 class IdentifierInputs(SerializableModel):
     # goal (for now, commit message) and diff to check
     maybe_goal: str | None = None
+    goal_truncated: bool = False
     maybe_diff: str | None = None
+    diff_truncated: bool = False
 
     # whole files to check
     maybe_files: tuple[str, ...] | None = None
 
     # conversation history to check
     maybe_conversation_history: tuple[ConversationMessageUnion, ...] | None = None
-
-    diff_truncated: bool = False
-    goal_truncated: bool = False
     conversation_truncated: bool = False
+
+    maybe_extra_context: str | None = None
     extra_context_truncated: bool = False
 
 

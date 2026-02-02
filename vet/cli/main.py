@@ -456,7 +456,6 @@ def main(argv: list[str] | None = None) -> int:
         filter_issues_below_confidence=args.confidence_threshold,
         max_identify_workers=args.max_workers,
         max_output_tokens=max_output_tokens or 20000,
-        extra_context=extra_context,
     )
 
     issues = find_issues(
@@ -465,6 +464,7 @@ def main(argv: list[str] | None = None) -> int:
         goal=goal,
         config=config,
         conversation_history=conversation_history,
+        extra_context=extra_context,
     )
 
     output_fields = args.output_fields if args.output_fields else OUTPUT_FIELDS

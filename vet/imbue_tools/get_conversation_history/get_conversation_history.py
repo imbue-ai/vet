@@ -7,6 +7,7 @@ from pydantic import TypeAdapter
 from pydantic import ValidationError
 
 from vet.vet_types.chat_state import ContentBlockTypes
+from vet.truncation import truncate_to_token_limit
 from vet.vet_types.messages import ChatInputUserMessage
 from vet.vet_types.messages import ConversationMessageUnion
 from vet.vet_types.messages import ResponseBlockAgentMessage
@@ -54,7 +55,6 @@ def format_conversation_history_for_prompt(
     result = "\n".join(message for message in formatted_messages if message is not None)
 
     if max_tokens is not None and count_tokens is not None:
-        from vet.truncation import truncate_to_token_limit
 
         result, was_truncated = truncate_to_token_limit(
             result,

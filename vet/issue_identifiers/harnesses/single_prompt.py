@@ -156,7 +156,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
             truncate_end=True,
         )
 
-        extra_context = config.extra_context or ""
+        extra_context = identifier_inputs.maybe_extra_context or ""
         if extra_context:
             extra_context, extra_context_truncated = truncate_to_token_limit(
                 extra_context,
@@ -165,6 +165,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
                 label="extra context",
                 truncate_end=True,
             )
+            extra_context_truncated = extra_context_truncated or identifier_inputs.extra_context_truncated
         else:
             extra_context_truncated = False
 

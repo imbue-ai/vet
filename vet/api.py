@@ -39,6 +39,7 @@ def get_issues_with_raw_responses(
     config: VetConfig,
     repo_path: Path,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
+    extra_context: str | None = None,
 ) -> tuple[tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext]:
     if not goal or not goal.strip():
         logger.info("No goal was provided, generating one from conversation history")
@@ -91,6 +92,7 @@ def get_issues_with_raw_responses(
         maybe_goal=goal,
         maybe_conversation_history=conversation_history,
         diff_truncated=diff_truncated,
+        maybe_extra_context=extra_context,
     )
 
     results_generator = registry.run(
@@ -115,6 +117,7 @@ def find_issues(
     goal: str,
     config: VetConfig,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
+    extra_context: str | None = None,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
     logger.info(
         "Finding issues in {repo_path} relative to commit hash {relative_to}",
@@ -140,5 +143,6 @@ def find_issues(
         config=config,
         repo_path=repo_path,
         conversation_history=conversation_history,
+        extra_context=extra_context,
     )
     return issues

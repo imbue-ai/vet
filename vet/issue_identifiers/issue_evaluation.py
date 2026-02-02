@@ -153,7 +153,9 @@ def _format_prompt(
         template_vars["goal_truncated"] = inputs.goal_truncated
         template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
         template_vars["diff_truncated"] = inputs.diff_truncated
-        template_vars["extra_context"] = escape_prompt_markers(config.extra_context) if config.extra_context else None
+        template_vars["extra_context"] = (
+            escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
+        )
         template_vars["extra_context_truncated"] = inputs.extra_context_truncated
     else:
         lm_config = config.language_model_generation_config
