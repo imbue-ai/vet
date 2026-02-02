@@ -2,7 +2,7 @@ import abc
 from typing import Generic
 from typing import TypeVar
 
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
+from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,

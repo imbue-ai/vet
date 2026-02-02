@@ -4,16 +4,16 @@ from typing import Iterable
 
 import jinja2
 
-from imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
-from imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
-from imbue_core.data_types import AgenticPhase
-from imbue_core.data_types import IssueCode
-from imbue_core.data_types import IssueIdentificationDebugInfo
-from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
-from imbue_core.data_types import LLMResponse
-from imbue_core.itertools import only
-from imbue_tools.repo_utils.context_utils import escape_prompt_markers
-from imbue_tools.types.vet_config import VetConfig
+from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
+from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
+from vet.imbue_core.data_types import AgenticPhase
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
+from vet.imbue_core.data_types import LLMResponse
+from vet.imbue_core.itertools import only
+from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
+from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import (

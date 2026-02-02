@@ -7,20 +7,55 @@ name = "vet"
 version = "0.1.0"
 readme = "README.md"
 dependencies = [
+    # Original vet dependencies
     "aiohttp>=3.8.0",
     "click",
-    "imbue_core",
-    "imbue_tools",
     "jinja2",
     "loguru",
-    "pydantic",
+    "pydantic>=2.11.4",
     "pygments>=2.0.0",
     "pytest",
     "syrupy",
     "together>=1.5.35",
-    "vet_types",
+
+    # From imbue_core
+    "anyio",
+    "attrs",
+    "boto3>=1.38.27",
+    "cachetools",
+    "cattrs",
+    "diskcache>=5.6.3",
+    "grpclib>=0.4.7",
+    "httpx",
+    "inline-snapshot",
+    "pathspec",
+    "prometheus-client>=0.20.0",
+    "pydantic-settings",
+    "pygit2>=1.18.0",
+    "pylint==3.2.6",
+    "pyhumps",
+    "pytest-asyncio",
+    "pytest-mock",
+    "python-gitlab>=4.5.0",
+    "tblib==2.0.0",
+    "tenacity>=8.2.2",
+    "toml",
+    "traceback-with-variables>=2.2.0",
+    "typeid-python",
+    "yasoo",
+    "anthropic~=0.54",
+    "openai>=1.79.0",
+    "tiktoken",
+    "groq>=0.18.0",
+    "google-genai>=1.26.0",
+
+    # From imbue_tools
+    "async_lru",
+    "libcst",
+    "psycopg[binary]",
+    "requests",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.13"
 
 [project.scripts]
 vet = "vet.cli.main:main"
@@ -31,14 +66,10 @@ package-data.vet = ["py.typed"]
 [tool.setuptools.packages.find]
 include = ["vet*"]
 
-[tool.uv.sources]
-imbue_core = { path = "./imbue_core", editable = true }
-imbue_tools = { path = "./imbue_tools", editable = true }
-vet_types = { path = "./vet_types", editable = true }
-
 [dependency-groups]
 dev = [
     "black",
+    "moto>=4.1.12",
 ]
 
 [tool.black]

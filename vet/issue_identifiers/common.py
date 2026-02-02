@@ -11,34 +11,34 @@ from loguru import logger
 from pydantic import Field
 from pydantic import PrivateAttr
 
-from imbue_core.agents.agent_api.api import get_agent_client
-from imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
-from imbue_core.agents.agent_api.data_types import AgentAssistantMessage
-from imbue_core.agents.agent_api.data_types import AgentMessage
-from imbue_core.agents.agent_api.data_types import AgentResultMessage
-from imbue_core.agents.agent_api.data_types import AgentTextBlock
-from imbue_core.agents.agent_api.data_types import AgentToolName
-from imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
-from imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
-from imbue_core.async_monkey_patches import log_exception
-from imbue_core.data_types import ConfidenceScore
-from imbue_core.data_types import IdentifiedVerifyIssue
-from imbue_core.data_types import InvocationInfo
-from imbue_core.data_types import IssueCode
-from imbue_core.data_types import IssueIdentificationDebugInfo
-from imbue_core.data_types import IssueIdentifierResult
-from imbue_core.data_types import IssueLocation
-from imbue_core.data_types import LineRange
-from imbue_core.data_types import SeverityScore
-from imbue_core.pydantic_serialization import SerializableModel
-from imbue_tools.llm_output_parsing.parse_model_json_response import (
+from vet.imbue_core.agents.agent_api.api import get_agent_client
+from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
+from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentToolName
+from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
+from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
+from vet.imbue_core.async_monkey_patches import log_exception
+from vet.imbue_core.data_types import ConfidenceScore
+from vet.imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import InvocationInfo
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.imbue_core.data_types import IssueIdentifierResult
+from vet.imbue_core.data_types import IssueLocation
+from vet.imbue_core.data_types import LineRange
+from vet.imbue_core.data_types import SeverityScore
+from vet.imbue_core.pydantic_serialization import SerializableModel
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
     ResponseParsingError,
 )
-from imbue_tools.llm_output_parsing.parse_model_json_response import (
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
     parse_model_json_response,
 )
-from imbue_tools.repo_utils.project_context import ProjectContext
+from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )

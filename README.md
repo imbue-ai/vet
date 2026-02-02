@@ -10,6 +10,12 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 pip install verify-everything
 ```
 
+Or install directly from git:
+
+```bash
+pip install git+https://github.com/imbue-ai/vet.git
+```
+
 ## Quickstart
 
 Run Vet in the current repo:

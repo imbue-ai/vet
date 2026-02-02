@@ -1,9 +1,9 @@
-from imbue_core.data_types import IssueIdentifierType
-from imbue_core.frozen_utils import FrozenDict
-from imbue_core.itertools import first
-from imbue_tools.get_conversation_history.input_data_types import CommitInputs
-from imbue_tools.repo_utils.project_context import BaseProjectContext
-from imbue_tools.types.vet_config import VetConfig
+from vet.imbue_core.data_types import IssueIdentifierType
+from vet.imbue_core.frozen_utils import FrozenDict
+from vet.imbue_core.itertools import first
+from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
+from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
+from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers import registry
 from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,

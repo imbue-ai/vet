@@ -4,10 +4,20 @@ Vet is a library and CLI tool for verifying code quality and correctness.
 
 ## Installation
 
-From the repository root:
+**From git (pip/uv):**
 
 ```bash
-uv sync --project vet
+pip install git+https://github.com/imbue-ai/vet.git
+# or
+uv pip install git+https://github.com/imbue-ai/vet.git
+```
+
+**For development (from repository root):**
+
+```bash
+uv sync
+# or
+pip install -e .
 ```
 
 ## Usage
@@ -86,7 +96,7 @@ By default, `vet` runs all the registered issue identifiers and outputs all the 
 
 If you want to add a new issue identifier, you need to:
 
-1. Implement the `IssueIdentifier` protocol from `imbue_tools.repo_utils.data_types`.
+1. Implement the `IssueIdentifier` protocol from `vet.imbue_tools.repo_utils.data_types`.
 2. Register the new issue identifier by adding it to `IDENTIFIERS` in `vet.issue_identifiers.registry`.
 
 Based on your needs, instead of the above, you can also extend one of the existing batched zero-shot issue identifiers:
@@ -102,7 +112,7 @@ Refer to the source code for more details.
 When creating a new entrypoint into vet, you must call `ensure_core_log_levels_configured()` to register the custom log levels used throughout the codebase.
 
 ```python
-from imbue_core.log_utils import ensure_core_log_levels_configured
+from vet.imbue_core.log_utils import ensure_core_log_levels_configured
 
 ensure_core_log_levels_configured()
 ```
