@@ -8,7 +8,7 @@ from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 from vet.imbue_tools.types.vet_config import VetConfig
 
 
-class ContentBudget(Enum):
+class ContextBudget(Enum):
     REPO_CONTEXT = 50
     DIFF = 30
     CONVERSATION = 10
@@ -16,7 +16,7 @@ class ContentBudget(Enum):
     GOAL = 4
 
 
-def get_token_budget(total_available: int, budget: ContentBudget) -> int:
+def get_token_budget(total_available: int, budget: ContextBudget) -> int:
     return int(total_available * budget.value / 100)
 
 

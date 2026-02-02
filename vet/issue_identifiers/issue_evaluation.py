@@ -42,7 +42,7 @@ from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
-from vet.truncation import ContentBudget
+from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget
 
@@ -160,7 +160,7 @@ def _format_prompt(
     else:
         lm_config = config.language_model_generation_config
         available_tokens = get_available_tokens(config)
-        conversation_budget = get_token_budget(available_tokens, ContentBudget.CONVERSATION)
+        conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
 
         conversation_history, conversation_truncated = format_conversation_history_for_prompt(
             inputs.maybe_conversation_history or (),

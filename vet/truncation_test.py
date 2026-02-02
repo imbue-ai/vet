@@ -3,7 +3,7 @@ from typing import Callable
 import tiktoken
 from hypothesis import given, settings, strategies as st, assume
 
-from vet.truncation import ContentBudget, get_token_budget, truncate_to_token_limit
+from vet.truncation import ContextBudget, get_token_budget, truncate_to_token_limit
 
 
 def word_count(text: str) -> int:
@@ -70,16 +70,16 @@ mixed_text = st.builds(
 )
 
 
-def test_content_budgets_sum_to_100():
-    total = sum(budget.value for budget in ContentBudget)
-    assert total == 100, f"ContentBudget values must sum to 100, got {total}"
+def test_context_budgets_sum_to_100():
+    total = sum(budget.value for budget in ContextBudget)
+    assert total == 100, f"ContextBudget values must sum to 100, got {total}"
 
 
 @given(
     total_tokens=st.integers(min_value=0, max_value=1_000_000),
-    budget=st.sampled_from(list(ContentBudget)),
+    budget=st.sampled_from(list(ContextBudget)),
 )
-def test_get_token_budget_is_mathematically_correct(total_tokens: int, budget: ContentBudget):
+def test_get_token_budget_is_mathematically_correct(total_tokens: int, budget: ContextBudget):
     result = get_token_budget(total_tokens, budget)
     expected = total_tokens * budget.value // 100
     assert result == expected

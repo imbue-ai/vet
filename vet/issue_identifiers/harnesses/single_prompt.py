@@ -34,7 +34,7 @@ from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
-from vet.truncation import ContentBudget
+from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget
 from vet.truncation import truncate_to_token_limit
@@ -145,8 +145,8 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
 
         lm_config = config.language_model_generation_config
         available_tokens = get_available_tokens(config)
-        goal_budget = get_token_budget(available_tokens, ContentBudget.GOAL)
-        extra_context_budget = get_token_budget(available_tokens, ContentBudget.EXTRA_CONTEXT)
+        goal_budget = get_token_budget(available_tokens, ContextBudget.GOAL)
+        extra_context_budget = get_token_budget(available_tokens, ContextBudget.EXTRA_CONTEXT)
 
         goal, goal_truncated = truncate_to_token_limit(
             identifier_inputs.goal,
