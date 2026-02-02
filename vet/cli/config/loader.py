@@ -6,9 +6,9 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from imbue_core.agents.configs import LanguageModelGenerationConfig
-from imbue_core.agents.configs import OpenAICompatibleModelConfig
-from imbue_core.agents.llm_apis.common import get_model_max_output_tokens
+from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
 from vet.cli.config.cli_config_schema import parse_cli_config_from_dict

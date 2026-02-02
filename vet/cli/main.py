@@ -11,11 +11,11 @@ from pathlib import Path
 
 from loguru import logger
 
-from imbue_core.data_types import IssueCode
-from imbue_tools.get_conversation_history.get_conversation_history import (
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
-from imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.types.vet_config import VetConfig
 from vet.api import find_issues
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset

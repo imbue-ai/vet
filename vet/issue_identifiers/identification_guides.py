@@ -1,5 +1,5 @@
-from imbue_core.data_types import IssueCode
-from imbue_core.pydantic_serialization import SerializableModel
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.pydantic_serialization import SerializableModel
 
 
 class IssueIdentificationGuide(SerializableModel):

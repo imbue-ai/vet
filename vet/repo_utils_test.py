@@ -3,11 +3,11 @@ from pathlib import Path
 
 from syrupy.assertion import SnapshotAssertion
 
-from imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
-from imbue_core.nested_evolver import assign
-from imbue_core.nested_evolver import chill
-from imbue_core.nested_evolver import evolver
-from imbue_tools.repo_utils.project_context import LazyProjectContext
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.nested_evolver import assign
+from vet.imbue_core.nested_evolver import chill
+from vet.imbue_core.nested_evolver import evolver
+from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
 from vet.repo_utils import get_code_to_check
 
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import IdentifiedVerifyIssue
 
 OUTPUT_FORMATS = ["text", "json"]
 

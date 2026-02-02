@@ -8,17 +8,17 @@ from pathlib import Path
 
 from loguru import logger
 
-from imbue_core.data_types import IdentifiedVerifyIssue
-from imbue_core.data_types import IssueIdentificationDebugInfo
-from vet_types.messages import ConversationMessageUnion
-from imbue_tools.get_conversation_history.get_conversation_history import (
+from vet.imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.vet_types.messages import ConversationMessageUnion
+from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     ConversationLoadingError,
 )
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.repo_utils.project_context import LazyProjectContext
-from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.vet_config import VetConfig
-from imbue_tools.util_prompts.goal_from_conversation import get_goal_from_conversation
+from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
+from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
+from vet.imbue_tools.repo_utils.project_context import ProjectContext
+from vet.imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.util_prompts.goal_from_conversation import get_goal_from_conversation
 from vet.issue_identifiers import registry
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 from vet.repo_utils import VET_MAX_PROMPT_TOKENS

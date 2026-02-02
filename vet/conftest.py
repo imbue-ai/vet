@@ -3,8 +3,8 @@ from typing import Generator
 
 import pytest
 
-from imbue_core.async_monkey_patches_test import explode_on_error  # noqa: F401
-from imbue_core.test_repo_utils import make_simple_test_git_repo
+from vet.imbue_core.async_monkey_patches_test import explode_on_error  # noqa: F401
+from vet.imbue_core.test_repo_utils import make_simple_test_git_repo
 
 simple_test_git_repo = pytest.fixture(make_simple_test_git_repo)
 

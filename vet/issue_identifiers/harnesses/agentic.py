@@ -12,21 +12,21 @@ from typing import Generator
 import jinja2
 from loguru import logger
 
-from imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
-from imbue_core.agents.agent_api.data_types import AgentMessage
-from imbue_core.agents.agent_api.data_types import AgentToolName
-from imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
-from imbue_core.async_monkey_patches import log_exception
-from imbue_core.data_types import AgenticPhase
-from imbue_core.data_types import IssueCode
-from imbue_core.data_types import IssueIdentificationDebugInfo
-from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
-from imbue_core.data_types import LLMResponse
-from imbue_tools.get_conversation_history.input_data_types import CommitInputs
-from imbue_tools.repo_utils.context_utils import escape_prompt_markers
-from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.vet_config import VetConfig
+from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
+from vet.imbue_core.agents.agent_api.data_types import AgentMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentToolName
+from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.async_monkey_patches import log_exception
+from vet.imbue_core.data_types import AgenticPhase
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
+from vet.imbue_core.data_types import LLMResponse
+from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
+from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
+from vet.imbue_tools.repo_utils.project_context import ProjectContext
+from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema

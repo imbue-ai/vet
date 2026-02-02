@@ -11,19 +11,19 @@ from typing import TypeVar
 
 from loguru import logger
 
-from imbue_core.agents.primitives.resource_limits import ensure_global_resource_limits
-from imbue_core.data_types import IssueCode
-from imbue_core.data_types import IssueIdentificationDebugInfo
-from imbue_core.data_types import IssueIdentificationLLMResponseMetadata
-from imbue_core.data_types import IssueIdentifierResult
-from imbue_core.data_types import IssueIdentifierType
-from imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from imbue_tools.get_conversation_history.input_data_types import (
+from vet.imbue_core.agents.primitives.resource_limits import ensure_global_resource_limits
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
+from vet.imbue_core.data_types import IssueIdentifierResult
+from vet.imbue_core.data_types import IssueIdentifierType
+from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
+from vet.imbue_tools.get_conversation_history.input_data_types import (
     IdentifierInputsMissingError,
 )
-from imbue_tools.repo_utils.project_context import ProjectContext
-from imbue_tools.types.vet_config import VetConfig
-from imbue_tools.types.vet_config import get_enabled_issue_codes
+from vet.imbue_tools.repo_utils.project_context import ProjectContext
+from vet.imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.types.vet_config import get_enabled_issue_codes
 from vet.issue_identifiers.agentic_issue_collation import (
     collate_issues_with_agent,
 )

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
-from imbue_core.agents.llm_apis.common import get_all_model_names
-from imbue_core.agents.llm_apis.gemini_api import GeminiModelName
-from imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
-from imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from imbue_core.agents.llm_apis.together_api import TogetherAIModelName
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.common import get_all_model_names
+from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
+from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
+from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
+from vet.imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.schema import ModelsConfig

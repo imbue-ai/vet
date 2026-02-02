@@ -2,19 +2,19 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from imbue_core.async_monkey_patches_test import expect_exact_logged_errors
-from imbue_core.data_types import IdentifiedVerifyIssue
-from imbue_core.data_types import IssueCode
-from imbue_core.frozen_utils import FrozenDict
-from imbue_core.itertools import only
-from imbue_tools.llm_output_parsing.parse_model_json_response import (
+from vet.imbue_core.async_monkey_patches_test import expect_exact_logged_errors
+from vet.imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.frozen_utils import FrozenDict
+from vet.imbue_core.itertools import only
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
     ResponseParsingError,
 )
-from imbue_tools.llm_output_parsing.parse_model_json_response import (
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
     parse_model_json_response,
 )
-from imbue_tools.repo_utils.project_context import BaseProjectContext
-from imbue_tools.repo_utils.project_context import ProjectContext
+from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
+from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import (
     convert_generated_issue_to_identified_issue,

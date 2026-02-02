@@ -9,7 +9,7 @@ from typing import Sequence
 import anyio
 from loguru import logger
 
-from imbue_core.async_monkey_patches import log_exception
+from vet.imbue_core.async_monkey_patches import log_exception
 from vet.errors import RunCommandError
 
 # Flexible path type alias
