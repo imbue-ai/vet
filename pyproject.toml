@@ -16,7 +16,6 @@ dependencies = [
     "pygments>=2.0.0",
     "pytest",
     "syrupy",
-    "together>=1.5.35",
 
     # From imbue_core
     "anyio",

@@ -5,7 +5,6 @@ from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.together_api import TogetherAIModelName
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.schema import ModelsConfig
@@ -48,7 +47,6 @@ def get_builtin_models_by_provider() -> dict[str, list[str]]:
         "openai": [m.value for m in OpenAIModelName],
         "gemini": [m.value for m in GeminiModelName],
         "groq": [m.value for m in GroqSupportedModelName],
-        "together": [m.value for m in TogetherAIModelName],
     }
 
 
