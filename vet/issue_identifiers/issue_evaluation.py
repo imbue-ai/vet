@@ -25,7 +25,9 @@ from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import DEFAULT_CONFIDENCE_THRESHOLD
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
+from vet.imbue_tools.util_prompts.conversation_prefix import (
+    CONVERSATION_PREFIX_TEMPLATE,
+)
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import (
     extract_invocation_info_from_costed_response,
@@ -40,6 +42,9 @@ from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
+from vet.truncation import ContentBudget
+from vet.truncation import get_available_tokens
+from vet.truncation import get_token_budget
 
 CODE_BASED_CRITERIA = (
     "1. The issue is based on specific code, and not merely on the absence of information in the codebase snapshot. (true/false)",
@@ -145,12 +150,23 @@ def _format_prompt(
     if is_code_based_issue:
         template_vars["include_request_and_diff"] = True
         template_vars["commit_message"] = escape_prompt_markers(inputs.maybe_goal or "")
+        template_vars["goal_truncated"] = inputs.goal_truncated
         template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
+        template_vars["diff_truncated"] = inputs.diff_truncated
         template_vars["extra_context"] = escape_prompt_markers(config.extra_context) if config.extra_context else None
+        template_vars["extra_context_truncated"] = inputs.extra_context_truncated
     else:
-        template_vars["conversation_history"] = format_conversation_history_for_prompt(
-            inputs.maybe_conversation_history or ()
+        lm_config = config.language_model_generation_config
+        available_tokens = get_available_tokens(config)
+        conversation_budget = get_token_budget(available_tokens, ContentBudget.CONVERSATION)
+
+        conversation_history, conversation_truncated = format_conversation_history_for_prompt(
+            inputs.maybe_conversation_history or (),
+            max_tokens=conversation_budget,
+            count_tokens=lm_config.count_tokens,
         )
+        template_vars["conversation_history"] = conversation_history
+        template_vars["conversation_truncated"] = conversation_truncated or inputs.conversation_truncated
 
     return jinja_template.render(template_vars)
 

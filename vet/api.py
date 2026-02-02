@@ -18,11 +18,17 @@ from vet.imbue_tools.get_conversation_history.input_data_types import Identifier
 from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.goal_from_conversation import get_goal_from_conversation
+from vet.imbue_tools.util_prompts.goal_from_conversation import (
+    get_goal_from_conversation,
+)
 from vet.issue_identifiers import registry
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
-from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 from vet.repo_utils import get_code_to_check
+from vet.repo_utils import VET_MAX_PROMPT_TOKENS
+from vet.truncation import ContentBudget
+from vet.truncation import get_available_tokens
+from vet.truncation import get_token_budget
+from vet.truncation import truncate_to_token_limit
 
 
 def get_issues_with_raw_responses(
@@ -52,10 +58,22 @@ def get_issues_with_raw_responses(
             goal = ""
 
     lm_config = config.language_model_generation_config
+
+    available_tokens = get_available_tokens(config)
+    diff_budget = get_token_budget(available_tokens, ContentBudget.DIFF)
+
     if diff_no_binary:
+        diff_no_binary, diff_truncated = truncate_to_token_limit(
+            diff_no_binary,
+            max_tokens=diff_budget,
+            count_tokens=lm_config.count_tokens,
+            label="diff",
+            truncate_end=True,
+        )
         diff_no_binary_tokens = lm_config.count_tokens(diff_no_binary)
     else:
         diff_no_binary_tokens = 0
+        diff_truncated = False
 
     project_context = LazyProjectContext.build(
         base_commit,
@@ -72,6 +90,7 @@ def get_issues_with_raw_responses(
         maybe_diff=diff_no_binary or None,
         maybe_goal=goal,
         maybe_conversation_history=conversation_history,
+        diff_truncated=diff_truncated,
     )
 
     results_generator = registry.run(

@@ -24,7 +24,9 @@ from vet.imbue_tools.get_conversation_history.get_conversation_history import (
 from vet.imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
+from vet.imbue_tools.util_prompts.conversation_prefix import (
+    CONVERSATION_PREFIX_TEMPLATE,
+)
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
@@ -39,6 +41,9 @@ from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
+from vet.truncation import ContentBudget
+from vet.truncation import get_available_tokens
+from vet.truncation import get_token_budget
 
 PROMPT_TEMPLATE = (
     CONVERSATION_PREFIX_TEMPLATE
@@ -89,12 +94,23 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
             guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
         }
 
+        lm_config = config.language_model_generation_config
+        available_tokens = get_available_tokens(config)
+        conversation_budget = get_token_budget(available_tokens, ContentBudget.CONVERSATION)
+
+        conversation_history, conversation_truncated = format_conversation_history_for_prompt(
+            identifier_inputs.conversation_history,
+            max_tokens=conversation_budget,
+            count_tokens=lm_config.count_tokens,
+        )
+
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
         jinja_template = env.from_string(PROMPT_TEMPLATE)
         return jinja_template.render(
             cached_prompt_prefix=project_context.cached_prompt_prefix,
             cache_full_prompt=config.cache_full_prompt,
-            conversation_history=format_conversation_history_for_prompt(identifier_inputs.conversation_history),
+            conversation_history=conversation_history,
+            conversation_truncated=conversation_truncated or identifier_inputs.conversation_truncated,
             # pyre-fixme[16]: SubrepoContext need not have a formatted_repo_context, and instruction_context can be None
             instruction_context=project_context.instruction_context.formatted_repo_context,
             response_schema=self._response_schema,

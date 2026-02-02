@@ -1,4 +1,5 @@
 import json
+from typing import Callable
 from typing import assert_never
 
 from loguru import logger
@@ -46,9 +47,25 @@ def delete_unnecessary_conversation_message_fields(
 
 def format_conversation_history_for_prompt(
     conversation_history: tuple[ConversationMessageUnion, ...],
-) -> str:
+    max_tokens: int | None = None,
+    count_tokens: Callable[[str], int] | None = None,
+) -> tuple[str, bool]:
     formatted_messages = [delete_unnecessary_conversation_message_fields(message) for message in conversation_history]
-    return "\n".join(message for message in formatted_messages if message is not None)
+    result = "\n".join(message for message in formatted_messages if message is not None)
+
+    if max_tokens is not None and count_tokens is not None:
+        from vet.truncation import truncate_to_token_limit
+
+        result, was_truncated = truncate_to_token_limit(
+            result,
+            max_tokens=max_tokens,
+            count_tokens=count_tokens,
+            label="conversation history",
+            truncate_end=False,
+        )
+        return result, was_truncated
+
+    return result, False
 
 
 # === loading from file ===

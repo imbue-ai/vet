@@ -22,6 +22,11 @@ class IdentifierInputs(SerializableModel):
     # conversation history to check
     maybe_conversation_history: tuple[ConversationMessageUnion, ...] | None = None
 
+    diff_truncated: bool = False
+    goal_truncated: bool = False
+    conversation_truncated: bool = False
+    extra_context_truncated: bool = False
+
 
 class CommitInputs(IdentifierInputs):
     # pyre-ignore[56]: pyre's stubs don't match pydantic v2 decorator signatures

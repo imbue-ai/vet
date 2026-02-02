@@ -34,12 +34,18 @@ from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
+from vet.truncation import ContentBudget
+from vet.truncation import get_available_tokens
+from vet.truncation import get_token_budget
+from vet.truncation import truncate_to_token_limit
 
 USER_REQUEST_PREFIX_TEMPLATE = """{{cached_prompt_prefix}}
 [ROLE=USER_CACHED]
 I'm working on a project, adding commits one after another. The current state of the project is captured by the codebase snapshot above.
 {% if extra_context %}
-
+{% if extra_context_truncated %}
+Note: Additional context was truncated due to size constraints. Do not assume details about content that is not visible.
+{% endif %}
 === ADDITIONAL CONTEXT BEGIN ===
 {{ extra_context }}
 === ADDITIONAL CONTEXT END ===
@@ -48,11 +54,15 @@ I'm working on a project, adding commits one after another. The current state of
 Assume that I asked for a piece of work to be done by specifying the user request and another programmer has delivered the diff.
 {% if include_request_and_diff %}
 Below, you can see the user request, as well as the delivered diff. IMPORTANT: The codebase snapshot already includes the changes made in this diff!
-
+{% if goal_truncated %}
+Note: The user request was truncated. The full request may contain additional details not shown.
+{% endif %}
 === USER REQUEST BEGIN ===
 {{ commit_message }}
 === USER REQUEST END ===
-
+{% if diff_truncated %}
+Note: The diff below was truncated due to size constraints. Do not assume details about code or context that is not visible.
+{% endif %}
 === DIFF BEGIN (unified; lines starting with `-` are removed and `+` are added) ===
 {{ unified_diff }}
 === DIFF END ===
@@ -133,6 +143,31 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
             guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
         }
 
+        lm_config = config.language_model_generation_config
+        available_tokens = get_available_tokens(config)
+        goal_budget = get_token_budget(available_tokens, ContentBudget.GOAL)
+        extra_context_budget = get_token_budget(available_tokens, ContentBudget.EXTRA_CONTEXT)
+
+        goal, goal_truncated = truncate_to_token_limit(
+            identifier_inputs.goal,
+            max_tokens=goal_budget,
+            count_tokens=lm_config.count_tokens,
+            label="goal",
+            truncate_end=True,
+        )
+
+        extra_context = config.extra_context or ""
+        if extra_context:
+            extra_context, extra_context_truncated = truncate_to_token_limit(
+                extra_context,
+                max_tokens=extra_context_budget,
+                count_tokens=lm_config.count_tokens,
+                label="extra context",
+                truncate_end=True,
+            )
+        else:
+            extra_context_truncated = False
+
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
         jinja_template = env.from_string(PROMPT_TEMPLATE)
         return jinja_template.render(
@@ -140,9 +175,12 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
                 "include_request_and_diff": True,
                 "cached_prompt_prefix": project_context.cached_prompt_prefix,
                 "cache_full_prompt": config.cache_full_prompt,
-                "extra_context": (escape_prompt_markers(config.extra_context) if config.extra_context else None),
-                "commit_message": escape_prompt_markers(identifier_inputs.goal),
+                "extra_context": (escape_prompt_markers(extra_context) if extra_context else None),
+                "extra_context_truncated": extra_context_truncated,
+                "commit_message": escape_prompt_markers(goal),
+                "goal_truncated": goal_truncated or identifier_inputs.goal_truncated,
                 "unified_diff": escape_prompt_markers(identifier_inputs.diff),
+                "diff_truncated": identifier_inputs.diff_truncated,
                 "guides": formatted_guides,
                 "response_schema": self._response_schema,
             }
