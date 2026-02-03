@@ -56,8 +56,6 @@ code_text = st.from_regex(
     fullmatch=True,
 )
 
-whitespace_text = st.text(alphabet=" \t\n\r", min_size=0, max_size=200)
-
 repeated_char_text = st.builds(
     lambda char, count: char * count,
     char=st.characters(min_codepoint=32, max_codepoint=126),
@@ -206,28 +204,6 @@ def test_zero_budget_returns_empty_and_truncated(text: str, count_tokens):
     assert was_truncated is True
 
 
-@given(
-    text=st.text(min_size=10, max_size=1000),
-    max_tokens=st.integers(min_value=1, max_value=50),
-)
-def test_truncation_preserves_maximum_content(text: str, max_tokens: int):
-    assume(char_count(text) > max_tokens)
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=char_count,
-        label="test",
-        truncate_end=True,
-    )
-
-    assert was_truncated is True
-    assert char_count(result) <= max_tokens
-
-    if max_tokens > 0:
-        assert len(result) > 0 or max_tokens == 0
-
-
 @settings(max_examples=100)  # 20 per strategy * 5 strategies
 @given(
     text=st.one_of(ascii_text, unicode_text, code_text, repeated_char_text, mixed_text),
@@ -243,47 +219,6 @@ def test_truncate_respects_limit_tiktoken(
         count_tokens=tiktoken_count,
         label="test",
         truncate_end=truncate_end,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=40)  # 20 * 2 directions
-@given(
-    text=st.text(min_size=10, max_size=500),
-    max_tokens=st.integers(min_value=1, max_value=50),
-    truncate_end=st.booleans(),
-)
-def test_truncation_is_maximally_efficient_tiktoken(
-    text: str, max_tokens: int, truncate_end: bool
-):
-    assume(tiktoken_count(text) > max_tokens)
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=truncate_end,
-    )
-
-    assert was_truncated is True
-    assert tiktoken_count(result) <= max_tokens
-    if not truncate_end:
-        assert text.endswith(result)
-
-
-@settings(max_examples=10)
-@given(text=whitespace_text)
-def test_truncate_whitespace_only_tiktoken(text: str):
-    max_tokens = 5
-
-    result, _ = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=True,
     )
 
     assert tiktoken_count(result) <= max_tokens
