@@ -27,6 +27,10 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      - name: Fetch main branch for vet comparison
+        if: github.event_name == 'pull_request'
+        run: git fetch origin main:main
+
       - name: Run vet
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
