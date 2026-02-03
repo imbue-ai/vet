@@ -79,3 +79,4 @@ wandb/
 
 # Project-specific
 .imbue/
+vet-output.txt
