@@ -480,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
         if not issues:
             if args.output_format == "json":
                 print(json.dumps({"issues": []}, indent=2), file=output_stream)
-            else:
+            elif not args.quiet:
                 print("No issues found.", file=output_stream)
             return 0
 
