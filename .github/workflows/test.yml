@@ -33,7 +33,16 @@ jobs:
 
       - name: Run vet
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: uv run vet --config ci
-        continue-on-error: true
+        run: uv run vet --base-commit main --confidence-threshold 0.9 --max-workers 4 --quiet --output-format json --model opus > vet-output.txt 2>&1
+
+      - name: Comment vet results
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -s vet-output.txt ]; then
+            gh pr comment ${{ github.event.pull_request.number }} --body-file vet-output.txt
+          fi
