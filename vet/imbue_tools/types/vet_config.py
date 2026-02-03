@@ -47,8 +47,6 @@ class VetConfig(SerializableModel):
     # contexts (such as black_box_evals) where the same inputs are being evaluated multiple times.
     cache_full_prompt: bool = False
 
-    extra_context: str | None = None
-
     @classmethod
     def build(
         cls,

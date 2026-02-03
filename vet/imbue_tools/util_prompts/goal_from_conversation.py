@@ -9,7 +9,9 @@ from vet.vet_types.messages import ConversationMessageUnion
 from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     format_conversation_history_for_prompt,
 )
-from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
+from vet.imbue_tools.util_prompts.conversation_prefix import (
+    CONVERSATION_PREFIX_TEMPLATE,
+)
 
 # TODO: see how this does on actual examples where the agent did something other than what the user asked for
 PROMPT_TEMPLATE = (
@@ -35,7 +37,11 @@ def prompt_for_getting_goal_from_conversation(
 ) -> str:
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
     jinja_template = env.from_string(PROMPT_TEMPLATE)
-    return jinja_template.render(conversation_history=format_conversation_history_for_prompt(conversation_history))
+    formatted_history, conversation_truncated = format_conversation_history_for_prompt(conversation_history)
+    return jinja_template.render(
+        conversation_history=formatted_history,
+        conversation_truncated=conversation_truncated,
+    )
 
 
 def get_goal_from_conversation_with_usage(

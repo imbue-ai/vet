@@ -68,6 +68,7 @@ include = ["vet*"]
 [dependency-groups]
 dev = [
     "black",
+    "hypothesis",
     "moto>=4.1.12",
 ]
 

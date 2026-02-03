@@ -45,12 +45,16 @@ PROMPT_TEMPLATE = """You are analyzing a code repository for potential issues. T
 
 Assume that a user requested work to be done and a programmer delivered the diff below.
 The changes from the diff are present in the codebase but are not yet committed.
-
+{% if goal_truncated %}
+Note: The user request was truncated. The full request may contain additional details not shown.
+{% endif %}
 ### User request ###
 {% filter indent(width=2) %}
 {{ commit_message }}
 {% endfilter %}
-
+{% if diff_truncated %}
+Note: The diff below was truncated due to size constraints. Do not assume details about code or context that is not visible.
+{% endif %}
 ### Diff (lines starting with `-` indicate removed code, and lines starting with `+` indicate added code) ###
 {% filter indent(width=2) %}
 {{ unified_diff }}
@@ -117,12 +121,16 @@ ISSUE_TYPE_PROMPT_TEMPLATE = """You are analyzing a code repository for potentia
 
 Assume that a user requested work to be done and a programmer delivered the diff below.
 The changes from the diff are present in the codebase but are not yet committed.
-
+{% if goal_truncated %}
+Note: The user request was truncated. The full request may contain additional details not shown.
+{% endif %}
 ### User request ###
 {% filter indent(width=2) %}
 {{ commit_message }}
 {% endfilter %}
-
+{% if diff_truncated %}
+Note: The diff below was truncated due to size constraints. Do not assume details about code or context that is not visible.
+{% endif %}
 ### Diff (lines starting with `-` indicate removed code, and lines starting with `+` indicate added code) ###
 {% filter indent(width=2) %}
 {{ unified_diff }}
@@ -212,7 +220,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             {
                 "repo_path": project_context.repo_path,
                 "commit_message": escape_prompt_markers(identifier_inputs.goal),
+                "goal_truncated": identifier_inputs.goal_truncated,
                 "unified_diff": escape_prompt_markers(identifier_inputs.diff),
+                "diff_truncated": identifier_inputs.diff_truncated,
                 "guides": formatted_guides,
                 "response_schema": self._response_schema,
                 "additional_guidance": additional_guidance_by_issue_code,
@@ -235,7 +245,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             {
                 "repo_path": project_context.repo_path,
                 "commit_message": escape_prompt_markers(identifier_inputs.goal),
+                "goal_truncated": identifier_inputs.goal_truncated,
                 "unified_diff": escape_prompt_markers(identifier_inputs.diff),
+                "diff_truncated": identifier_inputs.diff_truncated,
                 "guide": formatted_guide,
                 "response_schema": self._response_schema,
                 "issue_type": guide.issue_code,
