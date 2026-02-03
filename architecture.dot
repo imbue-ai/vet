@@ -1,0 +1,25 @@
+digraph VET_DataFlow {
+    rankdir=TB;
+    node [shape=box, style=rounded];
+
+    subgraph cluster_inputs {
+        label="Inputs";
+        diff [label="Git diff"];
+        goal [label="Goal\n(optional)", style=dashed];
+        history [label="Conversation history\n(optional)", style=dashed];
+    }
+
+    context [label="Repo snapshot"];
+    checks [label="LLM checks"];
+    post [label="Filter + deduplicate"];
+    issues [label="Issues"];
+
+    diff -> context;
+    diff -> checks;
+    goal -> checks [style=dashed];
+    history -> checks [style=dashed];
+    context -> checks;
+
+    checks -> post;
+    post -> issues;
+}
