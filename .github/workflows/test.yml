@@ -36,7 +36,12 @@ jobs:
         continue-on-error: true
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: uv run vet --base-commit main --confidence-threshold 0.9 --max-workers 4 --quiet --model opus > vet-output.txt 2>&1
+          VET_GOAL: |
+            ${{ github.event.pull_request.title }}
+
+            Additional context (not necessarily part of the goal):
+            ${{ github.event.pull_request.body }}
+        run: uv run vet "$VET_GOAL" --base-commit main --confidence-threshold 0.9 --max-workers 4 --quiet --model opus > vet-output.txt 2>&1
 
       - name: Comment vet results
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
