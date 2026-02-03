@@ -301,16 +301,22 @@ def configure_logging(verbose: bool, quiet: bool) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
-    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
+    result = subprocess.run(
+        command, shell=True, capture_output=True, text=True, cwd=cwd
+    )
     if result.returncode != 0:
-        logger.warning(f"History loader command failed with exit code {result.returncode}: {result.stderr}")
+        logger.warning(
+            f"History loader command failed with exit code {result.returncode}: {result.stderr}"
+        )
         return ()
     if not result.stdout.strip():
         return ()
     return parse_conversation_history(result.stdout)
 
 
-def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> argparse.Namespace:
+def apply_config_preset(
+    args: argparse.Namespace, preset: CliConfigPreset
+) -> argparse.Namespace:
     preset_dict = preset.model_dump(exclude_none=True)
 
     for field, preset_value in preset_dict.items():
@@ -376,7 +382,9 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if not repo_path.is_dir():
-        print(f"Error: Repository path is not a directory: {repo_path}", file=sys.stderr)
+        print(
+            f"Error: Repository path is not a directory: {repo_path}", file=sys.stderr
+        )
         return 2
 
     if args.extra_context:
@@ -413,7 +421,9 @@ def main(argv: list[str] | None = None) -> int:
 
     conversation_history = None
     if args.history_loader is not None:
-        conversation_history = load_conversation_from_command(args.history_loader, repo_path)
+        conversation_history = load_conversation_from_command(
+            args.history_loader, repo_path
+        )
 
     extra_context = None
     if args.extra_context:
@@ -450,8 +460,12 @@ def main(argv: list[str] | None = None) -> int:
     config = VetConfig(
         disabled_identifiers=("agentic_issue_identifier",),
         language_model_generation_config=language_model_config,
-        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
-        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
+        enabled_issue_codes=(
+            tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+        ),
+        disabled_issue_codes=(
+            tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
+        ),
         temperature=args.temperature,
         filter_issues_below_confidence=args.confidence_threshold,
         max_identify_workers=args.max_workers,
@@ -480,7 +494,7 @@ def main(argv: list[str] | None = None) -> int:
         if not issues:
             if args.output_format == "json":
                 print(json.dumps({"issues": []}, indent=2), file=output_stream)
-            elif not args.quiet:
+            else:
                 print("No issues found.", file=output_stream)
             return 0
 
