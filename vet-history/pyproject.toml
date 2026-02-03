@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vet-history"
+version = "0.1.0"
+description = "History loader for VET - extracts conversation history from coding agents"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Imbue" },
+]
+keywords = ["vet", "verification", "coding-agents", "history"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+vet-history = "vet_history.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["vet_history"]

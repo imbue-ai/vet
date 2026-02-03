@@ -31,9 +31,7 @@ SIMPLE_TOKEN_COUNTERS: list[Callable[[str], int]] = [
     char_div4_count,
 ]
 
-ALL_TOKEN_COUNTERS: list[Callable[[str], int]] = SIMPLE_TOKEN_COUNTERS + [
-    tiktoken_count
-]
+ALL_TOKEN_COUNTERS: list[Callable[[str], int]] = SIMPLE_TOKEN_COUNTERS + [tiktoken_count]
 
 ascii_text = st.text(
     alphabet=st.characters(min_codepoint=32, max_codepoint=126),
@@ -79,9 +77,7 @@ def test_context_budgets_sum_to_100():
     total_tokens=st.integers(min_value=0, max_value=1_000_000),
     budget=st.sampled_from(list(ContextBudget)),
 )
-def test_get_token_budget_is_mathematically_correct(
-    total_tokens: int, budget: ContextBudget
-):
+def test_get_token_budget_is_mathematically_correct(total_tokens: int, budget: ContextBudget):
     result = get_token_budget(total_tokens, budget)
     expected = total_tokens * budget.value // 100
     assert result == expected
@@ -93,9 +89,7 @@ def test_get_token_budget_is_mathematically_correct(
     truncate_end=st.booleans(),
     count_tokens=st.sampled_from(SIMPLE_TOKEN_COUNTERS),
 )
-def test_truncate_always_respects_token_limit_simple(
-    text: str, max_tokens: int, truncate_end: bool, count_tokens
-):
+def test_truncate_always_respects_token_limit_simple(text: str, max_tokens: int, truncate_end: bool, count_tokens):
     result, _ = truncate_to_token_limit(
         text,
         max_tokens=max_tokens,
@@ -123,9 +117,7 @@ def test_truncate_end_produces_prefix(text: str, max_tokens: int):
         truncate_end=True,
     )
 
-    assert text.startswith(result), (
-        f"Result '{result[:50]}...' is not a prefix of original"
-    )
+    assert text.startswith(result), f"Result '{result[:50]}...' is not a prefix of original"
 
     if was_truncated:
         assert len(result) < len(text)
@@ -144,9 +136,7 @@ def test_truncate_start_produces_suffix(text: str, max_tokens: int):
         truncate_end=False,
     )
 
-    assert text.endswith(result), (
-        f"Result '...{result[-50:]}' is not a suffix of original"
-    )
+    assert text.endswith(result), f"Result '...{result[-50:]}' is not a suffix of original"
 
     if was_truncated:
         assert len(result) < len(text)
@@ -210,9 +200,7 @@ def test_zero_budget_returns_empty_and_truncated(text: str, count_tokens):
     max_tokens=st.integers(min_value=0, max_value=500),
     truncate_end=st.booleans(),
 )
-def test_truncate_respects_limit_tiktoken(
-    text: str, max_tokens: int, truncate_end: bool
-):
+def test_truncate_respects_limit_tiktoken(text: str, max_tokens: int, truncate_end: bool):
     result, _ = truncate_to_token_limit(
         text,
         max_tokens=max_tokens,
