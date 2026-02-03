@@ -31,7 +31,9 @@ SIMPLE_TOKEN_COUNTERS: list[Callable[[str], int]] = [
     char_div4_count,
 ]
 
-ALL_TOKEN_COUNTERS: list[Callable[[str], int]] = SIMPLE_TOKEN_COUNTERS + [tiktoken_count]
+ALL_TOKEN_COUNTERS: list[Callable[[str], int]] = SIMPLE_TOKEN_COUNTERS + [
+    tiktoken_count
+]
 
 ascii_text = st.text(
     alphabet=st.characters(min_codepoint=32, max_codepoint=126),
@@ -79,7 +81,9 @@ def test_context_budgets_sum_to_100():
     total_tokens=st.integers(min_value=0, max_value=1_000_000),
     budget=st.sampled_from(list(ContextBudget)),
 )
-def test_get_token_budget_is_mathematically_correct(total_tokens: int, budget: ContextBudget):
+def test_get_token_budget_is_mathematically_correct(
+    total_tokens: int, budget: ContextBudget
+):
     result = get_token_budget(total_tokens, budget)
     expected = total_tokens * budget.value // 100
     assert result == expected
@@ -89,11 +93,11 @@ def test_get_token_budget_is_mathematically_correct(total_tokens: int, budget: C
     text=st.text(min_size=0, max_size=10_000),
     max_tokens=st.integers(min_value=0, max_value=10_000),
     truncate_end=st.booleans(),
-    counter_idx=st.integers(min_value=0, max_value=len(SIMPLE_TOKEN_COUNTERS) - 1),
+    count_tokens=st.sampled_from(SIMPLE_TOKEN_COUNTERS),
 )
-def test_truncate_always_respects_token_limit_simple(text: str, max_tokens: int, truncate_end: bool, counter_idx: int):
-    count_tokens = SIMPLE_TOKEN_COUNTERS[counter_idx]
-
+def test_truncate_always_respects_token_limit_simple(
+    text: str, max_tokens: int, truncate_end: bool, count_tokens
+):
     result, _ = truncate_to_token_limit(
         text,
         max_tokens=max_tokens,
@@ -121,7 +125,9 @@ def test_truncate_end_produces_prefix(text: str, max_tokens: int):
         truncate_end=True,
     )
 
-    assert text.startswith(result), f"Result '{result[:50]}...' is not a prefix of original"
+    assert text.startswith(result), (
+        f"Result '{result[:50]}...' is not a prefix of original"
+    )
 
     if was_truncated:
         assert len(result) < len(text)
@@ -140,7 +146,9 @@ def test_truncate_start_produces_suffix(text: str, max_tokens: int):
         truncate_end=False,
     )
 
-    assert text.endswith(result), f"Result '...{result[-50:]}' is not a suffix of original"
+    assert text.endswith(result), (
+        f"Result '...{result[-50:]}' is not a suffix of original"
+    )
 
     if was_truncated:
         assert len(result) < len(text)
@@ -149,10 +157,9 @@ def test_truncate_start_produces_suffix(text: str, max_tokens: int):
 @given(
     text=st.text(min_size=0, max_size=1000),
     budget_multiplier=st.integers(min_value=1, max_value=10),
-    counter_idx=st.integers(min_value=0, max_value=len(SIMPLE_TOKEN_COUNTERS) - 1),
+    count_tokens=st.sampled_from(SIMPLE_TOKEN_COUNTERS),
 )
-def test_text_within_budget_unchanged(text: str, budget_multiplier: int, counter_idx: int):
-    count_tokens = SIMPLE_TOKEN_COUNTERS[counter_idx]
+def test_text_within_budget_unchanged(text: str, budget_multiplier: int, count_tokens):
     token_count = count_tokens(text)
 
     max_tokens = token_count * budget_multiplier + 10
@@ -168,10 +175,8 @@ def test_text_within_budget_unchanged(text: str, budget_multiplier: int, counter
     assert was_truncated is False
 
 
-@given(counter_idx=st.integers(min_value=0, max_value=len(SIMPLE_TOKEN_COUNTERS) - 1))
-def test_empty_text_always_returns_empty(counter_idx: int):
-    count_tokens = SIMPLE_TOKEN_COUNTERS[counter_idx]
-
+@given(count_tokens=st.sampled_from(SIMPLE_TOKEN_COUNTERS))
+def test_empty_text_always_returns_empty(count_tokens):
     result, was_truncated = truncate_to_token_limit(
         "",
         max_tokens=100,
@@ -185,11 +190,9 @@ def test_empty_text_always_returns_empty(counter_idx: int):
 
 @given(
     text=st.text(min_size=1, max_size=1000),
-    counter_idx=st.integers(min_value=0, max_value=len(SIMPLE_TOKEN_COUNTERS) - 1),
+    count_tokens=st.sampled_from(SIMPLE_TOKEN_COUNTERS),
 )
-def test_zero_budget_returns_empty_and_truncated(text: str, counter_idx: int):
-    count_tokens = SIMPLE_TOKEN_COUNTERS[counter_idx]
-
+def test_zero_budget_returns_empty_and_truncated(text: str, count_tokens):
     assume(count_tokens(text) > 0)
 
     result, was_truncated = truncate_to_token_limit(
@@ -225,13 +228,15 @@ def test_truncation_preserves_maximum_content(text: str, max_tokens: int):
         assert len(result) > 0 or max_tokens == 0
 
 
-@settings(max_examples=20)
+@settings(max_examples=100)  # 20 per strategy * 5 strategies
 @given(
-    text=ascii_text,
+    text=st.one_of(ascii_text, unicode_text, code_text, repeated_char_text, mixed_text),
     max_tokens=st.integers(min_value=0, max_value=500),
     truncate_end=st.booleans(),
 )
-def test_truncate_respects_limit_tiktoken_ascii(text: str, max_tokens: int, truncate_end: bool):
+def test_truncate_respects_limit_tiktoken(
+    text: str, max_tokens: int, truncate_end: bool
+):
     result, _ = truncate_to_token_limit(
         text,
         max_tokens=max_tokens,
@@ -243,84 +248,15 @@ def test_truncate_respects_limit_tiktoken_ascii(text: str, max_tokens: int, trun
     assert tiktoken_count(result) <= max_tokens
 
 
-@settings(max_examples=20)
-@given(
-    text=unicode_text,
-    max_tokens=st.integers(min_value=0, max_value=200),
-    truncate_end=st.booleans(),
-)
-def test_truncate_respects_limit_tiktoken_unicode(text: str, max_tokens: int, truncate_end: bool):
-    result, _ = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=truncate_end,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=20)
-@given(
-    text=code_text,
-    max_tokens=st.integers(min_value=1, max_value=100),
-    truncate_end=st.booleans(),
-)
-def test_truncate_respects_limit_tiktoken_code(text: str, max_tokens: int, truncate_end: bool):
-    result, _ = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=truncate_end,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=20)
-@given(
-    text=repeated_char_text,
-    max_tokens=st.integers(min_value=0, max_value=100),
-    truncate_end=st.booleans(),
-)
-def test_truncate_respects_limit_tiktoken_repeated(text: str, max_tokens: int, truncate_end: bool):
-    result, _ = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=truncate_end,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=20)
-@given(
-    text=mixed_text,
-    max_tokens=st.integers(min_value=1, max_value=100),
-    truncate_end=st.booleans(),
-)
-def test_truncate_respects_limit_tiktoken_mixed(text: str, max_tokens: int, truncate_end: bool):
-    result, _ = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=truncate_end,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=20)
+@settings(max_examples=40)  # 20 * 2 directions
 @given(
     text=st.text(min_size=10, max_size=500),
     max_tokens=st.integers(min_value=1, max_value=50),
+    truncate_end=st.booleans(),
 )
-def test_truncation_is_maximally_efficient_tiktoken(text: str, max_tokens: int):
+def test_truncation_is_maximally_efficient_tiktoken(
+    text: str, max_tokens: int, truncate_end: bool
+):
     assume(tiktoken_count(text) > max_tokens)
 
     result, was_truncated = truncate_to_token_limit(
@@ -328,32 +264,13 @@ def test_truncation_is_maximally_efficient_tiktoken(text: str, max_tokens: int):
         max_tokens=max_tokens,
         count_tokens=tiktoken_count,
         label="test",
-        truncate_end=True,
+        truncate_end=truncate_end,
     )
 
     assert was_truncated is True
     assert tiktoken_count(result) <= max_tokens
-
-
-@settings(max_examples=20)
-@given(
-    text=st.text(min_size=10, max_size=500),
-    max_tokens=st.integers(min_value=1, max_value=50),
-)
-def test_truncation_from_start_is_maximally_efficient_tiktoken(text: str, max_tokens: int):
-    assume(tiktoken_count(text) > max_tokens)
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=False,
-    )
-
-    assert was_truncated is True
-    assert tiktoken_count(result) <= max_tokens
-    assert text.endswith(result)
+    if not truncate_end:
+        assert text.endswith(result)
 
 
 @settings(max_examples=10)
@@ -372,41 +289,16 @@ def test_truncate_whitespace_only_tiktoken(text: str):
     assert tiktoken_count(result) <= max_tokens
 
 
-def test_truncate_emoji_sequence():
-    text = "Hello 👋🏽 World 🌍 Test 🎉🎊🎁"
-    max_tokens = 5
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=True,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-    assert text.startswith(result)
+SPECIAL_CHAR_TEST_CASES = [
+    ("Hello 👋🏽 World 🌍 Test 🎉🎊🎁", 5),  # emoji
+    ("这是一个测试文本，包含中文字符。Hello World! 日本語テスト。", 10),  # CJK
+    ("Hello Привет مرحبا שלום 你好 こんにちは", 8),  # mixed scripts
+]
 
 
-def test_truncate_cjk_characters():
-    text = "这是一个测试文本，包含中文字符。Hello World! 日本語テスト。"
-    max_tokens = 10
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=True,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-    assert text.startswith(result)
-
-
-def test_truncate_mixed_scripts():
-    text = "Hello Привет مرحبا שלום 你好 こんにちは"
-    max_tokens = 8
+@given(case=st.sampled_from(SPECIAL_CHAR_TEST_CASES))
+def test_truncate_special_characters(case):
+    text, max_tokens = case
 
     result, was_truncated = truncate_to_token_limit(
         text,
