@@ -34,35 +34,7 @@ vet "Refactor storage layer" --base-commit main
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-TODO: Create rendering pipeline for this. GitHub MD doesn't directly support Graphviz.
-
-```dot
-digraph VET_DataFlow {
-    rankdir=TB;
-    node [shape=box, style=rounded];
-
-    subgraph cluster_inputs {
-        label="Inputs";
-        diff [label="Git diff"];
-        goal [label="Goal\n(optional)", style=dashed];
-        history [label="Conversation history\n(optional)", style=dashed];
-    }
-
-    context [label="Repo snapshot"];
-    checks [label="LLM checks"];
-    post [label="Filter + deduplicate"];
-    issues [label="Issues"];
-
-    diff -> context;
-    diff -> checks;
-    goal -> checks [style=dashed];
-    history -> checks [style=dashed];
-    context -> checks;
-
-    checks -> post;
-    post -> issues;
-}
-```
+![architecture](architecture.svg)
 
 ## Why Vet
 
