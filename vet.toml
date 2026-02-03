@@ -2,7 +2,6 @@
 confidence_threshold = 0.9
 max_workers = 4
 quiet = true
-output_format = "json"
 base_commit = "main"
 model = "opus"
 
