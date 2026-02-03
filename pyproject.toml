@@ -8,38 +8,24 @@ version = "0.1.0"
 readme = "README.md"
 dependencies = [
     # Original vet dependencies
-    "aiohttp>=3.8.0",
-    "click",
     "jinja2",
     "loguru",
     "pydantic>=2.11.4",
-    "pygments>=2.0.0",
     "pytest",
     "syrupy",
 
     # From imbue_core
     "anyio",
     "attrs",
-    "boto3>=1.38.27",
     "cachetools",
     "cattrs",
     "diskcache>=5.6.3",
-    "grpclib>=0.4.7",
     "httpx",
-    "inline-snapshot",
     "pathspec",
-    "prometheus-client>=0.20.0",
-    "pydantic-settings",
     "pygit2>=1.18.0",
-    "pylint==3.2.6",
     "pyhumps",
-    "pytest-asyncio",
-    "pytest-mock",
-    "python-gitlab>=4.5.0",
     "tblib==2.0.0",
-    "tenacity>=8.2.2",
     "toml",
-    "traceback-with-variables>=2.2.0",
     "typeid-python",
     "yasoo",
     "anthropic~=0.54",
@@ -51,8 +37,6 @@ dependencies = [
     # From imbue_tools
     "async_lru",
     "libcst",
-    "psycopg[binary]",
-    "requests",
 ]
 requires-python = ">=3.11"
 
@@ -69,7 +53,6 @@ include = ["vet*"]
 dev = [
     "black",
     "hypothesis",
-    "moto>=4.1.12",
 ]
 
 [tool.black]
