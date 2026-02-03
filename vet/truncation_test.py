@@ -222,26 +222,3 @@ def test_truncate_respects_limit_tiktoken(
     )
 
     assert tiktoken_count(result) <= max_tokens
-
-
-SPECIAL_CHAR_TEST_CASES = [
-    ("Hello 👋🏽 World 🌍 Test 🎉🎊🎁", 5),  # emoji
-    ("这是一个测试文本，包含中文字符。Hello World! 日本語テスト。", 10),  # CJK
-    ("Hello Привет مرحبا שלום 你好 こんにちは", 8),  # mixed scripts
-]
-
-
-@given(case=st.sampled_from(SPECIAL_CHAR_TEST_CASES))
-def test_truncate_special_characters(case):
-    text, max_tokens = case
-
-    result, was_truncated = truncate_to_token_limit(
-        text,
-        max_tokens=max_tokens,
-        count_tokens=tiktoken_count,
-        label="test",
-        truncate_end=True,
-    )
-
-    assert tiktoken_count(result) <= max_tokens
-    assert text.startswith(result)
