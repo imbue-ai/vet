@@ -44,6 +44,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ ! -s vet-output.txt ]; then
-            echo "No issues found." > vet-output.txt
+            echo "Vet found no issues." > vet-output.txt
           fi
           gh pr comment ${{ github.event.pull_request.number }} --body-file vet-output.txt
