@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+import json
+import os
+import sys
+from pathlib import Path
+
+SESSION_ID = os.environ.get("VET_SESSION_ID")
+if not SESSION_ID:
+    sys.exit(0)
+
+STORAGE = Path.home() / ".local/share/opencode/storage"
+MSG_DIR = STORAGE / "message" / SESSION_ID
+PART_DIR = STORAGE / "part"
+
+if not MSG_DIR.exists():
+    sys.exit(0)
+
+messages = []
+for msg_file in sorted(MSG_DIR.glob("*.json")):
+    msg = json.loads(msg_file.read_text())
+    messages.append((msg.get("time", {}).get("created", 0), msg))
+
+for _, msg in sorted(messages, key=lambda x: x[0]):
+    msg_id = msg["id"]
+    role = msg.get("role", "user")
+    part_dir = PART_DIR / msg_id
+
+    if not part_dir.exists():
+        continue
+
+    parts = []
+    for part_file in part_dir.glob("*.json"):
+        part = json.loads(part_file.read_text())
+        parts.append(part)
+
+    if role == "user":
+        text = " ".join(p.get("text", "") for p in parts if p.get("type") == "text")
+        if text:
+            print(json.dumps({"object_type": "ChatInputUserMessage", "text": text}))
+    else:
+        content = []
+        for p in parts:
+            if p.get("type") == "text" and p.get("text"):
+                content.append({"type": "TextBlock", "text": p["text"]})
+        if content:
+            print(
+                json.dumps(
+                    {
+                        "object_type": "ResponseBlockAgentMessage",
+                        "role": "assistant",
+                        "assistant_message_id": msg_id,
+                        "content": content,
+                    }
+                )
+            )
