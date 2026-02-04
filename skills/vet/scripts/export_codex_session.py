@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+# Add script directory to path for importing utils
+sys.path.insert(0, str(Path(__file__).parent))
 from utils import log_warning
 
 SESSION_FILE = os.environ.get("CODEX_SESSION_FILE")
