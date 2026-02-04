@@ -9,6 +9,31 @@ description: IMPORTANT - Run vet immediately after ANY code edit, file deletion,
 
 Vet reviews git diffs and conversation history to find issues in code changes. It is most effective when run frequently with conversation history, which helps it catch misunderstandings between what was requested and what was implemented.
 
+## Installation
+
+Install vet using pip or uv:
+
+```bash
+# Using pip
+pip install git+https://github.com/imbue-ai/vet.git
+
+# Using uv (recommended)
+uv pip install git+https://github.com/imbue-ai/vet.git
+
+# For development (from local clone)
+cd /path/to/vet
+pip install -e .
+```
+
+**Requirements:**
+- Python 3.11 or higher
+- Set `ANTHROPIC_API_KEY` environment variable (or configure another supported model provider)
+
+Verify installation:
+```bash
+vet --help
+```
+
 ## When to Run
 
 Run vet after:
