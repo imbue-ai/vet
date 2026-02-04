@@ -137,17 +137,6 @@ vet "Fix flaky tests without behavior changes" \
   --history-loader "<command that prints a transcript>"
 ```
 
-#### Example loaders
-
-In practice you’ll usually wrap your tool's logs/history with a small command that prints a readable transcript:
-
-```bash
-vet --history-loader "vet-history codex --latest"
-vet --history-loader "vet-history opencode --session current"
-vet --history-loader "vet-history claude-code --project ."
-vet --history-loader "vet-history gemini-cli --latest"
-```
-
 ## Privacy / telemetry
 
 Vet does **not** collect telemetry and does not send usage data to external services.
