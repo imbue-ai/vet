@@ -1,6 +1,6 @@
 ---
 name: vet
-description: Run VET (Verify Everything) to check code changes for issues. Use after making code changes to catch problems that tests and linters miss.
+description: Run VET (Verify Everything) to check code changes for issues. Use proactively and frequently after making code changes - don't wait to be asked.
 ---
 
 # Vet
