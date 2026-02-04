@@ -7,12 +7,6 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 ## Installation
 
 ```bash
-pip install verify-everything
-```
-
-Or install directly from git:
-
-```bash
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
@@ -141,17 +135,6 @@ Example:
 ```bash
 vet "Fix flaky tests without behavior changes" \
   --history-loader "<command that prints a transcript>"
-```
-
-#### Example loaders
-
-In practice you’ll usually wrap your tool's logs/history with a small command that prints a readable transcript:
-
-```bash
-vet --history-loader "vet-history codex --latest"
-vet --history-loader "vet-history opencode --session current"
-vet --history-loader "vet-history claude-code --project ."
-vet --history-loader "vet-history gemini-cli --latest"
 ```
 
 ## Privacy / telemetry
