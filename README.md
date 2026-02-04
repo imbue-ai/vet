@@ -47,20 +47,6 @@ Output formats:
 - `text`
 - `json`
 
-## CI usage
-
-Recommended CI usage is to run Vet with JSON output and display a warning if any issues are found.
-
-Example:
-
-```bash
-vet --base-commit main --output-format json > vet-report.json
-```
-
-- If Vet exits `0`, no issues were found.
-- If Vet exits `1`, issues were found (treat as a failing check).
-- If Vet exits `2`, the invocation/config is invalid (treat as a failing check).
-
 ## Configuration
 
 ### Model configuration
@@ -113,29 +99,6 @@ vet "Harden error handling" --model gpt-4o-mini
 Vet supports named profiles so teams can standardize CI usage without long CLI invocations.
 
 Profiles set defaults like model choice, enabled issue codes, output format, and thresholds.
-
-## Advanced usage
-
-### Conversation history
-
-Vet can **optionally** ingest agent conversation history via a **history loader command**.
-
-#### History loader contract
-
-`--history-loader` runs a shell command and reads **stdout** as plaintext.
-
-Security note: this executes a command on your machine. Only run history loader commands you trust.
-
-- Output format: **any text**
-- Vet treats this as an opaque transcript (it may include user/assistant messages, tool calls, tool results, logs, etc.)
-- If you want Vet to catch “claimed to run tests” style issues reliably, ensure your transcript includes tool invocations/results (or other evidence), not just prose.
-
-Example:
-
-```bash
-vet "Fix flaky tests without behavior changes" \
-  --history-loader "<command that prints a transcript>"
-```
 
 ## Privacy / telemetry
 
