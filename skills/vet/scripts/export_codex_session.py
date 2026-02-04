@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from utils import log_warning
+
 SESSION_FILE = os.environ.get("CODEX_SESSION_FILE")
 if not SESSION_FILE:
     sessions_dir = Path.home() / ".codex/sessions"
@@ -18,7 +20,11 @@ if not SESSION_FILE or not Path(SESSION_FILE).exists():
 for line in Path(SESSION_FILE).read_text().splitlines():
     if not line.strip():
         continue
-    entry = json.loads(line)
+    try:
+        entry = json.loads(line)
+    except json.JSONDecodeError as e:
+        log_warning(f"Skipping malformed JSON line in {SESSION_FILE}: {e}")
+        continue
 
     if entry.get("type") != "response_item":
         continue
@@ -40,7 +46,9 @@ for line in Path(SESSION_FILE).read_text().splitlines():
         blocks = []
         for c in content:
             if c.get("type") == "output_text" and c.get("text"):
-                blocks.append({"type": "TextBlock", "text": c["text"]})
+                blocks.append(
+                    {"object_type": "TextBlock", "type": "text", "text": c["text"]}
+                )
         if blocks:
             print(
                 json.dumps(

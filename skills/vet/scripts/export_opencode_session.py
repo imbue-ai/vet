@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from utils import log_warning
+
 SESSION_ID = os.environ.get("VET_SESSION_ID")
 if not SESSION_ID:
     sys.exit(0)
@@ -17,7 +19,11 @@ if not MSG_DIR.exists():
 
 messages = []
 for msg_file in sorted(MSG_DIR.glob("*.json")):
-    msg = json.loads(msg_file.read_text())
+    try:
+        msg = json.loads(msg_file.read_text())
+    except json.JSONDecodeError as e:
+        log_warning(f"Skipping malformed message file {msg_file}: {e}")
+        continue
     messages.append((msg.get("time", {}).get("created", 0), msg))
 
 for _, msg in sorted(messages, key=lambda x: x[0]):
@@ -30,7 +36,11 @@ for _, msg in sorted(messages, key=lambda x: x[0]):
 
     parts = []
     for part_file in part_dir.glob("*.json"):
-        part = json.loads(part_file.read_text())
+        try:
+            part = json.loads(part_file.read_text())
+        except json.JSONDecodeError as e:
+            log_warning(f"Skipping malformed part file {part_file}: {e}")
+            continue
         parts.append(part)
 
     if role == "user":
@@ -41,7 +51,9 @@ for _, msg in sorted(messages, key=lambda x: x[0]):
         content = []
         for p in parts:
             if p.get("type") == "text" and p.get("text"):
-                content.append({"type": "TextBlock", "text": p["text"]})
+                content.append(
+                    {"object_type": "TextBlock", "type": "text", "text": p["text"]}
+                )
         if content:
             print(
                 json.dumps(
