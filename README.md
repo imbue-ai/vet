@@ -7,12 +7,6 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 ## Installation
 
 ```bash
-pip install verify-everything
-```
-
-Or install directly from git:
-
-```bash
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
