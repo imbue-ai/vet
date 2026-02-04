@@ -20,9 +20,7 @@ for msg_file in sorted(MSG_DIR.glob("*.json")):
     try:
         msg = json.loads(msg_file.read_text())
     except json.JSONDecodeError as e:
-        print(
-            f"WARNING: Skipping malformed message file {msg_file}: {e}", file=sys.stderr
-        )
+        print(f"WARNING: Skipping malformed message file {msg_file}: {e}", file=sys.stderr)
         continue
     messages.append((msg.get("time", {}).get("created", 0), msg))
 
@@ -54,9 +52,7 @@ for _, msg in sorted(messages, key=lambda x: x[0]):
         content = []
         for p in parts:
             if p.get("type") == "text" and p.get("text"):
-                content.append(
-                    {"object_type": "TextBlock", "type": "text", "text": p["text"]}
-                )
+                content.append({"object_type": "TextBlock", "type": "text", "text": p["text"]})
         if content:
             print(
                 json.dumps(

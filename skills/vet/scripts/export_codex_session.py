@@ -38,18 +38,14 @@ for line in Path(SESSION_FILE).read_text().splitlines():
     content = payload.get("content", [])
 
     if role == "user":
-        text = " ".join(
-            c.get("text", "") for c in content if c.get("type") == "input_text"
-        )
+        text = " ".join(c.get("text", "") for c in content if c.get("type") == "input_text")
         if text:
             print(json.dumps({"object_type": "ChatInputUserMessage", "text": text}))
     elif role == "assistant":
         blocks = []
         for c in content:
             if c.get("type") == "output_text" and c.get("text"):
-                blocks.append(
-                    {"object_type": "TextBlock", "type": "text", "text": c["text"]}
-                )
+                blocks.append({"object_type": "TextBlock", "type": "text", "text": c["text"]})
         if blocks:
             print(
                 json.dumps(
