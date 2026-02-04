@@ -4,10 +4,6 @@ import os
 import sys
 from pathlib import Path
 
-# Add script directory to path for importing utils
-sys.path.insert(0, str(Path(__file__).parent))
-from utils import log_warning
-
 SESSION_ID = os.environ.get("VET_SESSION_ID")
 if not SESSION_ID:
     sys.exit(0)
@@ -24,7 +20,9 @@ for msg_file in sorted(MSG_DIR.glob("*.json")):
     try:
         msg = json.loads(msg_file.read_text())
     except json.JSONDecodeError as e:
-        log_warning(f"Skipping malformed message file {msg_file}: {e}")
+        print(
+            f"WARNING: Skipping malformed message file {msg_file}: {e}", file=sys.stderr
+        )
         continue
     messages.append((msg.get("time", {}).get("created", 0), msg))
 
@@ -41,7 +39,10 @@ for _, msg in sorted(messages, key=lambda x: x[0]):
         try:
             part = json.loads(part_file.read_text())
         except json.JSONDecodeError as e:
-            log_warning(f"Skipping malformed part file {part_file}: {e}")
+            print(
+                f"WARNING: Skipping malformed part file {part_file}: {e}",
+                file=sys.stderr,
+            )
             continue
         parts.append(part)
 

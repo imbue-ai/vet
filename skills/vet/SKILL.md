@@ -1,30 +1,27 @@
 ---
 name: vet
-description: Run VET (Verify Everything) to check code changes for issues. Use proactively and frequently after making code changes - don't wait to be asked.
+description: IMPORTANT - Run vet immediately after ANY code edit, file deletion, or refactor. Do not batch changes. Do not wait to be asked.
 ---
 
 # Vet
 
-Vet reviews git diffs and conversation history to find issues in code changes.
+**Run vet immediately after ANY code change. Do not batch. Do not wait to be asked.**
 
-**Run vet frequently throughout your work, not just at the end.** Vet is most effective when it has access to conversation history, which helps it understand your intent and catch misunderstandings between what was requested and what was implemented.
+Vet reviews git diffs and conversation history to find issues in code changes. It is most effective when run frequently with conversation history, which helps it catch misunderstandings between what was requested and what was implemented.
 
-## When to Use
+## When to Run
 
-- **After every logical unit of code changes** - do not batch up changes; run vet early and often
-- **Before every commit** - catch issues before they enter version control
-- **Proactively, without being asked** - vet is a safety net; use it liberally
-- In CI pipelines to validate PRs
+Run vet after:
+- Editing any file
+- Deleting any file
+- Refactoring code
+- Completing a bugfix
+- Adding a new feature or function
 
-## Best Practices
-
-1. **Run frequently**: Run vet after each logical unit of work, not just at the end of a session. Small, frequent checks catch issues earlier when they're easier to fix.
-
-2. **Always include conversation history**: Conversation context is critical. Without it, vet can only analyze the code diff in isolation. With history, vet understands *why* you made changes and can catch intent mismatches, misunderstood requirements, and forgotten edge cases.
-
-3. **Do not wait to be asked**: Run vet proactively after making changes. It's a safety check, not a final review step.
-
-4. **Run before committing**: Always verify changes before they enter version control.
+Do NOT wait until:
+- The user asks you to
+- You've made multiple changes
+- You're about to commit
 
 ## Running Vet
 

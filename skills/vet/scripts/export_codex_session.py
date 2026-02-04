@@ -4,10 +4,6 @@ import os
 import sys
 from pathlib import Path
 
-# Add script directory to path for importing utils
-sys.path.insert(0, str(Path(__file__).parent))
-from utils import log_warning
-
 SESSION_FILE = os.environ.get("CODEX_SESSION_FILE")
 if not SESSION_FILE:
     sessions_dir = Path.home() / ".codex/sessions"
@@ -25,7 +21,10 @@ for line in Path(SESSION_FILE).read_text().splitlines():
     try:
         entry = json.loads(line)
     except json.JSONDecodeError as e:
-        log_warning(f"Skipping malformed JSON line in {SESSION_FILE}: {e}")
+        print(
+            f"WARNING: Skipping malformed JSON line in {SESSION_FILE}: {e}",
+            file=sys.stderr,
+        )
         continue
 
     if entry.get("type") != "response_item":
