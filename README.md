@@ -31,24 +31,31 @@ Vet ships as an [agent skill](https://agentskills.io) that coding agents like [O
 ### Install the skill globally
 
 ```bash
-mkdir -p ~/.agents/skills/vet/scripts && \
+for dir in ~/.agents ~/.claude ~/.codex; do
+  mkdir -p "$dir/skills/vet/scripts"
   curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/SKILL.md \
-    -o ~/.agents/skills/vet/SKILL.md && \
+    -o "$dir/skills/vet/SKILL.md"
   curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_opencode_session.py \
-    -o ~/.agents/skills/vet/scripts/export_opencode_session.py && \
+    -o "$dir/skills/vet/scripts/export_opencode_session.py"
   curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_codex_session.py \
-    -o ~/.agents/skills/vet/scripts/export_codex_session.py
+    -o "$dir/skills/vet/scripts/export_codex_session.py"
+  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_claude_code_session.py \
+    -o "$dir/skills/vet/scripts/export_claude_code_session.py"
+done
 ```
 
-This places the skill in `~/.agents/skills/vet/`, which is discovered by both OpenCode and Codex.
+This places the skill in `~/.agents/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
 
 ### Install per-project
 
 To have agents use vet automatically in a specific repo, copy the skill into the project:
 
 ```bash
-cp -r /path/to/vet/skills/vet .agents/skills/vet
-git add .agents/skills/vet && git commit -m "Add vet agent skill"
+for dir in .agents .claude .codex; do
+  cp -r /path/to/vet/skills/vet "$dir/skills/vet"
+done
+git add .agents/skills/vet .claude/skills/vet .codex/skills/vet && \
+  git commit -m "Add vet agent skill"
 ```
 
 ## How it works

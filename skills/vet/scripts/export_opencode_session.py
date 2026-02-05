@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
+import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
-SESSION_ID = os.environ.get("VET_SESSION_ID")
-if not SESSION_ID:
-    sys.exit(0)
+parser = argparse.ArgumentParser(description="Export OpenCode session history for vet")
+parser.add_argument("--session-id", required=True, help="OpenCode session UUID")
+args = parser.parse_args()
 
 STORAGE = Path.home() / ".local/share/opencode/storage"
-MSG_DIR = STORAGE / "message" / SESSION_ID
+MSG_DIR = STORAGE / "message" / args.session_id
 PART_DIR = STORAGE / "part"
 
 if not MSG_DIR.exists():

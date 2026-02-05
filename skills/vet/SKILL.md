@@ -29,18 +29,21 @@ vet --help
 
 ### Standard Usage
 
-Always include conversation history for best results. Set the session environment variable and use `--history-loader`:
+Always include conversation history for best results. Pass the session identifier to the export script via `--history-loader`:
 
 **OpenCode:**
 ```bash
-export VET_SESSION_ID="<current-session-id>"
-vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py"
+vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <session-uuid>"
 ```
 
 **Codex:**
 ```bash
-export CODEX_SESSION_FILE="<path-to-current-session.jsonl>"
-vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_codex_session.py"
+vet "goal" --history-loader "python ~/.codex/skills/vet/scripts/export_codex_session.py --session-file <path-to-session.jsonl>"
+```
+
+**Claude Code:**
+```bash
+vet "goal" --history-loader "python ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
 ```
 
 ### Finding Your Session
@@ -48,6 +51,8 @@ vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_codex_se
 **OpenCode:** The session ID appears in task metadata or can be found as the most recent file in `~/.local/share/opencode/storage/session/`.
 
 **Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the most recently modified `.jsonl` file.
+
+**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the most recently modified `.jsonl` file in the directory matching your project.
 
 ## Common Options
 
