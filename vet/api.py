@@ -87,6 +87,12 @@ def get_issues_with_raw_responses(
         is_custom_model=lm_config.is_custom_model(),
     )
 
+    if conversation_history:
+        logger.debug(
+            "Passing {} conversation history messages to identifier inputs",
+            len(conversation_history),
+        )
+
     identifier_inputs = IdentifierInputs(
         maybe_diff=diff_no_binary or None,
         maybe_goal=goal,
