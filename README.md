@@ -134,6 +134,8 @@ Vet supports named profiles so teams can standardize CI usage without long CLI i
 
 Profiles set defaults like model choice, enabled issue codes, output format, and thresholds.
 
+See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this project.
+
 ## Privacy / telemetry
 
 Vet does **not** collect telemetry and does not send usage data to external services.
