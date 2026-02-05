@@ -17,7 +17,7 @@
           "max_output_tokens": 16384
         },
         "opus": {
-          "model_id": "claude-opus-4-5-20251101",
+          "model_id": "claude-opus-4-6",
           "context_window": 200000,
           "max_output_tokens": 16384
         }

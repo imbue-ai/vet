@@ -36,7 +36,9 @@ from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
 from vet.imbue_core.agents.llm_apis.errors import LanguageModelInvalidModelNameError
 from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
 from vet.imbue_core.agents.llm_apis.errors import NewSeedRetriableLanguageModelError
-from vet.imbue_core.agents.llm_apis.errors import SafelyRetriableTransientLanguageModelError
+from vet.imbue_core.agents.llm_apis.errors import (
+    SafelyRetriableTransientLanguageModelError,
+)
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
@@ -69,11 +71,13 @@ class AnthropicModelName(enum.StrEnum):
     CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_4_5_HAIKU_2025_10_01 = "claude-haiku-4-5-20251001"
     CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
+    CLAUDE_4_6_OPUS = "claude-opus-4-6"
     # the same as above but with the token limit and cost per token for the 1M token limit
     # TODO: combine these and add ability for token costs to be nonlinear
     # FIXME: this is an exception where the model name is not the same as the model name in the API
     CLAUDE_4_SONNET_2025_05_14_LONG = "claude-sonnet-4-20250514-long"
     CLAUDE_4_5_SONNET_2025_09_29_LONG = "claude-sonnet-4-5-20250929-long"
+    CLAUDE_4_6_OPUS_LONG = "claude-opus-4-6-long"
 
     # the following are 'retired' and are no longer available: https://docs.claude.com/en/docs/about-claude/model-deprecations
     # CLAUDE_2_1 = "claude-2.1"
@@ -218,6 +222,21 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=0.5 / 1_000_000,
             ),
         ),
+        AnthropicModelName.CLAUDE_4_6_OPUS: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_6_OPUS,
+            cost_per_input_token=5.00 / 1_000_000,
+            cost_per_output_token=25.00 / 1_000_000,
+            max_input_tokens=200_000,
+            max_output_tokens=128_000,
+            rate_limit_req=4000 / 60,
+            rate_limit_tok=2_000_000 / 60,
+            rate_limit_output_tok=400_000 / 60,
+            provider_specific_info=AnthropicModelInfo(
+                cost_per_5m_cache_write_token=6.25 / 1_000_000,
+                cost_per_1h_cache_write_token=10 / 1_000_000,
+                cost_per_cache_read_token=0.50 / 1_000_000,
+            ),
+        ),
         AnthropicModelName.CLAUDE_4_SONNET_2025_05_14: ModelInfo(
             model_name=AnthropicModelName.CLAUDE_4_SONNET_2025_05_14,
             cost_per_input_token=3.00 / 1_000_000,
@@ -287,6 +306,19 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
             max_output_tokens=64_000,
             rate_limit_req=None,  # Currently no limit set in our dashboard
             rate_limit_tok=1_000_000 / 60,  # <-- yeah they let us have one (1) 1M request per minute
+            rate_limit_output_tok=200_000 / 60,
+        ),
+        AnthropicModelName.CLAUDE_4_6_OPUS_LONG: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
+            # the first 200_000 input tokens use the rate 5.0 / 1_000_000, and the next up to 800_000 use the rate 10.0 / 1_000_000.
+            # thus the maximum average cost per input token is (5.0 * 200_000 + 10.0 * 800_000) / 1_000_000 = 9.0 per 1_000_000.
+            # (all output tokens may be past 200_000 input tokens, so the max average cost there is just the cost for tokens after 200_000)
+            cost_per_input_token=9.00 / 1_000_000,
+            cost_per_output_token=37.50 / 1_000_000,
+            max_input_tokens=1_000_000,
+            max_output_tokens=128_000,
+            rate_limit_req=None,  # Currently no limit set in our dashboard
+            rate_limit_tok=1_000_000 / 60,
             rate_limit_output_tok=200_000 / 60,
         ),
     }
