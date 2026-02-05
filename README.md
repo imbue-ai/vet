@@ -51,24 +51,6 @@ cp -r /path/to/vet/skills/vet .agents/skills/vet
 git add .agents/skills/vet && git commit -m "Add vet agent skill"
 ```
 
-### Run vet with conversation history (manual)
-
-For best results, pass the agent's conversation history so vet can catch mismatches between intent and implementation:
-
-**OpenCode:**
-
-```bash
-VET_SESSION_ID="<session-id>" vet "goal" \
-  --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py"
-```
-
-**Codex:**
-
-```bash
-CODEX_SESSION_FILE="<session.jsonl>" vet "goal" \
-  --history-loader "python ~/.agents/skills/vet/scripts/export_codex_session.py"
-```
-
 ## How it works
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
