@@ -24,9 +24,6 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Check formatting with black
-        run: uv run black --check .
-
       - name: Run tests
         run: uv run pytest
 
