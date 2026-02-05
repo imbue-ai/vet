@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
+import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
-SESSION_FILE = os.environ.get("CODEX_SESSION_FILE")
-if not SESSION_FILE:
-    sessions_dir = Path.home() / ".codex/sessions"
-    if sessions_dir.exists():
-        files = list(sessions_dir.rglob("*.jsonl"))
-        if files:
-            SESSION_FILE = str(max(files, key=lambda f: f.stat().st_mtime))
+parser = argparse.ArgumentParser(description="Export Codex session history for vet")
+parser.add_argument("--session-file", required=True, help="Path to Codex session .jsonl file")
+args = parser.parse_args()
 
-if not SESSION_FILE or not Path(SESSION_FILE).exists():
+SESSION_FILE = args.session_file
+if not Path(SESSION_FILE).exists():
     sys.exit(0)
 
 for line in Path(SESSION_FILE).read_text().splitlines():

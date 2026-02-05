@@ -39,6 +39,8 @@ for dir in ~/.agents ~/.claude ~/.codex; do
     -o "$dir/skills/vet/scripts/export_opencode_session.py"
   curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_codex_session.py \
     -o "$dir/skills/vet/scripts/export_codex_session.py"
+  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_claude_code_session.py \
+    -o "$dir/skills/vet/scripts/export_claude_code_session.py"
 done
 ```
 
