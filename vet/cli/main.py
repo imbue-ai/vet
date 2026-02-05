@@ -301,16 +301,16 @@ def configure_logging(verbose: bool, quiet: bool) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
-    logger.debug("Running history loader command: {}", command)
+    logger.info("Running history loader command: {}", command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
         logger.warning(f"History loader command failed with exit code {result.returncode}: {result.stderr}")
         return ()
     if not result.stdout.strip():
-        logger.debug("History loader command returned empty output, no conversation history loaded")
+        logger.info("History loader command returned empty output, no conversation history loaded")
         return ()
     messages = parse_conversation_history(result.stdout)
-    logger.debug(
+    logger.info(
         "Loaded {} conversation history messages from history loader command",
         len(messages),
     )
@@ -422,7 +422,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.history_loader is not None:
         conversation_history = load_conversation_from_command(args.history_loader, repo_path)
     else:
-        logger.debug("No history loader provided, skipping conversation history loading")
+        logger.info("No history loader provided, skipping conversation history loading")
 
     extra_context = None
     if args.extra_context:

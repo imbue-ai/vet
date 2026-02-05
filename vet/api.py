@@ -88,7 +88,7 @@ def get_issues_with_raw_responses(
     )
 
     if conversation_history:
-        logger.debug(
+        logger.info(
             "Passing {} conversation history messages to identifier inputs",
             len(conversation_history),
         )
