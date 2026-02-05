@@ -25,7 +25,7 @@ class VetConfig(SerializableModel):
 
     # Todo: Different models for different issue identifiers
     language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(
-        model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
+        model_name=AnthropicModelName.CLAUDE_4_6_OPUS
     )
     max_identifier_spend_dollars: float = 5.0
     max_output_tokens: int = 20000
@@ -65,7 +65,7 @@ class VetConfig(SerializableModel):
         cache_full_prompt: bool = False,
     ) -> "VetConfig":
         if not language_model_name:
-            language_model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
+            language_model_name = AnthropicModelName.CLAUDE_4_6_OPUS
         language_model_generation_config = LanguageModelGenerationConfig(
             model_name=language_model_name,
             cache_path=language_model_cache_path,
