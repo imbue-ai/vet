@@ -4,7 +4,7 @@
       "name": "Anthropic",
       "api_type": "openai_compatible",
       "base_url": "https://api.anthropic.com/v1/",
-      "api_key_env": "NTHROPIC_API_KEY",
+      "api_key_env": "ANTHROPIC_API_KEY",
       "models": {
         "sonnet": {
           "model_id": "claude-sonnet-4-5-20250929",
@@ -38,7 +38,6 @@
     },
     "groq": {
       "name": "Groq",
-      "api_type": "openai_compatible",
       "base_url": "https://api.groq.com/openai/v1",
       "api_key_env": "GROQ_API_KEY",
       "models": {
