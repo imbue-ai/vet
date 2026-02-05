@@ -21,7 +21,6 @@ pip install git+https://github.com/imbue-ai/vet.git
 uv pip install git+https://github.com/imbue-ai/vet.git
 
 Verify installation:
-```bash
 vet --help
 ```
 
