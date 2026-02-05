@@ -85,7 +85,7 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         metavar="NAME",
-        help="Name of the configuration to use. Configurations are defined in vet.toml in your target project's root or ~/.config/vet/config.toml.",
+        help="Name of the configuration to use. Configurations are defined in imbue/vet.toml in your target project's root or ~/.config/config.toml.",
     )
     parser.add_argument(
         "--list-configs",
