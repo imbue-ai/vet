@@ -28,7 +28,7 @@ vet "Refactor storage layer" --base-commit main
 
 Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
 
-### Install the skill globally
+### Install the skill
 
 ```bash
 for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
@@ -45,18 +45,6 @@ done
 ```
 
 This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
-
-### Install per-project
-
-To have agents use vet automatically in a specific repo, copy the skill into the project:
-
-```bash
-for dir in .agents .opencode .claude .codex; do
-  cp -r /path/to/vet/skills/vet "$dir/skills/vet"
-done
-git add .agents/skills/vet .opencode/skills/vet .claude/skills/vet .codex/skills/vet && \
-  git commit -m "Add vet agent skill"
-```
 
 ## How it works
 
