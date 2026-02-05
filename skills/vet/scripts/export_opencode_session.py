@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Export OpenCode session history for vet")
-parser.add_argument("--session-id", required=True, help="OpenCode session UUID")
+parser.add_argument("--session-id", required=True, help="OpenCode session ID (ses_...)")
 args = parser.parse_args()
 
 STORAGE = Path.home() / ".local/share/opencode/storage"
@@ -13,6 +13,10 @@ MSG_DIR = STORAGE / "message" / args.session_id
 PART_DIR = STORAGE / "part"
 
 if not MSG_DIR.exists():
+    print(
+        f"WARNING: Message directory not found for session {args.session_id}",
+        file=sys.stderr,
+    )
     sys.exit(0)
 
 messages = []

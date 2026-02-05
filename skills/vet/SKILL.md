@@ -33,7 +33,7 @@ Always include conversation history for best results. Pass the session identifie
 
 **OpenCode:**
 ```bash
-vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <session-uuid>"
+vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
 ```
 
 **Codex:**
@@ -48,7 +48,11 @@ vet "goal" --history-loader "python ~/.claude/skills/vet/scripts/export_claude_c
 
 ### Finding Your Session
 
-**OpenCode:** The session ID appears in task metadata or can be found as the most recent file in `~/.local/share/opencode/storage/session/`.
+**OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for the first user message from this conversation in the part files:
+1. Take the **full text** of the first user message in this conversation (not a short snippet — use the entire message to avoid matching other sessions).
+2. Run: `grep -rl "FULL_FIRST_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
+3. Read the `sessionID` field from that part JSON file.
+4. Pass that value as `--session-id`.
 
 **Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the most recently modified `.jsonl` file.
 

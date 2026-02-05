@@ -5,6 +5,7 @@ Examine the conversation carefully and be prepared to answer questions about it.
 {% if conversation_truncated %}
 Note: Earlier conversation messages were removed due to size constraints. Do not assume details about prior messages that are not visible.
 {% endif %}
+Note: This conversation is being analyzed while still in progress. The agent's final messages may reference actions it is currently performing (such as running verification tools). Do not treat these as completed claims — the results may not yet be visible because the action is still executing at the time of this analysis.
 Here is the conversation history between the user and the other agent.
 {% filter indent(width=2) %}
 ```
