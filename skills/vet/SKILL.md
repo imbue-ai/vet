@@ -29,8 +29,6 @@ vet --help
 
 ### Standard Usage
 
-Always include conversation history for best results. Pass the session identifier to the export script via `--history-loader`:
-
 **OpenCode:**
 ```bash
 vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
@@ -46,36 +44,29 @@ vet "goal" --history-loader "python ~/.codex/skills/vet/scripts/export_codex_ses
 vet "goal" --history-loader "python ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
 ```
 
+**Without Conversation History**
+```bash
+vet "goal"
+```
+
 ### Finding Your Session
 
 **OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for the first user message from this conversation in the part files:
-1. Take the **full text** of the first user message in this conversation (not a short snippet — use the entire message to avoid matching other sessions).
-2. Run: `grep -rl "FULL_FIRST_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation, and is not another conversation with the same search string. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
 3. Read the `sessionID` field from that part JSON file.
 4. Pass that value as `--session-id`.
 
-**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the most recently modified `.jsonl` file.
+**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the correct conversation using the approach described above for opencode that uses textual search.
 
-**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the most recently modified `.jsonl` file in the directory matching your project.
+**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the correct conversation using the approach described above for opencode that uses textual search.
 
 ## Common Options
 
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
-- `--model MODEL`: LLM model to use (default: claude-4-5-haiku)
+- `--model MODEL`: LLM model to use (default: claude-4-5-sonnet)
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text` or `json`
 - `--quiet`: Suppress progress output
 - `--help`: Show comprehensive list of options
-
-## Configuration
-
-Create `vet.toml` in your repo for project-specific presets:
-
-```toml
-[ci]
-confidence_threshold = 0.9
-base_commit = "main"
-quiet = true
-```
-
-Then run with `vet --config ci "goal"`.
