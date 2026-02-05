@@ -54,7 +54,7 @@ vet "goal"
 **OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for the first user message from this conversation in the part files:
 1. Find the most unique sentence / question / string in the current conversation.
 2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
-    - IMPORTANT: Verify the conversation you found matches the current conversation, and is not another conversation with the same search string. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string. This happens frequently so it is paramount you verify this. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
 3. Read the `sessionID` field from that part JSON file.
 4. Pass that value as `--session-id`.
 
