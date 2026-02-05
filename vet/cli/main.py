@@ -423,7 +423,6 @@ def main(argv: list[str] | None = None) -> int:
         conversation_history = load_conversation_from_command(args.history_loader, repo_path)
     else:
         logger.info("No history loader provided, skipping conversation history loading")
-
     extra_context = None
     if args.extra_context:
         extra_context_parts = []
