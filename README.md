@@ -31,7 +31,7 @@ Vet ships as an [agent skill](https://agentskills.io) that coding agents like [O
 ### Install the skill globally
 
 ```bash
-for dir in ~/.agents ~/.claude ~/.codex; do
+for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
   mkdir -p "$dir/skills/vet/scripts"
   curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/SKILL.md \
     -o "$dir/skills/vet/SKILL.md"
@@ -44,17 +44,17 @@ for dir in ~/.agents ~/.claude ~/.codex; do
 done
 ```
 
-This places the skill in `~/.agents/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
+This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
 
 ### Install per-project
 
 To have agents use vet automatically in a specific repo, copy the skill into the project:
 
 ```bash
-for dir in .agents .claude .codex; do
+for dir in .agents .opencode .claude .codex; do
   cp -r /path/to/vet/skills/vet "$dir/skills/vet"
 done
-git add .agents/skills/vet .claude/skills/vet .codex/skills/vet && \
+git add .agents/skills/vet .opencode/skills/vet .claude/skills/vet .codex/skills/vet && \
   git commit -m "Add vet agent skill"
 ```
 
