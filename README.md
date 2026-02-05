@@ -24,6 +24,33 @@ Compare against a base ref/commit:
 vet "Refactor storage layer" --base-commit main
 ```
 
+## Using Vet with Coding Agents
+
+Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+
+### Install the skill globally
+
+```bash
+mkdir -p ~/.agents/skills/vet/scripts && \
+  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/SKILL.md \
+    -o ~/.agents/skills/vet/SKILL.md && \
+  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_opencode_session.py \
+    -o ~/.agents/skills/vet/scripts/export_opencode_session.py && \
+  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_codex_session.py \
+    -o ~/.agents/skills/vet/scripts/export_codex_session.py
+```
+
+This places the skill in `~/.agents/skills/vet/`, which is discovered by both OpenCode and Codex.
+
+### Install per-project
+
+To have agents use vet automatically in a specific repo, copy the skill into the project:
+
+```bash
+cp -r /path/to/vet/skills/vet .agents/skills/vet
+git add .agents/skills/vet && git commit -m "Add vet agent skill"
+```
+
 ## How it works
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.

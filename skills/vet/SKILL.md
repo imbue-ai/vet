@@ -34,13 +34,13 @@ Always include conversation history for best results. Set the session environmen
 **OpenCode:**
 ```bash
 export VET_SESSION_ID="<current-session-id>"
-vet "goal" --history-loader "python /path/to/skills/vet/scripts/export_opencode_session.py"
+vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py"
 ```
 
 **Codex:**
 ```bash
 export CODEX_SESSION_FILE="<path-to-current-session.jsonl>"
-vet "goal" --history-loader "python /path/to/skills/vet/scripts/export_codex_session.py"
+vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_codex_session.py"
 ```
 
 ### Finding Your Session
