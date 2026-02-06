@@ -44,6 +44,7 @@ on:
 
 jobs:
   vet:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
