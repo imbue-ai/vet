@@ -79,9 +79,7 @@ NOTE: This will not fail in CI if Vet finds an issue. This will only add a comme
 
 #### Environment variables
 
-- `ANTHROPIC_API_KEY` is required for the default model.
-- Provider API key(s) required by your configured model (e.g. `OPENAI_API_KEY`).
-- See the Configuration section below for `models.json` and `vet.toml`.
+- `ANTHROPIC_API_KEY` is required for the default model configuration.
 
 ## Using Vet with Coding Agents
 
