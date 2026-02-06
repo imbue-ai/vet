@@ -11,6 +11,7 @@ from vet.cli.config.schema import ModelsConfig
 
 DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
 
+
 def get_builtin_model_ids() -> set[str]:
     return {str(name) for name in get_all_model_names()}
 
