@@ -24,6 +24,65 @@ Compare against a base ref/commit:
 vet "Refactor storage layer" --base-commit main
 ```
 
+## GitHub PRs (Actions)
+
+Vet can run on pull requests.
+
+Create `.github/workflows/vet.yml`:
+
+```yaml
+name: Vet
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  vet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install git+https://github.com/imbue-ai/vet.git
+      - name: Run vet
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VET_GOAL: |
+            ${{ github.event.pull_request.title }}
+
+            Additional context (not necessarily part of the goal):
+            ${{ github.event.pull_request.body }}
+        run: |
+          set +e
+          vet "$VET_GOAL" --quiet --base-commit "${{ github.event.pull_request.base.sha }}" > "$RUNNER_TEMP/vet-output.txt" 2>&1
+          status=$?
+          if [ ! -s "$RUNNER_TEMP/vet-output.txt" ]; then
+            echo "Vet found no issues." > "$RUNNER_TEMP/vet-output.txt"
+          fi
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/vet-output.txt"
+          if [ "$status" -eq 1 ]; then exit 0; fi
+          exit "$status"
+```
+
+NOTE: This will not fail in CI if Vet finds an issue. This will only add a comment to the PR.
+
+#### Environment variables
+
+- `ANTHROPIC_API_KEY` is required for the default model.
+- Provider API key(s) required by your configured model (e.g. `OPENAI_API_KEY`).
+- See the Configuration section below for `models.json` and `vet.toml`.
+
 ## Using Vet with Coding Agents
 
 Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
