@@ -64,7 +64,7 @@ vet "goal"
 ## Common Options
 
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
-- `--model MODEL`: LLM model to use (default: claude-4-5-sonnet)
+- `--model MODEL`: LLM model to use (default: claude-4-6-opus)
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text` or `json`
 - `--quiet`: Suppress progress output

@@ -9,7 +9,7 @@ from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.schema import ModelsConfig
 
-DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29.value
+DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
 
 
 def get_builtin_model_ids() -> set[str]:
