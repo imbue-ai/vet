@@ -107,7 +107,6 @@ class ResourceLimits:
     ) -> "ResourceLimits":
         if max_dollars is None and "DEFAULT_MAX_HAMMER_DOLLARS" in os.environ:
             max_dollars = _float_or_none(os.getenv("DEFAULT_MAX_HAMMER_DOLLARS"))
-        assert max_dollars != float("inf"), "max_dollars must be finite"
         if max_dollars is None:
             max_dollars = 0.0
         assert max_dollars >= 0, "max_dollars must be non-negative"

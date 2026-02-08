@@ -185,6 +185,13 @@ def create_parser() -> argparse.ArgumentParser:
         metavar="N",
         help=f"Maximum number of parallel workers for identification (default: {CLI_DEFAULTS.max_workers})",
     )
+    parallel_group.add_argument(
+        "--max-spend",
+        type=float,
+        default=CLI_DEFAULTS.max_spend,
+        metavar="DOLLARS",
+        help="Maximum dollars to spend on API calls (default: no limit)",
+    )
 
     output_group = parser.add_argument_group("output options")
     output_group.add_argument(
@@ -416,6 +423,13 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    if args.max_spend is not None and args.max_spend <= 0:
+        print(
+            f"Error: Max spend must be a positive number, got: {args.max_spend}",
+            file=sys.stderr,
+        )
+        return 2
+
     configure_logging(args.verbose, args.quiet)
 
     conversation_history = None
@@ -464,6 +478,7 @@ def main(argv: list[str] | None = None) -> int:
         filter_issues_below_confidence=args.confidence_threshold,
         max_identify_workers=args.max_workers,
         max_output_tokens=max_output_tokens or 20000,
+        max_identifier_spend_dollars=args.max_spend,
     )
 
     issues = find_issues(
