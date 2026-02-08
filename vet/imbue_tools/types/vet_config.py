@@ -27,7 +27,7 @@ class VetConfig(SerializableModel):
     language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(
         model_name=AnthropicModelName.CLAUDE_4_6_OPUS
     )
-    max_identifier_spend_dollars: float = 5.0
+    max_identifier_spend_dollars: float | None = None
     max_output_tokens: int = 20000
     enable_parallel_agentic_issue_identification: bool = False
     max_identify_workers: int | None = None

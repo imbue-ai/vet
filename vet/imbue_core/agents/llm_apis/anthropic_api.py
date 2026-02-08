@@ -549,6 +549,7 @@ class AnthropicAPI(LanguageModelAPI):
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
                     AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG,
+                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
@@ -556,6 +557,8 @@ class AnthropicAPI(LanguageModelAPI):
                         model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
                     elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_6_OPUS
                     else:
                         assert False, "unreachable"
                     api_result = await client.beta.messages.create(
@@ -631,6 +634,7 @@ class AnthropicAPI(LanguageModelAPI):
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
                     AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG,
+                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
@@ -638,6 +642,8 @@ class AnthropicAPI(LanguageModelAPI):
                         model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
                     elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_6_OPUS
                     else:
                         assert False, "unreachable"
                     stream_fn = lambda **kwargs: client.beta.messages.stream(**kwargs, betas=["context-1m-2025-08-07"])
