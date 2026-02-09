@@ -17,6 +17,7 @@ from vet.imbue_tools.get_conversation_history.get_conversation_history import (
 )
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.custom_guides import (
+    CustomGuideOverride,
     load_custom_guides_from_directory,
     validate_custom_guides,
 )
