@@ -11,7 +11,9 @@ from typing import TypeVar
 
 from loguru import logger
 
-from vet.imbue_core.agents.primitives.resource_limits import ensure_global_resource_limits
+from vet.imbue_core.agents.primitives.resource_limits import (
+    ensure_global_resource_limits,
+)
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
 from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
@@ -157,7 +159,7 @@ def _generate_with_name_in_debug_info(
 def _combine_issue_generator_debug_info(
     generator: Generator[GeneratedIssueSchema, None, tuple[tuple[str, IssueIdentificationDebugInfo], ...]],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
-    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = (yield from generator)
+    collected_debug_info: tuple[tuple[str, IssueIdentificationDebugInfo], ...] = yield from generator
 
     updated_llm_responses = []
     for identifier_name, debug_info in collected_debug_info:
@@ -179,7 +181,11 @@ def run(
     """
     enabled_issue_codes = get_enabled_issue_codes(config)
     identifiers = _build_identifiers(_get_enabled_identifier_names(config), enabled_issue_codes)
-    ensure_global_resource_limits(max_dollars=config.max_identifier_spend_dollars)
+    ensure_global_resource_limits(
+        max_dollars=(
+            config.max_identifier_spend_dollars if config.max_identifier_spend_dollars is not None else float("inf")
+        )
+    )
 
     issue_generators: list[Generator[GeneratedIssueSchema, None, tuple[str, IssueIdentificationDebugInfo]]] = []
     compatible_enabled_identifier_names: list[str] = []

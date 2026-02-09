@@ -34,6 +34,7 @@ class CliConfigPreset(BaseModel):
     temperature: float | None = Field(default=None, ge=0.0, le=2.0)
     confidence_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
     max_workers: int | None = Field(default=None, ge=1)
+    max_spend: float | None = Field(default=None, gt=0.0)
     output: str | None = None
     output_format: str | None = None
     output_fields: list[str] | None = None
@@ -57,6 +58,7 @@ class CliDefaults(BaseModel):
     temperature: float = 0.0
     confidence_threshold: float = 0.8
     max_workers: int = 2
+    max_spend: float | None = None
     output: str | None = None
     output_format: str = "text"
     output_fields: list[str] | None = None

@@ -66,6 +66,7 @@ def test_parse_cli_config_from_dict_handles_all_fields() -> None:
             "temperature": 0.7,
             "confidence_threshold": 0.85,
             "max_workers": 8,
+            "max_spend": 10.0,
             "output": "results.json",
             "output_format": "json",
             "output_fields": ["file", "line", "message"],
@@ -88,6 +89,7 @@ def test_parse_cli_config_from_dict_handles_all_fields() -> None:
     assert preset.temperature == 0.7
     assert preset.confidence_threshold == 0.85
     assert preset.max_workers == 8
+    assert preset.max_spend == 10.0
     assert preset.output == "results.json"
     assert preset.output_format == "json"
     assert preset.output_fields == ["file", "line", "message"]
@@ -357,6 +359,7 @@ def _create_default_args() -> argparse.Namespace:
         temperature=CLI_DEFAULTS.temperature,
         confidence_threshold=CLI_DEFAULTS.confidence_threshold,
         max_workers=CLI_DEFAULTS.max_workers,
+        max_spend=CLI_DEFAULTS.max_spend,
         output_format=CLI_DEFAULTS.output_format,
         output_fields=CLI_DEFAULTS.output_fields,
         verbose=CLI_DEFAULTS.verbose,
@@ -396,6 +399,7 @@ def test_apply_config_preset_cli_args_take_precedence() -> None:
         temperature=0.0,
         confidence_threshold=0.95,
         max_workers=2,
+        max_spend=None,
         output_format="text",
         output_fields=None,
         verbose=False,
