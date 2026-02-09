@@ -14,6 +14,7 @@ from pydantic import PrivateAttr
 from vet.imbue_core.agents.agent_api.api import get_agent_client
 from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
@@ -205,9 +206,7 @@ def get_claude_code_options(cwd: Path | None, model_name: str) -> ClaudeCodeOpti
     return options
 
 
-def generate_response_from_claude_code(
-    prompt: str, options: ClaudeCodeOptions
-) -> tuple[str, list[AgentMessage]] | None:
+def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[str, list[AgentMessage]] | None:
     messages = []
     assistant_messages = []
     result_message = None
@@ -220,7 +219,7 @@ def generate_response_from_claude_code(
                 elif isinstance(message, AgentResultMessage):
                     result_message = message
     except Exception as e:
-        log_exception(e, "Claude Code API call failed")
+        log_exception(e, "Agent API call failed")
         return None
 
     # Try to get response from result message first

@@ -145,6 +145,16 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="List all available issue codes",
     )
+    analysis_group.add_argument(
+        "--agentic",
+        action="store_true",
+        default=False,
+        help=(
+            "Enable the agentic issue identifier, which uses Codex to explore the repo. "
+            "More thorough but slower and more expensive. "
+            "Note: --max-spend does not apply to agentic evaluation."
+        ),
+    )
 
     model_group = parser.add_argument_group("model configuration")
     model_group.add_argument(
@@ -470,7 +480,7 @@ def main(argv: list[str] | None = None) -> int:
     max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
 
     config = VetConfig(
-        disabled_identifiers=("agentic_issue_identifier",),
+        disabled_identifiers=() if args.agentic else ("agentic_issue_identifier",),
         language_model_generation_config=language_model_config,
         enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
         disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
