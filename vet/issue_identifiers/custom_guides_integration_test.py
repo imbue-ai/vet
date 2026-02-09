@@ -249,9 +249,7 @@ def test_vet_config_guides_by_code_property_with_custom_guides(tmp_path: Path) -
     assert config.guides_by_code == ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 
     # Set merged guides with custom override
-    custom_overrides = {
-        IssueCode.LOGIC_ERROR: load_custom_guides_from_directory(tmp_path).get(IssueCode.LOGIC_ERROR)
-    }
+    custom_overrides = {IssueCode.LOGIC_ERROR: load_custom_guides_from_directory(tmp_path).get(IssueCode.LOGIC_ERROR)}
     # Since tmp_path is empty, let's manually create one
     from vet.issue_identifiers.custom_guides import CustomGuideOverride
 
@@ -321,14 +319,16 @@ SUFFIX PART
     # Verify each mode worked correctly
     assert merged_guides[IssueCode.LOGIC_ERROR].guide.startswith("PREFIX MODE\n\n")
     assert "PREFIX MODE" in merged_guides[IssueCode.LOGIC_ERROR].guide
-    assert ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.LOGIC_ERROR].guide in merged_guides[
-        IssueCode.LOGIC_ERROR
-    ].guide
+    assert (
+        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.LOGIC_ERROR].guide
+        in merged_guides[IssueCode.LOGIC_ERROR].guide
+    )
 
     assert merged_guides[IssueCode.INSECURE_CODE].guide.endswith("\n\nSUFFIX MODE")
-    assert ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.INSECURE_CODE].guide in merged_guides[
-        IssueCode.INSECURE_CODE
-    ].guide
+    assert (
+        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.INSECURE_CODE].guide
+        in merged_guides[IssueCode.INSECURE_CODE].guide
+    )
 
     assert merged_guides[IssueCode.TEST_COVERAGE].guide == "REPLACE MODE"
     assert (
@@ -338,9 +338,10 @@ SUFFIX PART
 
     assert "PREFIX PART" in merged_guides[IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE].guide
     assert "SUFFIX PART" in merged_guides[IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE].guide
-    assert ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[
-        IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE
-    ].guide in merged_guides[IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE].guide
+    assert (
+        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE].guide
+        in merged_guides[IssueCode.INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE].guide
+    )
 
 
 def test_end_to_end_with_invalid_and_valid_files(tmp_path: Path) -> None:

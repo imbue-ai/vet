@@ -134,7 +134,9 @@ Check for:
     result = parse_custom_guide_markdown(guide_file)
 
     assert result is not None
-    assert result.prefix == "Check for:\n  - Off-by-one errors\n  - Null pointer dereferences\n    - Especially in loops"
+    assert (
+        result.prefix == "Check for:\n  - Off-by-one errors\n  - Null pointer dereferences\n    - Especially in loops"
+    )
 
 
 def test_parse_custom_guide_markdown_ignores_content_before_first_section(tmp_path: Path) -> None:
