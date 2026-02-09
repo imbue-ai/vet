@@ -16,6 +16,11 @@ from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
 from vet.imbue_tools.types.vet_config import VetConfig
+from vet.issue_identifiers.custom_guides import (
+    load_custom_guides_from_directory,
+    validate_custom_guides,
+)
+from vet.issue_identifiers.identification_guides import build_merged_guides
 from vet.api import find_issues
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset
@@ -23,6 +28,7 @@ from vet.cli.config.loader import ConfigLoadError
 from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
+from vet.cli.config.loader import get_custom_guides_directories
 from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_models_config
@@ -480,6 +486,26 @@ def main(argv: list[str] | None = None) -> int:
         max_output_tokens=max_output_tokens or 20000,
         max_identifier_spend_dollars=args.max_spend,
     )
+
+    # Load and merge custom guides from standard locations
+    # Priority: global config first, then local config overrides
+    custom_overrides: dict[IssueCode, CustomGuideOverride] = {}
+
+    # Get directories in reverse priority order (global first, then local)
+    guides_directories = list(reversed(get_custom_guides_directories(repo_path)))
+
+    for guides_dir in guides_directories:
+        dir_overrides = load_custom_guides_from_directory(guides_dir)
+        if dir_overrides:
+            logger.debug(f"Loaded {len(dir_overrides)} custom guide(s) from: {guides_dir}")
+            # Later directories override earlier ones (local overrides global)
+            custom_overrides.update(dir_overrides)
+
+    if custom_overrides:
+        validate_custom_guides(custom_overrides)
+        merged_guides = build_merged_guides(custom_overrides)
+        config._merged_guides_by_code = merged_guides
+        logger.info(f"Applied {len(custom_overrides)} custom guide override(s)")
 
     issues = find_issues(
         repo_path=repo_path,

@@ -1,9 +1,12 @@
 from pathlib import Path
 
+from pydantic import PrivateAttr
+
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
 
@@ -46,6 +49,31 @@ class VetConfig(SerializableModel):
     # There can be an additional cost for such a cache write, but it can help save cost in evaluation
     # contexts (such as black_box_evals) where the same inputs are being evaluated multiple times.
     cache_full_prompt: bool = False
+
+    # Private: Merged guides with custom overrides applied (populated during config loading).
+    # Automatically loaded from .vet/custom_guides/ (project) or ~/.config/vet/custom_guides/ (global).
+    # Do not set directly - use the loader to populate this field.
+    _merged_guides_by_code: dict[IssueCode, "IssueIdentificationGuide"] | None = PrivateAttr(  # type: ignore
+        default=None
+    )
+
+    @property
+    def guides_by_code(self) -> dict[IssueCode, "IssueIdentificationGuide"]:  # type: ignore
+        """
+        Get guides dictionary (merged with customs if provided, else defaults).
+
+        This is the primary way to access issue identification guides throughout
+        the codebase. It automatically returns merged guides if custom overrides
+        were loaded, or defaults if not.
+
+        Returns:
+            Dict mapping IssueCode to IssueIdentificationGuide
+        """
+        if self._merged_guides_by_code is not None:
+            return self._merged_guides_by_code
+
+        # Fallback to defaults if customs weren't loaded
+        return ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 
     @classmethod
     def build(

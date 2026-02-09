@@ -38,9 +38,6 @@ from vet.issue_identifiers.common import (
 from vet.issue_identifiers.harnesses.single_prompt import (
     USER_REQUEST_PREFIX_TEMPLATE,
 )
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
@@ -131,7 +128,7 @@ def _format_prompt(
     prompt_template = _get_full_prompt_template(is_code_based_issue)
     jinja_template = env.from_string(prompt_template)
     issue_code = IssueCode(issue.issue_code)
-    guide = format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[issue_code])
+    guide = format_issue_identification_guide_for_llm(config.guides_by_code[issue_code])
 
     criteria = CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
     response_class = CodeBasedEvaluationResponse if is_code_based_issue else ConversationBasedEvaluationResponse

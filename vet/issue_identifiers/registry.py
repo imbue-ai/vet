@@ -47,9 +47,6 @@ from vet.issue_identifiers.identification_guides import (
 from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
 )
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
 from vet.issue_identifiers.issue_deduplication import deduplicate_issues
 from vet.issue_identifiers.issue_evaluation import filter_issues
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -118,7 +115,9 @@ def _get_enabled_identifier_names(
 
 
 def _build_identifiers(
-    identifiers_to_build: set[IssueIdentifierType], enabled_issue_codes: set[IssueCode]
+    identifiers_to_build: set[IssueIdentifierType],
+    enabled_issue_codes: set[IssueCode],
+    guides_by_code: dict[IssueCode, "IssueIdentificationGuide"],  # type: ignore
 ) -> list[tuple[str, IssueIdentifier]]:
     # Merge the enabled issue codes for each harness
     enabled_issue_codes_per_harness: defaultdict[IssueIdentifierHarness, set[IssueCode]] = defaultdict(set)
@@ -138,7 +137,7 @@ def _build_identifiers(
             (
                 combined_name,
                 harness.make_issue_identifier(
-                    identification_guides=tuple(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code] for code in issue_codes)
+                    identification_guides=tuple(guides_by_code[code] for code in issue_codes)
                 ),
             )
         )
@@ -180,7 +179,9 @@ def run(
     Run all the registered and configured issue identifiers on the given inputs.
     """
     enabled_issue_codes = get_enabled_issue_codes(config)
-    identifiers = _build_identifiers(_get_enabled_identifier_names(config), enabled_issue_codes)
+    identifiers = _build_identifiers(
+        _get_enabled_identifier_names(config), enabled_issue_codes, config.guides_by_code
+    )
     ensure_global_resource_limits(
         max_dollars=(
             config.max_identifier_spend_dollars if config.max_identifier_spend_dollars is not None else float("inf")

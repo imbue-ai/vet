@@ -163,6 +163,29 @@ def get_cli_config_file_paths(repo_path: Path | None = None) -> list[Path]:
     return _get_config_file_paths("vet", "config.toml", "vet.toml", repo_path)
 
 
+def get_custom_guides_directories(repo_path: Path | None = None) -> list[Path]:
+    """
+    Get candidate directories for custom issue guides, in priority order.
+
+    Returns:
+        List of paths to check for custom guides (highest priority first):
+        1. Project-specific: {repo}/.vet/custom_guides
+        2. Global: ~/.config/vet/custom_guides
+    """
+    paths = []
+
+    # Project-specific path (highest priority)
+    if repo_path:
+        git_root = find_git_repo_root(repo_path)
+        root = git_root if git_root else repo_path
+        paths.append(root / ".vet" / "custom_guides")
+
+    # Global path
+    paths.append(get_xdg_config_home() / "vet" / "custom_guides")
+
+    return paths
+
+
 def _load_cli_config_file(config_path: Path) -> dict[str, CliConfigPreset]:
     try:
         with open(config_path, "rb") as f:

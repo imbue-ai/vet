@@ -26,9 +26,6 @@ from vet.issue_identifiers.common import (
 from vet.issue_identifiers.common import generate_issues_from_response_texts
 from vet.issue_identifiers.common import generate_response_from_claude_code
 from vet.issue_identifiers.common import get_claude_code_options
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 COLLATION_PROMPT_TEMPLATE = """You are reviewing the results from parallel code analysis for potential issues.
@@ -78,12 +75,12 @@ def _get_collation_prompt(
     identifier_inputs: CommitInputs,
     enabled_issue_codes: tuple[IssueCode, ...],
     generated_issues: str,
+    guides_by_code: dict[IssueCode, "IssueIdentificationGuide"],  # type: ignore
 ) -> str:
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
-        for code in sorted_issue_codes
+        code: format_issue_identification_guide_for_llm(guides_by_code[code]) for code in sorted_issue_codes
     }
 
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -155,7 +152,7 @@ def collate_issues_with_agent(
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
     collation_prompt = _get_collation_prompt(
-        project_context, collation_inputs, enabled_issue_codes, combined_issues_string
+        project_context, collation_inputs, enabled_issue_codes, combined_issues_string, config.guides_by_code
     )
     claude_response = generate_response_from_claude_code(collation_prompt, options)
     assert claude_response is not None

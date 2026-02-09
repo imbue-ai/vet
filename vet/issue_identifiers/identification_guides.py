@@ -452,3 +452,71 @@ ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK: tuple[IssueCode, ...] = (
     IssueCode.INSTRUCTION_FILE_DISOBEYED,
     IssueCode.INSTRUCTION_TO_SAVE,
 )
+
+
+# ============================================================================
+# Custom Guide Merging
+# ============================================================================
+
+
+def merge_guide_with_custom(
+    default_guide: IssueIdentificationGuide,
+    custom_override: "CustomGuideOverride | None",  # type: ignore  # Forward reference to avoid circular import
+) -> IssueIdentificationGuide:
+    """
+    Merge a custom override with the default guide.
+
+    Logic:
+    - If custom_override is None: return default unchanged
+    - If custom_override.replace is set: replace only the 'guide' field (keep examples/exceptions)
+    - If custom_override.prefix/suffix: prepend/append to 'guide' field
+
+    Args:
+        default_guide: Original guide from ISSUE_IDENTIFICATION_GUIDES
+        custom_override: User's custom override (can be None)
+
+    Returns:
+        New IssueIdentificationGuide with merged content
+    """
+    if custom_override is None:
+        return default_guide
+
+    # Handle replace mode (takes precedence over prefix/suffix)
+    if custom_override.replace:
+        return default_guide.model_copy(update={"guide": custom_override.replace})
+
+    # Handle prefix/suffix mode
+    parts = []
+    if custom_override.prefix:
+        parts.append(custom_override.prefix.strip())
+    parts.append(default_guide.guide)
+    if custom_override.suffix:
+        parts.append(custom_override.suffix.strip())
+
+    merged_guide_text = "\n\n".join(parts)
+
+    return default_guide.model_copy(update={"guide": merged_guide_text})
+
+
+def build_merged_guides(
+    custom_overrides: dict[IssueCode, "CustomGuideOverride"],  # type: ignore  # Forward reference
+) -> dict[IssueCode, IssueIdentificationGuide]:
+    """
+    Build complete guides dictionary with custom overrides merged in.
+
+    This function should be called once during config loading to merge all
+    custom overrides with default guides.
+
+    Args:
+        custom_overrides: Dict of custom guide overrides by issue code
+
+    Returns:
+        Dict of merged guides (custom merged with defaults)
+    """
+    merged = {}
+    for code, default_guide in ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE.items():
+        if code in custom_overrides:
+            merged[code] = merge_guide_with_custom(default_guide, custom_overrides[code])
+        else:
+            merged[code] = default_guide
+    return merged

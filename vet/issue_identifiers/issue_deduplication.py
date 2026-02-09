@@ -23,9 +23,6 @@ from vet.issue_identifiers.common import (
     format_issue_identification_guide_for_llm,
 )
 from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 DEDUPLICATION_PROMPT_TEMPLATE = """[ROLE=USER]
@@ -75,12 +72,12 @@ Do not output any other JSON, only the consolidated issues in the specified form
 def _get_deduplication_prompt(
     enabled_issue_codes: Iterable[IssueCode],
     generated_issues: str,
+    guides_by_code: dict[IssueCode, "IssueIdentificationGuide"],  # type: ignore
 ) -> str:
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
-        for code in sorted_issue_codes
+        code: format_issue_identification_guide_for_llm(guides_by_code[code]) for code in sorted_issue_codes
     }
 
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -155,7 +152,7 @@ def deduplicate_issues(
 
     # As per above TODO, only deduplicate over issues that passed filtration
     combined_issues_string = _convert_parsed_issues_to_combined_string(issues_passing_filtration)
-    prompt = _get_deduplication_prompt(enabled_issue_codes, combined_issues_string)
+    prompt = _get_deduplication_prompt(enabled_issue_codes, combined_issues_string, config.guides_by_code)
 
     costed_response = language_model.complete_with_usage_sync(
         prompt,
