@@ -6,7 +6,10 @@ from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
-from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from vet.issue_identifiers.identification_guides import (
+    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
+    IssueIdentificationGuide,
+)
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
 
@@ -53,12 +56,10 @@ class VetConfig(SerializableModel):
     # Private: Merged guides with custom overrides applied (populated during config loading).
     # Automatically loaded from .vet/custom_guides/ (project) or ~/.config/vet/custom_guides/ (global).
     # Do not set directly - use the loader to populate this field.
-    _merged_guides_by_code: dict[IssueCode, "IssueIdentificationGuide"] | None = PrivateAttr(  # type: ignore
-        default=None
-    )
+    _merged_guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = PrivateAttr(default=None)
 
     @property
-    def guides_by_code(self) -> dict[IssueCode, "IssueIdentificationGuide"]:  # type: ignore
+    def guides_by_code(self) -> dict[IssueCode, IssueIdentificationGuide]:
         """
         Get guides dictionary (merged with customs if provided, else defaults).
 

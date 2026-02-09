@@ -40,12 +40,9 @@ from vet.issue_identifiers.harnesses.conversation_single_prompt import (
 from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
 from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
+    IssueIdentificationGuide,
 )
 from vet.issue_identifiers.issue_deduplication import deduplicate_issues
 from vet.issue_identifiers.issue_evaluation import filter_issues
@@ -117,7 +114,7 @@ def _get_enabled_identifier_names(
 def _build_identifiers(
     identifiers_to_build: set[IssueIdentifierType],
     enabled_issue_codes: set[IssueCode],
-    guides_by_code: dict[IssueCode, "IssueIdentificationGuide"],  # type: ignore
+    guides_by_code: dict[IssueCode, IssueIdentificationGuide],
 ) -> list[tuple[str, IssueIdentifier]]:
     # Merge the enabled issue codes for each harness
     enabled_issue_codes_per_harness: defaultdict[IssueIdentifierHarness, set[IssueCode]] = defaultdict(set)

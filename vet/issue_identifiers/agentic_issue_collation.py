@@ -18,6 +18,7 @@ from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.common import GeneratedIssueSchema
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import (
@@ -75,7 +76,7 @@ def _get_collation_prompt(
     identifier_inputs: CommitInputs,
     enabled_issue_codes: tuple[IssueCode, ...],
     generated_issues: str,
-    guides_by_code: dict[IssueCode, "IssueIdentificationGuide"],  # type: ignore
+    guides_by_code: dict[IssueCode, IssueIdentificationGuide],
 ) -> str:
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
