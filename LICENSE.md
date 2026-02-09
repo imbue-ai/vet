@@ -1,15 +1,5 @@
 Copyright (c) 2026 Imbue
 
-NOTE: The following sub-packages are licensed under the MIT License
-(see their respective LICENSE files):
-  - vet/imbue_core/
-  - vet/imbue_tools/
-
-All other code in this repository is licensed under the GNU Affero
-General Public License v3.0, the full text of which follows.
-
-------------------------------------------------------------------------
-
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
