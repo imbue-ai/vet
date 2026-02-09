@@ -186,4 +186,10 @@ See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this pr
 
 Vet does **not** collect telemetry and does not send usage data to external services.
 
-If you configure Vet to use a hosted inference provider, that provider may log requests; selecting a provider is the user’s responsibility.
+If you configure Vet to use a hosted inference provider, that provider may log requests; selecting a provider is the user's responsibility.
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0-only)](LICENSE).
+
+The `vet/imbue_core` and `vet/imbue_tools` sub-packages contain their own MIT LICENSE files. These are standalone libraries developed by Imbue and made available under the MIT License.
