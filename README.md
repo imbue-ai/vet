@@ -36,7 +36,6 @@ name: Vet
 permissions:
   contents: read
   pull-requests: write
-  issues: write
 
 on:
   pull_request:
@@ -66,17 +65,23 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          vet "$VET_GOAL" --quiet --base-commit "${{ github.event.pull_request.base.sha }}" > "$RUNNER_TEMP/vet-output.txt" 2>&1
+          vet "$VET_GOAL" --quiet --output-format github \
+            --base-commit "${{ github.event.pull_request.base.sha }}" \
+            > "$RUNNER_TEMP/review.json" 2>/dev/null
           status=$?
-          if [ ! -s "$RUNNER_TEMP/vet-output.txt" ]; then
-            echo "Vet found no issues." > "$RUNNER_TEMP/vet-output.txt"
-          fi
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/vet-output.txt"
-          if [ "$status" -eq 1 ]; then exit 0; fi
-          exit "$status"
+          if [ "$status" -ge 2 ]; then exit "$status"; fi
+
+          jq --arg sha "${{ github.event.pull_request.head.sha }}" \
+            '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
+
+          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+            --method POST --input "$RUNNER_TEMP/review-final.json" || \
+            gh pr comment "${{ github.event.pull_request.number }}" \
+              --body "$(jq -r '.body' "$RUNNER_TEMP/review-final.json")"
+          exit 0
 ```
 
-NOTE: This will not fail in CI if Vet finds an issue. This will only add a comment to the PR.
+NOTE: This will not fail CI when Vet finds issues. The `github` output format produces a GitHub Reviews API payload that posts inline comments on the PR diff.
 
 #### Environment variables
 
@@ -125,6 +130,7 @@ Vet snapshots the repo and diff, optionally adds a goal and agent conversation, 
 Output formats:
 - `text`
 - `json`
+- `github`
 
 ## Configuration
 
