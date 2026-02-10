@@ -38,9 +38,9 @@ jobs:
           HEAD_SHA="${{ github.event.pull_request.head.sha }}"
           REPO="${{ github.repository }}"
 
-          # Run vet once with JSON output — we derive both annotations and PR review from it.
-          # (Using --output-format github would give us annotations directly, but we need
-          # the structured JSON for the review API call, and running vet twice doubles LLM cost.)
+          # Run vet with JSON output for building the PR review payload.
+          # (For simple annotation-only workflows, use --output-format github instead;
+          # see the README for a minimal example.)
           vet "$VET_GOAL" --quiet --output-format json --base-commit "$BASE_SHA" > "$RUNNER_TEMP/vet.json" 2>/dev/null
           vet_status=$?
 
@@ -55,18 +55,6 @@ jobs:
             echo "Vet found no issues."
             exit 0
           fi
-
-          # Emit GitHub Actions annotations from JSON (appear inline on the Files Changed tab)
-          jq -r '.issues[] |
-            (if (.severity // 0) >= 4 then "error" else "warning" end) as $level |
-            (if .file_path and .line_number then
-              (if .line_number_end and .line_number_end != .line_number then
-                "file=\(.file_path),line=\(.line_number),endLine=\(.line_number_end)"
-              else
-                "file=\(.file_path),line=\(.line_number)"
-              end)
-            else "" end) as $loc |
-            "::\($level) \($loc),title=[\(.issue_code)]::\(.description)"' "$RUNNER_TEMP/vet.json"
 
           # --- Build and submit a PR review with inline comments ---
 
