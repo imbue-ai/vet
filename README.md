@@ -81,7 +81,7 @@ jobs:
           exit 0
 ```
 
-NOTE: This will not fail CI when Vet finds issues. The `github` output format produces a GitHub Reviews API payload that posts inline comments on the PR diff.
+NOTE: This will not fail in CI if Vet finds an issue. This will only add a comment to the PR.
 
 #### Environment variables
 
