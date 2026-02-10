@@ -27,28 +27,3 @@ jobs:
 
       - name: Run tests
         run: uv run pytest
-
-      - name: Fetch main branch for vet comparison
-        if: github.event_name == 'pull_request'
-        run: git fetch origin main:main
-
-      - name: Run vet
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VET_GOAL: |
-            ${{ github.event.pull_request.title }}
-
-            Additional context (not necessarily part of the goal):
-            ${{ github.event.pull_request.body }}
-        run: |
-          set +e
-          uv run vet "$VET_GOAL" --base-commit main --confidence-threshold 0.9 --max-workers 4 --quiet --model opus > "$RUNNER_TEMP/vet-output.txt" 2>&1
-          status=$?
-          if [ ! -s "$RUNNER_TEMP/vet-output.txt" ]; then
-            echo "Vet found no issues." > "$RUNNER_TEMP/vet-output.txt"
-          fi
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/vet-output.txt"
-          if [ "$status" -eq 1 ]; then exit 0; fi
-          exit "$status"
