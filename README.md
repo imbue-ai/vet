@@ -67,7 +67,7 @@ jobs:
           set +e
           vet "$VET_GOAL" --quiet --output-format github \
             --base-commit "${{ github.event.pull_request.base.sha }}" \
-            > "$RUNNER_TEMP/review.json" 2>/dev/null
+            > "$RUNNER_TEMP/review.json"
           status=$?
           if [ "$status" -ge 2 ]; then exit "$status"; fi
 
