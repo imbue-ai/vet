@@ -6,12 +6,6 @@ from vet.errors import RunCommandError
 from vet.git import SyncLocalGitRepo
 from vet.git import find_relative_to_commit_hash
 
-# DEPRECATED: Maximum length of LLM prompts used within vet in tokens, without the repository-specific context.
-# This constant is no longer used in the main codebase. Instead, VetConfig.max_prompt_overhead dynamically
-# calculates the actual prompt overhead based on enabled identifiers, issue codes, and custom guides.
-# Kept for backward compatibility with test_prompt_lengths.py.
-VET_MAX_PROMPT_TOKENS = 10000
-
 
 def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]:
     """
