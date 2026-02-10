@@ -522,7 +522,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(format_issue_text(issue, output_fields), file=output_stream)
                 print(file=output_stream)
 
-        return 1
+        return 10
     finally:
         if output_file is not None:
             output_file.close()

@@ -69,7 +69,7 @@ jobs:
             --base-commit "${{ github.event.pull_request.base.sha }}" \
             > "$RUNNER_TEMP/review.json"
           status=$?
-          if [ "$status" -ge 2 ]; then exit "$status"; fi
+          if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
 
           jq --arg sha "${{ github.event.pull_request.head.sha }}" \
             '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
@@ -124,8 +124,9 @@ Vet snapshots the repo and diff, optionally adds a goal and agent conversation, 
 ## Output & exit codes
 
 - Exit code `0`: no issues found
-- Exit code `1`: issues found
+- Exit code `1`: unexpected runtime error
 - Exit code `2`: invalid usage/configuration error
+- Exit code `10`: issues found
 
 Output formats:
 - `text`
