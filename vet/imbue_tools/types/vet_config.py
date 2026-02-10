@@ -55,7 +55,6 @@ class VetConfig(SerializableModel):
 
     # Private: Merged guides with custom overrides applied (populated during config loading).
     # Automatically loaded from .vet/custom_guides/ (project) or ~/.config/vet/custom_guides/ (global).
-    # Do not set directly - use the loader to populate this field.
     _merged_guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = PrivateAttr(default=None)
 
     @property
@@ -75,6 +74,19 @@ class VetConfig(SerializableModel):
 
         # Fallback to defaults if customs weren't loaded
         return ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+
+    def set_merged_guides(self, merged_guides: dict[IssueCode, IssueIdentificationGuide]) -> None:
+        """
+        Set custom merged guides for this config.
+
+        This method should be called by the loader after merging custom guide
+        overrides with default guides. Once set, guides_by_code will return
+        these merged guides instead of the defaults.
+
+        Args:
+            merged_guides: Dictionary mapping issue codes to merged identification guides
+        """
+        self._merged_guides_by_code = merged_guides
 
     @classmethod
     def build(

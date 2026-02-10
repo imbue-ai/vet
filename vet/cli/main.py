@@ -505,7 +505,7 @@ def main(argv: list[str] | None = None) -> int:
     if custom_overrides:
         validate_custom_guides(custom_overrides)
         merged_guides = build_merged_guides(custom_overrides)
-        config._merged_guides_by_code = merged_guides
+        config.set_merged_guides(merged_guides)
         logger.info(f"Applied {len(custom_overrides)} custom guide override(s)")
 
     issues = find_issues(

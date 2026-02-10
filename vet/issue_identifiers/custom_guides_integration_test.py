@@ -261,7 +261,7 @@ def test_vet_config_guides_by_code_property_with_custom_guides(tmp_path: Path) -
         )
     }
     merged_guides = build_merged_guides(custom_overrides)
-    config._merged_guides_by_code = merged_guides
+    config.set_merged_guides(merged_guides)
 
     # Now should return merged guides
     assert config.guides_by_code == merged_guides
