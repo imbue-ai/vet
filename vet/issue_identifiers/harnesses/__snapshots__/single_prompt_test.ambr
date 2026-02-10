@@ -1,0 +1,416 @@
+# serializer version: 1
+# name: test_prompt_snapshot
+  '''
+  [ROLE=SYSTEM]
+  System context here
+  [ROLE=USER_CACHED]
+  I'm working on a project, adding commits one after another. The current state of the project is captured by the codebase snapshot above.
+  
+  
+  Assume that I asked for a piece of work to be done by specifying the user request and another programmer has delivered the diff.
+  
+  Below, you can see the user request, as well as the delivered diff. IMPORTANT: The codebase snapshot already includes the changes made in this diff!
+  
+  === USER REQUEST BEGIN ===
+  Add hello world function
+  === USER REQUEST END ===
+  
+  === DIFF BEGIN (unified; lines starting with `-` are removed and `+` are added) ===
+  +def hello():
+  +    print('hello')
+  === DIFF END ===
+  
+  
+  [ROLE=USER]
+  Your task is to help me verify the quality of the diff.
+  
+  We care only about specific categories of issues. The rubric below outlines these categories of issues, and contains guidelines and examples to correctly identify them:
+  
+  [Issue Category 1: async_correctness]
+  Guidelines:
+      - Issues specific to asynchronous or concurrent code correctness.
+      - Look for: missing await keywords on functions that are clearly async (defined with 'async def' or returning coroutines/Promises), improper async context manager usage, race conditions in async code, deadlock potential, shared state access without proper synchronization.
+      - For threading issues: threads or background tasks that are created but never started, joins without corresponding starts.
+      - Be careful not to flag decorators or wrappers as requiring await unless you can verify they actually make the function async. Only flag clear cases where an async function is called without await or a thread/task is created but never started.
+  [End of issue category: async_correctness]
+  
+  [Issue Category 2: correctness_syntax_issues]
+  Guidelines:
+      - The diff should not contain any syntax errors that would prevent the code from running.
+      - CAREFULLY CHECK INDENTATION: In Python and other indentation-sensitive languages, verify that all function definitions, class definitions, and code blocks maintain proper indentation levels. Dedenting a function body to the module level or similar indentation errors are critical syntax issues.
+      - Look for: broken indentation that would cause syntax errors, missing or mismatched brackets/braces/parentheses, references to files/classes/functions that don't exist, removal of code that is still being referenced elsewhere.
+      - Check function signatures match their usage: if a function is modified to return different values (e.g., a single value vs. a tuple), all call sites must be updated accordingly.
+  Examples:
+      - The diff breaks the indentation of a Python function or class, dedenting it incorrectly.
+      - Code references a file, class or function that does not exist, or removes a file, class or function that is definitely still being referenced.
+      - A function is changed to return a tuple of two values, but existing callers still expect only a single return value.
+      - A function's return statement is removed but callers still expect a return value.
+  [End of issue category: correctness_syntax_issues]
+  
+  [Issue Category 3: error_handling_missing]
+  Guidelines:
+      - Missing error handling for operations that could reasonably fail.
+      - Look for: file I/O without exception handling, network requests without timeout/retry logic, user input processing without validation, external API calls without error checking, database operations without transaction handling.
+      - Only flag issues that are clearly incorrect, and avoid flagging issues where it is not a big problem (e.g. file I/O in a script may not need flagging while missing error handling for file I/O in a long running or production systems should have error handling).
+  [End of issue category: error_handling_missing]
+  
+  [Issue Category 4: incorrect_algorithm]
+  Guidelines:
+      - Code that implements an algorithm incorrectly for its stated purpose.
+      - Look for: sorting algorithms with wrong comparison logic, search algorithms with incorrect termination, mathematical calculations with wrong formulas, data structure operations that don't maintain invariants, algorithms that don't handle edge cases (empty inputs, single elements).
+      - Only flag issues that are clearly incorrect for the stated purpose of the algorithm, and describe the problem and correction in detail.
+  [End of issue category: incorrect_algorithm]
+  
+  [Issue Category 5: logic_error]
+  Guidelines:
+      - Logic errors are flaws in the reasoning or flow of the code that would cause incorrect behavior.
+      - Look for: off-by-one errors in loops or array indexing, incorrect conditional logic (wrong operators, inverted conditions), variable assignments that overwrite needed values, incorrect order of operations, missing or incorrect loop termination conditions, algorithms that don't match their intended purpose.
+      - Look for missing, incorrect, or incomplete parameters to function/API calls that will cause the function to behave differently than intended (e.g., missing event masks, wrong flags, omitted required options).
+      - Pay special attention to control flow issues: early returns or breaks that prevent intended functionality from executing, functions that exit before completing their stated purpose, conditions that prevent code paths from being reached when they should be.
+      - Do not flag issues that are not clearly incorrect, for example it's possible code is implemented in a suboptimal way, this is not an issue unless it is explicitly stated that the code should be optimal or implemented in a certain way.
+  [End of issue category: logic_error]
+  
+  [Issue Category 6: runtime_error_risk]
+  Guidelines:
+      - Code patterns that are very likely to cause runtime errors during execution.
+      - Check for version compatibility issues: usage of function parameters, APIs, or language features that are only available in specific versions of the language, standard library, or external dependencies (e.g., a keyword argument added in Python 3.10 will cause TypeError on Python 3.8/3.9).
+      - Look for: potential null/None pointer dereferences, array/list access with potentially invalid indices, division by zero possibilities, file operations without existence checks, network/IO operations without timeout or error handling, infinite loop conditions, memory allocation issues.
+      - Check string encoding/decoding operations: calls to .encode() or .decode() without error handling (try/except or 'errors' parameter) that could raise UnicodeEncodeError or UnicodeDecodeError, especially when processing untrusted or streamed data.
+      - Look for operations with global side effects that could cause problems: os.chdir() without proper restoration, modifying global state in ways that affect other code, operations that are not thread-safe when concurrency is present.
+      - Only flag issues where there is clear evidence the code will fail or cause serious problems. Avoid speculating about potential issues in well-established language patterns or standard library usage.
+  [End of issue category: runtime_error_risk]
+  
+  [Issue Category 7: type_safety_violation]
+  Guidelines:
+      - Code that violates type safety expectations or could cause type-related runtime errors.
+      - Look for: incorrect type assumptions, missing type checks before operations, unsafe type casting, attribute access on potentially None values.
+      - Check for return type violations: functions that return values inconsistent with their declared return type annotations (e.g., returning None when the type annotation specifies a non-optional type, returning wrong tuple element types).
+  [End of issue category: type_safety_violation]
+  
+  
+  ## Instructions:
+  
+  1. Look at each category of issues outlined above, one at a time.
+  2. For each given category, analyze the diff for issues that match the category.
+  3. For each issue found, provide:
+     - issue_code: One of the category names above
+     - description: Specific explanation of what's wrong and what a better implementation could be. The description should not exceed a few sentences unless absolutely necessary.
+     - location: File path where the issue occurs (if applicable)
+     - code_part: Specific code snippet that has the issue (if applicable). Must match exactly, including whitespace. If the code part spans multiple lines, include the exact whitespace and newlines. If there are multiple locations that are relevant to the issue, select a single one to represent the issue.
+     - severity: Integer 1-5 (1=minor issue, 5=critical issue that will definitely cause problems)
+     - confidence: Float 0.0-1.0 indicating your confidence in this issue
+  4. When you have identified all issues of the current category, move on to the next category and repeat the process.
+  
+  Respond with valid JSON that matches this exact schema:
+  
+  {
+    "$defs": {
+      "GeneratedIssueSchema": {
+        "additionalProperties": true,
+        "description": "Individual issue from LLM response.",
+        "properties": {
+          "codePart": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Specific code snippet that has the issue",
+            "title": "Codepart"
+          },
+          "confidence": {
+            "description": "Confidence in this assessment",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "description": {
+            "description": "Specific explanation of what\u0027s wrong and why it\u0027s incorrect",
+            "title": "Description",
+            "type": "string"
+          },
+          "issueCode": {
+            "description": "Category of the issue",
+            "title": "Issuecode",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "File path where the issue occurs",
+            "title": "Location"
+          },
+          "severity": {
+            "description": "Integer 1-5 (1=minor issue, 5=critical bug)",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Severity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "issueCode",
+          "description",
+          "severity",
+          "confidence"
+        ],
+        "title": "GeneratedIssueSchema",
+        "type": "object"
+      }
+    },
+    "additionalProperties": true,
+    "description": "Complete response structure for issue identification.",
+    "properties": {
+      "issues": {
+        "description": "List of identified issues",
+        "items": {
+          "$ref": "#/$defs/GeneratedIssueSchema"
+        },
+        "title": "Issues",
+        "type": "array"
+      }
+    },
+    "title": "GeneratedResponseSchema",
+    "type": "object"
+  }
+  
+  Every issue you report must stand on its own, and should not reference other issues in its description.
+  Do not report duplicate issues with the same or equivalent descriptions within one issue category.
+  Do not output any issues that are merely based on the absence of information in the codebase snapshot.
+  Do not speculate about the way a piece of code might get used if that use is not supported by the code included above.
+  Only raise issues that were introduced by the diff.
+  It is fine to output an empty list if no issues are found!
+  
+  IMPORTANT: Do not include any additional commentary outside the JSON response, your response should only contain the JSON object:
+  
+  ```json
+  {
+      "issues": [
+          <list of issues>
+      ]
+  }
+  ```
+  [ROLE=ASSISTANT]
+  '''
+# ---
+# name: test_prompt_snapshot_with_custom_guides
+  '''
+  [ROLE=SYSTEM]
+  System context here
+  [ROLE=USER_CACHED]
+  I'm working on a project, adding commits one after another. The current state of the project is captured by the codebase snapshot above.
+  
+  
+  Assume that I asked for a piece of work to be done by specifying the user request and another programmer has delivered the diff.
+  
+  Below, you can see the user request, as well as the delivered diff. IMPORTANT: The codebase snapshot already includes the changes made in this diff!
+  
+  === USER REQUEST BEGIN ===
+  Add hello world function
+  === USER REQUEST END ===
+  
+  === DIFF BEGIN (unified; lines starting with `-` are removed and `+` are added) ===
+  +def hello():
+  +    print('hello')
+  === DIFF END ===
+  
+  
+  [ROLE=USER]
+  Your task is to help me verify the quality of the diff.
+  
+  We care only about specific categories of issues. The rubric below outlines these categories of issues, and contains guidelines and examples to correctly identify them:
+  
+  [Issue Category 1: async_correctness]
+  Guidelines:
+      CUSTOM REPLACE WINS: Replace takes precedence over prefix.
+  [End of issue category: async_correctness]
+  
+  [Issue Category 2: correctness_syntax_issues]
+  Guidelines:
+      - The diff should not contain any syntax errors that would prevent the code from running.
+      - CAREFULLY CHECK INDENTATION: In Python and other indentation-sensitive languages, verify that all function definitions, class definitions, and code blocks maintain proper indentation levels. Dedenting a function body to the module level or similar indentation errors are critical syntax issues.
+      - Look for: broken indentation that would cause syntax errors, missing or mismatched brackets/braces/parentheses, references to files/classes/functions that don't exist, removal of code that is still being referenced elsewhere.
+      - Check function signatures match their usage: if a function is modified to return different values (e.g., a single value vs. a tuple), all call sites must be updated accordingly.
+  Examples:
+      - The diff breaks the indentation of a Python function or class, dedenting it incorrectly.
+      - Code references a file, class or function that does not exist, or removes a file, class or function that is definitely still being referenced.
+      - A function is changed to return a tuple of two values, but existing callers still expect only a single return value.
+      - A function's return statement is removed but callers still expect a return value.
+  [End of issue category: correctness_syntax_issues]
+  
+  [Issue Category 3: error_handling_missing]
+  Guidelines:
+      CUSTOM PREFIX: Check all I/O operations.
+  
+      - Missing error handling for operations that could reasonably fail.
+      - Look for: file I/O without exception handling, network requests without timeout/retry logic, user input processing without validation, external API calls without error checking, database operations without transaction handling.
+      - Only flag issues that are clearly incorrect, and avoid flagging issues where it is not a big problem (e.g. file I/O in a script may not need flagging while missing error handling for file I/O in a long running or production systems should have error handling).
+  
+      CUSTOM SUFFIX: Ensure timeouts are set for network calls.
+  [End of issue category: error_handling_missing]
+  
+  [Issue Category 4: incorrect_algorithm]
+  Guidelines:
+      CUSTOM REPLACEMENT: This entirely replaces the default incorrect_algorithm guide.
+  [End of issue category: incorrect_algorithm]
+  
+  [Issue Category 5: logic_error]
+  Guidelines:
+      CUSTOM PREFIX: Always check edge cases for off-by-one errors.
+  
+      - Logic errors are flaws in the reasoning or flow of the code that would cause incorrect behavior.
+      - Look for: off-by-one errors in loops or array indexing, incorrect conditional logic (wrong operators, inverted conditions), variable assignments that overwrite needed values, incorrect order of operations, missing or incorrect loop termination conditions, algorithms that don't match their intended purpose.
+      - Look for missing, incorrect, or incomplete parameters to function/API calls that will cause the function to behave differently than intended (e.g., missing event masks, wrong flags, omitted required options).
+      - Pay special attention to control flow issues: early returns or breaks that prevent intended functionality from executing, functions that exit before completing their stated purpose, conditions that prevent code paths from being reached when they should be.
+      - Do not flag issues that are not clearly incorrect, for example it's possible code is implemented in a suboptimal way, this is not an issue unless it is explicitly stated that the code should be optimal or implemented in a certain way.
+  [End of issue category: logic_error]
+  
+  [Issue Category 6: runtime_error_risk]
+  Guidelines:
+      - Code patterns that are very likely to cause runtime errors during execution.
+      - Check for version compatibility issues: usage of function parameters, APIs, or language features that are only available in specific versions of the language, standard library, or external dependencies (e.g., a keyword argument added in Python 3.10 will cause TypeError on Python 3.8/3.9).
+      - Look for: potential null/None pointer dereferences, array/list access with potentially invalid indices, division by zero possibilities, file operations without existence checks, network/IO operations without timeout or error handling, infinite loop conditions, memory allocation issues.
+      - Check string encoding/decoding operations: calls to .encode() or .decode() without error handling (try/except or 'errors' parameter) that could raise UnicodeEncodeError or UnicodeDecodeError, especially when processing untrusted or streamed data.
+      - Look for operations with global side effects that could cause problems: os.chdir() without proper restoration, modifying global state in ways that affect other code, operations that are not thread-safe when concurrency is present.
+      - Only flag issues where there is clear evidence the code will fail or cause serious problems. Avoid speculating about potential issues in well-established language patterns or standard library usage.
+  
+      CUSTOM SUFFIX: Pay special attention to null pointer dereferences.
+  [End of issue category: runtime_error_risk]
+  
+  [Issue Category 7: type_safety_violation]
+  Guidelines:
+      - Code that violates type safety expectations or could cause type-related runtime errors.
+      - Look for: incorrect type assumptions, missing type checks before operations, unsafe type casting, attribute access on potentially None values.
+      - Check for return type violations: functions that return values inconsistent with their declared return type annotations (e.g., returning None when the type annotation specifies a non-optional type, returning wrong tuple element types).
+  [End of issue category: type_safety_violation]
+  
+  
+  ## Instructions:
+  
+  1. Look at each category of issues outlined above, one at a time.
+  2. For each given category, analyze the diff for issues that match the category.
+  3. For each issue found, provide:
+     - issue_code: One of the category names above
+     - description: Specific explanation of what's wrong and what a better implementation could be. The description should not exceed a few sentences unless absolutely necessary.
+     - location: File path where the issue occurs (if applicable)
+     - code_part: Specific code snippet that has the issue (if applicable). Must match exactly, including whitespace. If the code part spans multiple lines, include the exact whitespace and newlines. If there are multiple locations that are relevant to the issue, select a single one to represent the issue.
+     - severity: Integer 1-5 (1=minor issue, 5=critical issue that will definitely cause problems)
+     - confidence: Float 0.0-1.0 indicating your confidence in this issue
+  4. When you have identified all issues of the current category, move on to the next category and repeat the process.
+  
+  Respond with valid JSON that matches this exact schema:
+  
+  {
+    "$defs": {
+      "GeneratedIssueSchema": {
+        "additionalProperties": true,
+        "description": "Individual issue from LLM response.",
+        "properties": {
+          "codePart": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Specific code snippet that has the issue",
+            "title": "Codepart"
+          },
+          "confidence": {
+            "description": "Confidence in this assessment",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "description": {
+            "description": "Specific explanation of what\u0027s wrong and why it\u0027s incorrect",
+            "title": "Description",
+            "type": "string"
+          },
+          "issueCode": {
+            "description": "Category of the issue",
+            "title": "Issuecode",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "File path where the issue occurs",
+            "title": "Location"
+          },
+          "severity": {
+            "description": "Integer 1-5 (1=minor issue, 5=critical bug)",
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Severity",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "issueCode",
+          "description",
+          "severity",
+          "confidence"
+        ],
+        "title": "GeneratedIssueSchema",
+        "type": "object"
+      }
+    },
+    "additionalProperties": true,
+    "description": "Complete response structure for issue identification.",
+    "properties": {
+      "issues": {
+        "description": "List of identified issues",
+        "items": {
+          "$ref": "#/$defs/GeneratedIssueSchema"
+        },
+        "title": "Issues",
+        "type": "array"
+      }
+    },
+    "title": "GeneratedResponseSchema",
+    "type": "object"
+  }
+  
+  Every issue you report must stand on its own, and should not reference other issues in its description.
+  Do not report duplicate issues with the same or equivalent descriptions within one issue category.
+  Do not output any issues that are merely based on the absence of information in the codebase snapshot.
+  Do not speculate about the way a piece of code might get used if that use is not supported by the code included above.
+  Only raise issues that were introduced by the diff.
+  It is fine to output an empty list if no issues are found!
+  
+  IMPORTANT: Do not include any additional commentary outside the JSON response, your response should only contain the JSON object:
+  
+  ```json
+  {
+      "issues": [
+          <list of issues>
+      ]
+  }
+  ```
+  [ROLE=ASSISTANT]
+  '''
+# ---

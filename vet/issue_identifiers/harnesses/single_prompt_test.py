@@ -6,6 +6,8 @@ import json
 from unittest import mock
 
 import pytest
+from pydantic import Field
+from syrupy.assertion import SnapshotAssertion
 
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
@@ -24,12 +26,14 @@ from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
+from vet.issue_identifiers.custom_guides import CustomGuideOverride
 from vet.issue_identifiers.identification_guides import (
     ISSUE_CODES_FOR_CORRECTNESS_CHECK,
 )
 from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
+from vet.issue_identifiers.identification_guides import build_merged_guides
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -37,6 +41,7 @@ class SinglePromptHarnessMock(LanguageModelMock):
     """Mock language model for testing SinglePromptHarness."""
 
     response_text: str = ""
+    captured_prompts: list[str] = Field(default_factory=list)
 
     def complete_with_usage_sync(
         self,
@@ -44,6 +49,7 @@ class SinglePromptHarnessMock(LanguageModelMock):
         params: LanguageModelGenerationParams,
         is_caching_enabled: bool = True,
     ) -> CostedLanguageModelResponse:
+        self.captured_prompts.append(prompt)
         self.stats.complete_calls += 1
         response = LanguageModelResponseWithLogits(
             text=self.response_text,
@@ -172,3 +178,101 @@ def test_identify_issues_integration() -> None:
         assert raw_issues[0].issue_code == IssueCode.LOGIC_ERROR
         assert raw_issues[0].description == "Test logic error"
         assert len(llm_responses) > 0  # Should have LLM responses
+
+
+def test_prompt_snapshot(snapshot: SnapshotAssertion) -> None:
+    """Snapshot the exact prompt sent to the LLM to catch unintended prompt regressions."""
+    identifier = make_identifier()
+
+    mock_language_model = SinglePromptHarnessMock(response_text='{"issues": []}')
+    with mock.patch(
+        "vet.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
+        return_value=mock_language_model,
+    ):
+        project_context = BaseProjectContext(
+            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
+            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
+        )
+        commit_inputs = CommitInputs(
+            maybe_goal="Add hello world function",
+            maybe_diff="+def hello():\n+    print('hello')",
+        )
+        config = VetConfig()
+
+        generator = identifier.identify_issues(commit_inputs, project_context, config)
+        # Drain the generator to trigger the LLM call
+        list(generator)
+
+    assert len(mock_language_model.captured_prompts) == 1
+    assert mock_language_model.captured_prompts[0] == snapshot
+
+
+def _run_single_prompt_with_guides(
+    guides: dict[IssueCode, object],
+) -> str:
+    """Helper: run identify_issues with given guides and return the captured prompt."""
+    harness = SinglePromptHarness()
+    identifier = harness.make_issue_identifier(
+        identification_guides=tuple(guides[code] for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK)
+    )
+
+    mock_language_model = SinglePromptHarnessMock(response_text='{"issues": []}')
+    with mock.patch(
+        "vet.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
+        return_value=mock_language_model,
+    ):
+        project_context = BaseProjectContext(
+            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
+            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
+        )
+        commit_inputs = CommitInputs(
+            maybe_goal="Add hello world function",
+            maybe_diff="+def hello():\n+    print('hello')",
+        )
+        config = VetConfig()
+
+        generator = identifier.identify_issues(commit_inputs, project_context, config)
+        list(generator)
+
+    assert len(mock_language_model.captured_prompts) == 1
+    return mock_language_model.captured_prompts[0]
+
+
+def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None:
+    """Snapshot prompt with multiple custom guide override modes applied simultaneously.
+
+    Covers all override modes across different issue codes:
+    - logic_error: prefix only
+    - runtime_error_risk: suffix only
+    - incorrect_algorithm: replace (fully replaces the default guide)
+    - error_handling_missing: prefix + suffix combined
+    - async_correctness: prefix + replace (conflict: replace takes precedence)
+    - type_safety_violation: left as default (no override)
+    - correctness_syntax_issues: left as default (no override)
+    """
+    merged_guides = build_merged_guides({
+        IssueCode.LOGIC_ERROR: CustomGuideOverride(
+            issue_code=IssueCode.LOGIC_ERROR,
+            prefix="CUSTOM PREFIX: Always check edge cases for off-by-one errors.",
+        ),
+        IssueCode.RUNTIME_ERROR_RISK: CustomGuideOverride(
+            issue_code=IssueCode.RUNTIME_ERROR_RISK,
+            suffix="CUSTOM SUFFIX: Pay special attention to null pointer dereferences.",
+        ),
+        IssueCode.INCORRECT_ALGORITHM: CustomGuideOverride(
+            issue_code=IssueCode.INCORRECT_ALGORITHM,
+            replace="CUSTOM REPLACEMENT: This entirely replaces the default incorrect_algorithm guide.",
+        ),
+        IssueCode.ERROR_HANDLING_MISSING: CustomGuideOverride(
+            issue_code=IssueCode.ERROR_HANDLING_MISSING,
+            prefix="CUSTOM PREFIX: Check all I/O operations.",
+            suffix="CUSTOM SUFFIX: Ensure timeouts are set for network calls.",
+        ),
+        IssueCode.ASYNC_CORRECTNESS: CustomGuideOverride(
+            issue_code=IssueCode.ASYNC_CORRECTNESS,
+            prefix="CUSTOM PREFIX (should be ignored due to replace taking precedence).",
+            replace="CUSTOM REPLACE WINS: Replace takes precedence over prefix.",
+        ),
+    })
+    prompt = _run_single_prompt_with_guides(merged_guides)
+    assert prompt == snapshot
