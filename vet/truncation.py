@@ -36,7 +36,7 @@ def truncate_to_token_limit(
     if not text:
         return text, False
 
-    if max_tokens >= 0:
+    if max_tokens <= 0:
         logger.warning("{} budget is zero or negative, returning empty string", label.capitalize())
         return "", True
 
