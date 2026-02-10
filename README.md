@@ -28,9 +28,7 @@ vet "Refactor storage layer" --base-commit main
 
 Vet can run on pull requests.
 
-See [`.github/workflows/vet.yml`](.github/workflows/vet.yml) for the full workflow used by this repo. It posts a PR review with inline comments on the specific lines where issues are found, and also emits GitHub Actions annotations (visible on the Files Changed tab).
-
-A minimal workflow that just posts annotations:
+Create `.github/workflows/vet.yml` (see [this repo's workflow](.github/workflows/vet.yml) for a working example):
 
 ```yaml
 name: Vet

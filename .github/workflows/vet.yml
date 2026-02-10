@@ -2,12 +2,10 @@ name: Vet
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   vet:
@@ -25,7 +23,6 @@ jobs:
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VET_GOAL: |
             ${{ github.event.pull_request.title }}
 
@@ -33,93 +30,7 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          REPO="${{ github.repository }}"
-
-          # Run vet with JSON output for building the PR review payload.
-          # (For simple annotation-only workflows, use --output-format github instead;
-          # see the README for a minimal example.)
-          vet "$VET_GOAL" --quiet --output-format json --base-commit "$BASE_SHA" > "$RUNNER_TEMP/vet.json" 2>/dev/null
-          vet_status=$?
-
-          # Exit early on config/usage errors
-          if [ "$vet_status" -ge 2 ]; then
-            echo "::error::Vet encountered a configuration error (exit code $vet_status)"
-            exit "$vet_status"
-          fi
-
-          # No issues found
-          if [ "$vet_status" -eq 0 ] || ! jq -e '.issues | length > 0' "$RUNNER_TEMP/vet.json" > /dev/null 2>&1; then
-            echo "Vet found no issues."
-            exit 0
-          fi
-
-          # --- Build and submit a PR review with inline comments ---
-
-          # Separate issues by whether they have file location info
-          INLINE_ISSUES=$(jq '[.issues[] | select(.file_path != null and .line_number != null)]' "$RUNNER_TEMP/vet.json")
-          BODY_ISSUES=$(jq '[.issues[] | select(.file_path == null or .line_number == null)]' "$RUNNER_TEMP/vet.json")
-
-          TOTAL_COUNT=$(jq '.issues | length' "$RUNNER_TEMP/vet.json")
-          INLINE_COUNT=$(echo "$INLINE_ISSUES" | jq 'length')
-          BODY_COUNT=$(echo "$BODY_ISSUES" | jq 'length')
-
-          # Build the review body (summary + any issues without file locations)
-          REVIEW_BODY="**Vet found ${TOTAL_COUNT} issue(s)**"
-          if [ "$BODY_COUNT" -gt 0 ]; then
-            BODY_SECTION=$(echo "$BODY_ISSUES" | jq -r '.[] |
-              "### [\(.issue_code)] (severity: \(.severity // "?")/5, confidence: \(.confidence // "?"))\n\(.description)\n"')
-            REVIEW_BODY="${REVIEW_BODY}
-
-          ---
-
-          Issues without specific file locations:
-
-          ${BODY_SECTION}"
-          fi
-
-          if [ "$INLINE_COUNT" -gt 0 ]; then
-            # Build review comments for issues with file locations
-            REVIEW_COMMENTS=$(echo "$INLINE_ISSUES" | jq '[.[] | {
-              path: .file_path,
-              line: .line_number,
-              side: "RIGHT",
-              body: ("**[\(.issue_code)]** (severity: \(.severity // "?")/5, confidence: \(.confidence // "?"))\n\n\(.description)")
-            }]')
-
-            # Submit as a PR review with inline comments
-            jq -n \
-              --arg body "$REVIEW_BODY" \
-              --argjson comments "$REVIEW_COMMENTS" \
-              --arg event "COMMENT" \
-              --arg commit "$HEAD_SHA" \
-              '{body: $body, comments: $comments, event: $event, commit_id: $commit}' \
-              > "$RUNNER_TEMP/review-payload.json"
-
-            REVIEW_RESPONSE=$(gh api "repos/${REPO}/pulls/${PR_NUMBER}/reviews" \
-              --method POST \
-              --input "$RUNNER_TEMP/review-payload.json" 2>&1) && true
-            REVIEW_STATUS=$?
-
-            if [ "$REVIEW_STATUS" -ne 0 ]; then
-              # Review API can fail if a comment targets a line not in the diff.
-              # Fall back to a plain PR comment with all issues.
-              echo "::warning::PR review submission failed, falling back to PR comment. Error: $REVIEW_RESPONSE"
-              INLINE_SECTION=$(echo "$INLINE_ISSUES" | jq -r '.[] |
-                "### [\(.issue_code)] `\(.file_path):\(.line_number)` (severity: \(.severity // "?")/5, confidence: \(.confidence // "?"))\n\(.description)\n"')
-              FALLBACK_BODY="${REVIEW_BODY}
-
-          ${INLINE_SECTION}"
-              echo "$FALLBACK_BODY" > "$RUNNER_TEMP/vet-fallback.md"
-              gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/vet-fallback.md"
-            fi
-          else
-            # No inline issues — post review body as a regular PR comment
-            echo "$REVIEW_BODY" > "$RUNNER_TEMP/vet-comment.md"
-            gh pr comment "$PR_NUMBER" --body-file "$RUNNER_TEMP/vet-comment.md"
-          fi
-
-          # Exit 0 even when issues are found (don't fail CI)
-          exit 0
+          vet "$VET_GOAL" --quiet --output-format github --base-commit "${{ github.event.pull_request.base.sha }}"
+          status=$?
+          if [ "$status" -eq 1 ]; then exit 0; fi
+          exit "$status"

@@ -111,15 +111,7 @@ def get_issues_with_raw_responses(
     results_generator_with_capture = ReturnCapturingGenerator(results_generator)
     for result in results_generator_with_capture:
         if result.passes_filtration:
-            # Apply confidence threshold: skip issues below the configured threshold
-            if (
-                result.issue.confidence_score
-                and result.issue.confidence_score.normalized > config.filter_issues_below_confidence
-            ):
-                issues.append(result.issue)
-            elif not result.issue.confidence_score:
-                # Issues without confidence scores are always included
-                issues.append(result.issue)
+            issues.append(result.issue)
     issue_identification_debug_info = results_generator_with_capture.return_value
 
     return tuple(issues), issue_identification_debug_info, project_context
