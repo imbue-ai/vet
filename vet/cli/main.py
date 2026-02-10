@@ -33,6 +33,7 @@ from vet.cli.models import get_models_by_provider
 from vet.cli.models import validate_model_id
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
+from vet.formatters import format_github_review
 from vet.formatters import format_issue_text
 from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
@@ -503,6 +504,9 @@ def main(argv: list[str] | None = None) -> int:
         if not issues:
             if args.output_format == "json":
                 print(json.dumps({"issues": []}, indent=2), file=output_stream)
+            elif args.output_format == "github":
+                payload = format_github_review(issues, output_fields)
+                print(json.dumps(payload, indent=2), file=output_stream)
             elif not args.quiet:
                 print("No issues found.", file=output_stream)
             return 0
@@ -510,12 +514,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.output_format == "json":
             issues_list = [issue_to_dict(issue, output_fields) for issue in issues]
             print(json.dumps({"issues": issues_list}, indent=2), file=output_stream)
+        elif args.output_format == "github":
+            payload = format_github_review(issues, output_fields)
+            print(json.dumps(payload, indent=2), file=output_stream)
         else:
             for issue in issues:
                 print(format_issue_text(issue, output_fields), file=output_stream)
                 print(file=output_stream)
 
-        return 1
+        return 10
     finally:
         if output_file is not None:
             output_file.close()

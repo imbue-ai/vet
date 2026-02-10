@@ -3,7 +3,6 @@ name: Vet
 permissions:
   contents: read
   pull-requests: write
-  issues: write
 
 on:
   pull_request:
@@ -20,7 +19,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install git+https://github.com/imbue-ai/vet.git
+      # we want to run the current version of vet against the PR, not necessarily the deployed / main version.
+      # this is the only difference between this vet.yml and the recommended one in the readme.
+      - run: pip install .
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -33,11 +34,17 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          vet "$VET_GOAL" --quiet --base-commit "${{ github.event.pull_request.base.sha }}" > "$RUNNER_TEMP/vet-output.txt" 2>&1
+          vet "$VET_GOAL" --quiet --output-format github \
+            --base-commit "${{ github.event.pull_request.base.sha }}" \
+            > "$RUNNER_TEMP/review.json"
           status=$?
-          if [ ! -s "$RUNNER_TEMP/vet-output.txt" ]; then
-            echo "Vet found no issues." > "$RUNNER_TEMP/vet-output.txt"
-          fi
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/vet-output.txt"
-          if [ "$status" -eq 1 ]; then exit 0; fi
-          exit "$status"
+          if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
+
+          jq --arg sha "${{ github.event.pull_request.head.sha }}" \
+            '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
+
+          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
+            --method POST --input "$RUNNER_TEMP/review-final.json" || \
+            gh pr comment "${{ github.event.pull_request.number }}" \
+              --body "$(jq -r '[.body] + [.comments[] | "**\(.path):\(.line)**\n\n\(.body)"] | join("\n\n---\n\n")' "$RUNNER_TEMP/review-final.json")"
+          exit 0

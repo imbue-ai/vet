@@ -70,6 +70,6 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
 - `--model MODEL`: LLM model to use (default: claude-4-6-opus)
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
-- `--output-format FORMAT`: Output as `text` or `json`
+- `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress progress output
 - `--help`: Show comprehensive list of options

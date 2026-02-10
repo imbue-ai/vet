@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_format_github_review_mixed_issues
+  dict({
+    'body': '''
+      **Vet found 2 issues.**
+      
+      ---
+      
+      **[incorrect_function_implementation]** (severity 2/5) (confidence 0.75)
+      
+      General architecture concern
+    ''',
+    'comments': list([
+      dict({
+        'body': '''
+          **[incorrect_function_implementation]** (severity 2/5) (confidence 0.75)
+          
+          This function has a bug
+        ''',
+        'line': 10,
+        'path': 'src/app.py',
+        'side': 'RIGHT',
+      }),
+    ]),
+    'event': 'COMMENT',
+  })
+# ---
+# name: test_format_github_review_no_issues
+  dict({
+    'body': '**Vet found 0 issues.**',
+    'comments': list([
+    ]),
+    'event': 'COMMENT',
+  })
+# ---

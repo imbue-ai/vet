@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
 
-OUTPUT_FORMATS = ["text", "json"]
+OUTPUT_FORMATS = ["text", "json", "github"]
 
 OUTPUT_FIELDS = [
     "issue_code",
@@ -91,3 +91,47 @@ def issue_to_dict(issue: IdentifiedVerifyIssue, fields: list[str]) -> dict:
     if "line_number" in fields and output.line_number_end is not None:
         include_fields.add("line_number_end")
     return output.model_dump(mode="json", include=include_fields)
+
+
+def _format_review_comment_body(issue: IdentifiedVerifyIssue, fields: list[str]) -> str:
+    parts: list[str] = []
+    header = []
+    if "issue_code" in fields:
+        header.append(f"**[{issue.code}]**")
+    if "severity" in fields and issue.severity_score:
+        header.append(f"(severity {issue.severity_score.raw:.0f}/5)")
+    if "confidence" in fields and issue.confidence_score:
+        header.append(f"(confidence {issue.confidence_score.normalized:.2f})")
+    if header:
+        parts.append(" ".join(header))
+    if "description" in fields:
+        parts.append(issue.description)
+    return "\n\n".join(parts)
+
+
+def format_github_review(
+    issues: tuple[IdentifiedVerifyIssue, ...],
+    fields: list[str],
+) -> dict:
+    inline = [i for i in issues if i.location and i.location[0].filename]
+    body_only = [i for i in issues if not i.location or not i.location[0].filename]
+
+    count = len(issues)
+    noun = "issue" if count == 1 else "issues"
+    body = f"**Vet found {count} {noun}.**"
+    if body_only:
+        sections = [_format_review_comment_body(i, fields) for i in body_only]
+        body += "\n\n---\n\n" + "\n\n".join(sections)
+
+    comments = []
+    for issue in inline:
+        loc = issue.location[0]
+        comment: dict = {
+            "path": loc.filename,
+            "line": loc.line_start,
+            "side": "RIGHT",
+            "body": _format_review_comment_body(issue, fields),
+        }
+        comments.append(comment)
+
+    return {"body": body, "event": "COMMENT", "comments": comments}

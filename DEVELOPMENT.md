@@ -74,9 +74,10 @@ Example configuration:
 
 The following are the **expected** exit status codes for vet:
 
-- `0` - Success, no issues found
-- `1` - Issues were found in the code
+- `0` - No issues found
+- `1` - Unexpected runtime error
 - `2` - Invalid arguments or configuration
+- `10` - Issues were found in the code
 
 ## Concepts
 
