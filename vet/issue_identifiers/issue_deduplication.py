@@ -1,8 +1,10 @@
 import json
+import time
 from typing import Generator
 from typing import Iterable
 
 import jinja2
+from loguru import logger
 
 from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
@@ -79,7 +81,9 @@ def _get_deduplication_prompt(
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
+        code: format_issue_identification_guide_for_llm(
+            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
+        )
         for code in sorted_issue_codes
     }
 
@@ -110,7 +114,9 @@ def _convert_parsed_issues_to_combined_string(
 
 
 def deduplicate_issues(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     config: VetConfig,
     enabled_issue_codes: Iterable[IssueCode],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
@@ -128,11 +134,23 @@ def deduplicate_issues(
 
     # This current implementation is not streaming. Rather, we collect all issues, then send them to the LLM for deduplication all at once.
     # In the future, we can consider changing this into a streaming version that performs deduplication as issues come in.
+    dedup_start = time.monotonic()
+    logger.debug(
+        "[TIMING] DEDUPLICATION: starting - collecting issues from upstream phases"
+    )
+
     all_issues = []
     issue_generator_with_capture = ReturnCapturingGenerator(issue_generator)
     for issue in issue_generator_with_capture:
         all_issues.append(issue)
     issue_generator_debug_info = issue_generator_with_capture.return_value
+
+    collect_elapsed = time.monotonic() - dedup_start
+    logger.debug(
+        "[TIMING] DEDUPLICATION: collected {num_issues} issues from upstream in {elapsed:.2f}s",
+        num_issues=len(all_issues),
+        elapsed=collect_elapsed,
+    )
 
     # TODO: This is a bit hacky, since it breaks abstraction boundaries:
     #   We need to apply some special handling here around issue filtration.
@@ -142,29 +160,57 @@ def deduplicate_issues(
     #   - We deduplicate only over issues that pass filtration.
     #     (The resulting deduplicated issues will implicitly be set to have passed filtration as well, as per default value of _passes_filtration)
     #   - Issues that didn't pass filtration will be yielded out unchanged.
-    issues_passing_filtration = [issue for issue in all_issues if issue.passes_filtration]
-    issues_not_passing_filtration = [issue for issue in all_issues if not issue.passes_filtration]
+    issues_passing_filtration = [
+        issue for issue in all_issues if issue.passes_filtration
+    ]
+    issues_not_passing_filtration = [
+        issue for issue in all_issues if not issue.passes_filtration
+    ]
 
     if len(issues_passing_filtration) <= 1:
         # None or one issues that pass filtration: nothing to deduplicate, return early
+        total_elapsed = time.monotonic() - dedup_start
+        logger.debug(
+            "[TIMING] DEDUPLICATION: skipped (<=1 issues passing filtration) in {elapsed:.2f}s",
+            elapsed=total_elapsed,
+        )
         for issue in all_issues:
             yield issue
         return issue_generator_debug_info
 
-    language_model = build_language_model_from_config(config.language_model_generation_config)
+    language_model = build_language_model_from_config(
+        config.language_model_generation_config
+    )
 
     # As per above TODO, only deduplicate over issues that passed filtration
-    combined_issues_string = _convert_parsed_issues_to_combined_string(issues_passing_filtration)
+    combined_issues_string = _convert_parsed_issues_to_combined_string(
+        issues_passing_filtration
+    )
     prompt = _get_deduplication_prompt(enabled_issue_codes, combined_issues_string)
 
+    llm_start = time.monotonic()
+    logger.debug(
+        "[TIMING] DEDUPLICATION: starting LLM call with {num_issues} issues passing filtration",
+        num_issues=len(issues_passing_filtration),
+    )
     costed_response = language_model.complete_with_usage_sync(
         prompt,
-        params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
+        params=LanguageModelGenerationParams(
+            temperature=0.0, max_tokens=config.max_output_tokens
+        ),
         is_caching_enabled=language_model.cache_path is not None,
     )
 
+    llm_elapsed = time.monotonic() - llm_start
     response = only(costed_response.responses)
     invocation_info = extract_invocation_info_from_costed_response(costed_response)
+
+    total_elapsed = time.monotonic() - dedup_start
+    logger.debug(
+        "[TIMING] DEDUPLICATION: completed in {total_elapsed:.2f}s (LLM call: {llm_elapsed:.2f}s)",
+        total_elapsed=total_elapsed,
+        llm_elapsed=llm_elapsed,
+    )
 
     yield from generate_issues_from_response_texts(response_texts=(response.text,))
 
@@ -184,7 +230,8 @@ def deduplicate_issues(
     )
 
     augmented_debug_info = IssueIdentificationDebugInfo(
-        llm_responses=issue_generator_debug_info.llm_responses + deduplication_llm_responses
+        llm_responses=issue_generator_debug_info.llm_responses
+        + deduplication_llm_responses
     )
 
     return augmented_debug_info

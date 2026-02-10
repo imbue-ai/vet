@@ -2,6 +2,7 @@
 Common components shared between issue identifiers.
 """
 
+import time
 from pathlib import Path
 from typing import Generator
 from typing import Iterable
@@ -50,12 +51,22 @@ class GeneratedIssueSchema(SerializableModel):
     """Individual issue from LLM response."""
 
     issue_code: str = Field(description="Category of the issue")
-    description: str = Field(description="Specific explanation of what's wrong and why it's incorrect")
-    location: str | None = Field(default=None, description="File path where the issue occurs")
-    code_part: str | None = Field(default=None, description="Specific code snippet that has the issue")
+    description: str = Field(
+        description="Specific explanation of what's wrong and why it's incorrect"
+    )
+    location: str | None = Field(
+        default=None, description="File path where the issue occurs"
+    )
+    code_part: str | None = Field(
+        default=None, description="Specific code snippet that has the issue"
+    )
     # pyre doesn't like the way ints/floats implement ge/le
-    severity: int = Field(description="Integer 1-5 (1=minor issue, 5=critical bug)", ge=1, le=5)  # pyre-ignore[6]
-    confidence: float = Field(description="Confidence in this assessment", ge=0.0, le=1.0)  # pyre-ignore[6]
+    severity: int = Field(
+        description="Integer 1-5 (1=minor issue, 5=critical bug)", ge=1, le=5
+    )  # pyre-ignore[6]
+    confidence: float = Field(
+        description="Confidence in this assessment", ge=0.0, le=1.0
+    )  # pyre-ignore[6]
 
     # ----------------------------------------------------------------
     # Internal mutable fields used by the post-identification pipeline for tagging.
@@ -81,7 +92,9 @@ class GeneratedIssueSchema(SerializableModel):
 class GeneratedResponseSchema(SerializableModel):
     """Complete response structure for issue identification."""
 
-    issues: list[GeneratedIssueSchema] = Field(default_factory=list, description="List of identified issues")
+    issues: list[GeneratedIssueSchema] = Field(
+        default_factory=list, description="List of identified issues"
+    )
 
 
 def generate_issues_from_response_texts(
@@ -90,7 +103,9 @@ def generate_issues_from_response_texts(
     """Generate IssueIdentifierResult objects from LLM response text."""
     for response_text in response_texts:
         try:
-            parsed_data = parse_model_json_response(response_text, GeneratedResponseSchema)
+            parsed_data = parse_model_json_response(
+                response_text, GeneratedResponseSchema
+            )
         except ResponseParsingError:
             logger.warning(f"Failed to parse response text: {response_text}")
             continue
@@ -99,7 +114,9 @@ def generate_issues_from_response_texts(
             yield raw_issue
 
 
-def line_ranges_to_issue_locations(line_ranges: Iterable[LineRange], file_path: str) -> tuple[IssueLocation, ...]:
+def line_ranges_to_issue_locations(
+    line_ranges: Iterable[LineRange], file_path: str
+) -> tuple[IssueLocation, ...]:
     """Convert LineRange objects to IssueLocation objects."""
     return tuple(
         IssueLocation(
@@ -132,7 +149,11 @@ def convert_generated_issue_to_identified_issue(
         issue_location = issue_data.location
         try:
             issue_location_path = Path(issue_location) if issue_location else None
-            if project_context.repo_path and issue_location_path and issue_location_path.is_absolute():
+            if (
+                project_context.repo_path
+                and issue_location_path
+                and issue_location_path.is_absolute()
+            ):
                 # Make absolute path relative.
                 # This will raise ValueError if issue_location_path is not under repo_path.
                 repo_path = project_context.repo_path
@@ -140,10 +161,14 @@ def convert_generated_issue_to_identified_issue(
                 issue_location_path = issue_location_path.relative_to(repo_path)
         except ValueError:
             issue_location_path = None
-            logger.warning(f"Invalid location '{issue_location}', skipping line range detection.")
+            logger.warning(
+                f"Invalid location '{issue_location}', skipping line range detection."
+            )
         issue_code_part = issue_data.code_part
         if issue_location_path and issue_code_part:
-            contents = project_context.file_contents_by_path.get(issue_location_path.as_posix())
+            contents = project_context.file_contents_by_path.get(
+                issue_location_path.as_posix()
+            )
             if contents is not None:
                 line_ranges = LineRange.build_from_substring(contents, issue_code_part)
                 if not line_ranges:
@@ -153,7 +178,9 @@ def convert_generated_issue_to_identified_issue(
                         code_part_repr=repr(issue_code_part),
                     )
             else:
-                logger.warning(f"Unknown location '{issue_location}', skipping line range detection.")
+                logger.warning(
+                    f"Unknown location '{issue_location}', skipping line range detection."
+                )
 
         # Convert severity (1-5) to normalized score (0-1)
         severity_normalized = (issue_data.severity - 1) / 4.0  # Map 1-5 to 0-1
@@ -163,8 +190,12 @@ def convert_generated_issue_to_identified_issue(
         return IdentifiedVerifyIssue(
             code=IssueCode(issue_data.issue_code),
             description=issue_data.description,
-            severity_score=SeverityScore(raw=issue_data.severity, normalized=severity_normalized),
-            confidence_score=ConfidenceScore(raw=issue_data.confidence, normalized=issue_data.confidence),
+            severity_score=SeverityScore(
+                raw=issue_data.severity, normalized=severity_normalized
+            ),
+            confidence_score=ConfidenceScore(
+                raw=issue_data.confidence, normalized=issue_data.confidence
+            ),
             location=locations,
         )
 
@@ -191,7 +222,9 @@ def convert_to_issue_identifier_result(
             enabled_issue_codes=enabled_issue_codes,
         )
         if issue:
-            yield IssueIdentifierResult(issue=issue, passes_filtration=issue_data.passes_filtration)
+            yield IssueIdentifierResult(
+                issue=issue, passes_filtration=issue_data.passes_filtration
+            )
 
     return generator_with_capture.return_value
 
@@ -206,7 +239,13 @@ def get_claude_code_options(cwd: Path | None, model_name: str) -> ClaudeCodeOpti
     return options
 
 
-def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[str, list[AgentMessage]] | None:
+def generate_response_from_agent(
+    prompt: str, options: AgentOptions
+) -> tuple[str, list[AgentMessage]] | None:
+    start_time = time.monotonic()
+    logger.debug(
+        "[TIMING] generate_response_from_agent: starting agent subprocess call"
+    )
     messages = []
     assistant_messages = []
     result_message = None
@@ -219,8 +258,20 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
                 elif isinstance(message, AgentResultMessage):
                     result_message = message
     except Exception as e:
+        elapsed = time.monotonic() - start_time
+        logger.debug(
+            "[TIMING] generate_response_from_agent: agent subprocess call FAILED after {elapsed:.2f}s",
+            elapsed=elapsed,
+        )
         log_exception(e, "Agent API call failed")
         return None
+
+    elapsed = time.monotonic() - start_time
+    logger.debug(
+        "[TIMING] generate_response_from_agent: agent subprocess call completed in {elapsed:.2f}s ({num_messages} messages)",
+        elapsed=elapsed,
+        num_messages=len(messages),
+    )
 
     # Try to get response from result message first
     response_text = ""
@@ -252,7 +303,8 @@ def extract_invocation_info_from_costed_response(
         if caching_info.provider_specific_data is not None:
             if isinstance(caching_info.provider_specific_data, AnthropicCachingInfo):
                 cache_creation_tokens = (
-                    caching_info.provider_specific_data.written_5m + caching_info.provider_specific_data.written_1h
+                    caching_info.provider_specific_data.written_5m
+                    + caching_info.provider_specific_data.written_1h
                 )
             else:
                 logger.info(

@@ -1,3 +1,4 @@
+import time
 from typing import Generator
 
 import jinja2
@@ -55,7 +56,9 @@ CODE_BASED_CRITERIA = (
     "6. The issue flags a piece of code that is already being removed by the diff (line in diff starts with a `-`). (true/false)",
 )
 
-CONVERSATION_BASED_CRITERIA = ("1. The issue matches the issue type definition given below. (true/false)",)
+CONVERSATION_BASED_CRITERIA = (
+    "1. The issue matches the issue type definition given below. (true/false)",
+)
 
 PROMPT_TEMPLATE = """Somebody has reviewed the {% if is_code_based_issue %}diff{% else %}conversation history{% endif %} and flagged an issue with it, which you can see here:
 
@@ -97,7 +100,11 @@ IMPORTANT: Do not include any additional commentary outside the JSON response, y
 
 def _get_full_prompt_template(is_code_based_issue: bool) -> str:
     """Get the full prompt template with the appropriate prefix."""
-    prefix = USER_REQUEST_PREFIX_TEMPLATE if is_code_based_issue else CONVERSATION_PREFIX_TEMPLATE
+    prefix = (
+        USER_REQUEST_PREFIX_TEMPLATE
+        if is_code_based_issue
+        else CONVERSATION_PREFIX_TEMPLATE
+    )
     return prefix + PROMPT_TEMPLATE
 
 
@@ -131,10 +138,18 @@ def _format_prompt(
     prompt_template = _get_full_prompt_template(is_code_based_issue)
     jinja_template = env.from_string(prompt_template)
     issue_code = IssueCode(issue.issue_code)
-    guide = format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[issue_code])
+    guide = format_issue_identification_guide_for_llm(
+        ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[issue_code]
+    )
 
-    criteria = CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
-    response_class = CodeBasedEvaluationResponse if is_code_based_issue else ConversationBasedEvaluationResponse
+    criteria = (
+        CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
+    )
+    response_class = (
+        CodeBasedEvaluationResponse
+        if is_code_based_issue
+        else ConversationBasedEvaluationResponse
+    )
 
     template_vars = {
         "cached_prompt_prefix": project_context.cached_prompt_prefix,
@@ -154,21 +169,29 @@ def _format_prompt(
         template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
         template_vars["diff_truncated"] = inputs.diff_truncated
         template_vars["extra_context"] = (
-            escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
+            escape_prompt_markers(inputs.maybe_extra_context)
+            if inputs.maybe_extra_context
+            else None
         )
         template_vars["extra_context_truncated"] = inputs.extra_context_truncated
     else:
         lm_config = config.language_model_generation_config
         available_tokens = get_available_tokens(config)
-        conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
+        conversation_budget = get_token_budget(
+            available_tokens, ContextBudget.CONVERSATION
+        )
 
-        conversation_history, conversation_truncated = format_conversation_history_for_prompt(
-            inputs.maybe_conversation_history or (),
-            max_tokens=conversation_budget,
-            count_tokens=lm_config.count_tokens,
+        conversation_history, conversation_truncated = (
+            format_conversation_history_for_prompt(
+                inputs.maybe_conversation_history or (),
+                max_tokens=conversation_budget,
+                count_tokens=lm_config.count_tokens,
+            )
         )
         template_vars["conversation_history"] = conversation_history
-        template_vars["conversation_truncated"] = conversation_truncated or inputs.conversation_truncated
+        template_vars["conversation_truncated"] = (
+            conversation_truncated or inputs.conversation_truncated
+        )
 
     return jinja_template.render(template_vars)
 
@@ -178,7 +201,9 @@ def _parse_response(
 ) -> CodeBasedEvaluationResponse | ConversationBasedEvaluationResponse:
     # Fallback value of True for now, since we assume that most issues will pass the evaluation.
     if is_code_based_issue:
-        FALLBACK_VALUE = CodeBasedEvaluationResponse(q1=True, q2=True, q3=True, q4=True, q5=True, q6=False)
+        FALLBACK_VALUE = CodeBasedEvaluationResponse(
+            q1=True, q2=True, q3=True, q4=True, q5=True, q6=False
+        )
         response_class = CodeBasedEvaluationResponse
     else:
         FALLBACK_VALUE = ConversationBasedEvaluationResponse(q1=True)
@@ -209,6 +234,8 @@ def evaluate_code_issue_through_llm(
         A tuple containing a boolean indicating whether the issue passes the evaluation and the LLM responses.
         If evaluation fails because the data to judge the issue is missing, the issue is taken to have passed the evaluation.
     """
+    from loguru import logger
+
     if not config.filter_issues_through_llm_evaluator:
         return True, ()
 
@@ -220,18 +247,31 @@ def evaluate_code_issue_through_llm(
         if inputs.maybe_conversation_history is None:
             return True, ()
 
-    language_model = build_language_model_from_config(config.language_model_generation_config)
+    language_model = build_language_model_from_config(
+        config.language_model_generation_config
+    )
 
+    llm_start = time.monotonic()
     prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue)
     costed_response = language_model.complete_with_usage_sync(
         prompt,
-        params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
+        params=LanguageModelGenerationParams(
+            temperature=0.0, max_tokens=config.max_output_tokens
+        ),
         is_caching_enabled=language_model.cache_path is not None,
     )
 
+    llm_elapsed = time.monotonic() - llm_start
     response = only(costed_response.responses)
     invocation_info = extract_invocation_info_from_costed_response(costed_response)
     results = _parse_response(response.text, is_code_based_issue)
+
+    logger.debug(
+        "[TIMING] FILTRATION: LLM evaluation for issue '{issue_code}' completed in {elapsed:.2f}s (passed={passed})",
+        issue_code=issue.issue_code,
+        elapsed=llm_elapsed,
+        passed=results.is_passing_result(),
+    )
 
     llm_responses = (
         LLMResponse(
@@ -264,13 +304,17 @@ def get_vet_confidence_threshold(config: VetConfig) -> float:
     return DEFAULT_CONFIDENCE_THRESHOLD
 
 
-def evaluate_issue_through_confidence(issue: GeneratedIssueSchema, config: VetConfig) -> bool:
+def evaluate_issue_through_confidence(
+    issue: GeneratedIssueSchema, config: VetConfig
+) -> bool:
     threshold = get_vet_confidence_threshold(config)
     return issue.confidence >= threshold
 
 
 def filter_issues(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     inputs: IdentifierInputs,
     project_context: ProjectContext,
     config: VetConfig,
@@ -292,22 +336,46 @@ def filter_issues(
         At the end of the generation, returns IssueIdentificationDebugInfo containing the LLM responses.
     """
 
+    from loguru import logger
+
+    filtration_start = time.monotonic()
+    logger.debug("[TIMING] FILTRATION: starting issue filtration phase")
+
     filter_llm_responses = []
+    issue_count = 0
+    llm_eval_count = 0
 
     issue_generator_with_capture = ReturnCapturingGenerator(issue_generator)
     for issue in issue_generator_with_capture:
+        issue_count += 1
         passes_filtration = evaluate_issue_through_confidence(issue, config)
         if passes_filtration:
+            llm_eval_count += 1
             passes_filtration, llm_responses = evaluate_code_issue_through_llm(
                 issue, inputs, project_context, config, is_code_based_issue_generator
             )
             filter_llm_responses.extend(llm_responses)
+        else:
+            logger.debug(
+                "[TIMING] FILTRATION: issue {idx} '{issue_code}' filtered by confidence threshold (skipped LLM eval)",
+                idx=issue_count,
+                issue_code=issue.issue_code,
+            )
         issue.set_passes_filtration(passes_filtration)
         yield issue
     issue_generator_debug_info = issue_generator_with_capture.return_value
 
+    filtration_elapsed = time.monotonic() - filtration_start
+    logger.debug(
+        "[TIMING] FILTRATION: completed in {elapsed:.2f}s - {issue_count} issues total, {llm_eval_count} required LLM evaluation",
+        elapsed=filtration_elapsed,
+        issue_count=issue_count,
+        llm_eval_count=llm_eval_count,
+    )
+
     augmented_debug_info = IssueIdentificationDebugInfo(
-        llm_responses=issue_generator_debug_info.llm_responses + tuple(filter_llm_responses)
+        llm_responses=issue_generator_debug_info.llm_responses
+        + tuple(filter_llm_responses)
     )
 
     return augmented_debug_info

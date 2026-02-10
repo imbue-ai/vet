@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Generator
 from typing import Iterable
 
@@ -82,7 +83,9 @@ def _get_collation_prompt(
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
+        code: format_issue_identification_guide_for_llm(
+            ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code]
+        )
         for code in sorted_issue_codes
     }
 
@@ -119,7 +122,9 @@ def _convert_parsed_issues_to_combined_string(
 
 
 def collate_issues_with_agent(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     identifier_inputs: IdentifierInputs,
     project_context: ProjectContext,
     config: VetConfig,
@@ -141,13 +146,27 @@ def collate_issues_with_agent(
     Raises:
         IdentifierInputsMissingError: If the identifier inputs are missing the commit message or diff, which are required for collation.
     """
+    from loguru import logger
+
     collation_inputs = to_specific_inputs_type(identifier_inputs, CommitInputs)
+
+    collation_start = time.monotonic()
+    logger.debug(
+        "[TIMING] COLLATION: starting - collecting issues from identification phase"
+    )
 
     all_issues = []
     issue_generator_with_capture = ReturnCapturingGenerator(issue_generator)
     for issue in issue_generator_with_capture:
         all_issues.append(issue)
     issue_generator_debug_info = issue_generator_with_capture.return_value
+
+    collect_elapsed = time.monotonic() - collation_start
+    logger.debug(
+        "[TIMING] COLLATION: collected {num_issues} issues from identification in {elapsed:.2f}s",
+        num_issues=len(all_issues),
+        elapsed=collect_elapsed,
+    )
 
     options = CodexOptions(
         cwd=project_context.repo_path,
@@ -158,11 +177,29 @@ def collate_issues_with_agent(
     collation_prompt = _get_collation_prompt(
         project_context, collation_inputs, enabled_issue_codes, combined_issues_string
     )
+
+    agent_start = time.monotonic()
+    logger.debug(
+        "[TIMING] COLLATION: starting collation agent call with {num_issues} issues",
+        num_issues=len(all_issues),
+    )
     agent_response = generate_response_from_agent(collation_prompt, options)
     assert agent_response is not None
     response_text, collation_messages = agent_response
-    collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
-    collation_invocation_info = extract_invocation_info_from_messages(collation_messages)
+
+    agent_elapsed = time.monotonic() - agent_start
+    total_elapsed = time.monotonic() - collation_start
+    logger.debug(
+        "[TIMING] COLLATION: agent call completed in {agent_elapsed:.2f}s (total collation phase: {total_elapsed:.2f}s)",
+        agent_elapsed=agent_elapsed,
+        total_elapsed=total_elapsed,
+    )
+    collation_raw_messages = tuple(
+        json.dumps(message.model_dump()) for message in collation_messages
+    )
+    collation_invocation_info = extract_invocation_info_from_messages(
+        collation_messages
+    )
 
     collation_llm_responses = (
         LLMResponse(
