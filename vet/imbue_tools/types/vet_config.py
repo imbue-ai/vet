@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from pydantic import PrivateAttr
-
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import IssueCode
@@ -53,9 +51,8 @@ class VetConfig(SerializableModel):
     # contexts (such as black_box_evals) where the same inputs are being evaluated multiple times.
     cache_full_prompt: bool = False
 
-    # Private: Merged guides with custom overrides applied (populated during config loading).
-    # Automatically loaded from .vet/custom_guides/ (project) or ~/.config/vet/custom_guides/ (global).
-    _merged_guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = PrivateAttr(default=None)
+    # Automatically loaded from .vet/custom_guides/ (local) or ~/.config/vet/custom_guides/ (global).
+    merged_guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = None
 
     @property
     def guides_by_code(self) -> dict[IssueCode, IssueIdentificationGuide]:
@@ -69,24 +66,11 @@ class VetConfig(SerializableModel):
         Returns:
             Dict mapping IssueCode to IssueIdentificationGuide
         """
-        if self._merged_guides_by_code is not None:
-            return self._merged_guides_by_code
+        if self.merged_guides_by_code is not None:
+            return self.merged_guides_by_code
 
         # Fallback to defaults if customs weren't loaded
         return ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
-
-    def set_merged_guides(self, merged_guides: dict[IssueCode, IssueIdentificationGuide]) -> None:
-        """
-        Set custom merged guides for this config.
-
-        This method should be called by the loader after merging custom guide
-        overrides with default guides. Once set, guides_by_code will return
-        these merged guides instead of the defaults.
-
-        Args:
-            merged_guides: Dictionary mapping issue codes to merged identification guides
-        """
-        self._merged_guides_by_code = merged_guides
 
     @classmethod
     def build(

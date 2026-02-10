@@ -476,18 +476,6 @@ def main(argv: list[str] | None = None) -> int:
     language_model_config = build_language_model_config(model_id, user_config)
     max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
 
-    config = VetConfig(
-        disabled_identifiers=("agentic_issue_identifier",),
-        language_model_generation_config=language_model_config,
-        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
-        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
-        temperature=args.temperature,
-        filter_issues_below_confidence=args.confidence_threshold,
-        max_identify_workers=args.max_workers,
-        max_output_tokens=max_output_tokens or 20000,
-        max_identifier_spend_dollars=args.max_spend,
-    )
-
     custom_overrides: dict[IssueCode, CustomGuideOverride] = {}
 
     # [global, local]
@@ -499,11 +487,24 @@ def main(argv: list[str] | None = None) -> int:
             logger.debug("Loaded {} custom guide(s) from: {}", len(dir_overrides), guides_dir)
             custom_overrides.update(dir_overrides)
 
+    merged_guides = None
     if custom_overrides:
         validate_custom_guides(custom_overrides)
         merged_guides = build_merged_guides(custom_overrides)
-        config.set_merged_guides(merged_guides)
         logger.info("Applied {} custom guide override(s)", len(custom_overrides))
+
+    config = VetConfig(
+        disabled_identifiers=("agentic_issue_identifier",),
+        language_model_generation_config=language_model_config,
+        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
+        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
+        temperature=args.temperature,
+        filter_issues_below_confidence=args.confidence_threshold,
+        max_identify_workers=args.max_workers,
+        max_output_tokens=max_output_tokens or 20000,
+        max_identifier_spend_dollars=args.max_spend,
+        merged_guides_by_code=merged_guides,
+    )
 
     issues = find_issues(
         repo_path=repo_path,

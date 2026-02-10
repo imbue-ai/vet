@@ -242,15 +242,12 @@ def test_end_to_end_no_custom_guides_uses_defaults(tmp_path: Path) -> None:
 
 
 def test_vet_config_guides_by_code_property_with_custom_guides(tmp_path: Path) -> None:
-    """Test VetConfig.guides_by_code property returns merged guides when set."""
+    """Test VetConfig.guides_by_code property returns merged guides when provided."""
+    # Config without custom guides should return defaults
     config = VetConfig()
-
-    # Initially should return defaults
     assert config.guides_by_code == ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 
-    # Set merged guides with custom override
-    custom_overrides = {IssueCode.LOGIC_ERROR: load_custom_guides_from_directory(tmp_path).get(IssueCode.LOGIC_ERROR)}
-    # Since tmp_path is empty, let's manually create one
+    # Create custom override and build merged guides
     from vet.issue_identifiers.custom_guides import CustomGuideOverride
 
     custom_overrides = {
@@ -261,11 +258,13 @@ def test_vet_config_guides_by_code_property_with_custom_guides(tmp_path: Path) -
         )
     }
     merged_guides = build_merged_guides(custom_overrides)
-    config.set_merged_guides(merged_guides)
 
-    # Now should return merged guides
-    assert config.guides_by_code == merged_guides
-    assert config.guides_by_code[IssueCode.LOGIC_ERROR].guide.startswith("Custom\n\n")
+    # Create config with merged guides
+    config_with_custom = VetConfig(merged_guides_by_code=merged_guides)
+
+    # Should return merged guides
+    assert config_with_custom.guides_by_code == merged_guides
+    assert config_with_custom.guides_by_code[IssueCode.LOGIC_ERROR].guide.startswith("Custom\n\n")
 
 
 def test_vet_config_guides_by_code_property_without_custom_guides() -> None:
