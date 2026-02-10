@@ -40,14 +40,18 @@ def get_issues_with_raw_responses(
     repo_path: Path,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
     extra_context: str | None = None,
-) -> tuple[tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext]:
+) -> tuple[
+    tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext
+]:
     if not goal or not goal.strip():
         logger.info("No goal was provided, generating one from conversation history")
         # should be not None and not empty
         if conversation_history:
             try:
                 # TODO: we use the config here, but we may want to configure this separately
-                goal = get_goal_from_conversation(conversation_history, config.language_model_generation_config)
+                goal = get_goal_from_conversation(
+                    conversation_history, config.language_model_generation_config
+                )
                 logger.info("Generated goal from conversation history: {}", goal)
             except Exception as e:
                 raise ConversationLoadingError(
@@ -55,7 +59,9 @@ def get_issues_with_raw_responses(
                 )
         else:
             # TODO: Consider which CLI options we should show this for (quiet, normal, verbose).
-            logger.info("No goal or conversation history provided, only goal-independent identifiers will run")
+            logger.info(
+                "No goal or conversation history provided, only goal-independent identifiers will run"
+            )
             goal = ""
 
     lm_config = config.language_model_generation_config
@@ -82,7 +88,9 @@ def get_issues_with_raw_responses(
         language_model_name=lm_config.model_name,
         repo_path=repo_path,
         # This needs to account for the vet prompt, as well as the max_tokens output tokens.
-        tokens_to_reserve=VET_MAX_PROMPT_TOKENS + diff_no_binary_tokens + config.max_output_tokens,
+        tokens_to_reserve=VET_MAX_PROMPT_TOKENS
+        + diff_no_binary_tokens
+        + config.max_output_tokens,
         context_window=lm_config.get_max_context_length(),
         is_custom_model=lm_config.is_custom_model(),
     )
@@ -111,7 +119,16 @@ def get_issues_with_raw_responses(
     results_generator_with_capture = ReturnCapturingGenerator(results_generator)
     for result in results_generator_with_capture:
         if result.passes_filtration:
-            issues.append(result.issue)
+            # Apply confidence threshold: skip issues below the configured threshold
+            if (
+                result.issue.confidence_score
+                and result.issue.confidence_score.normalized
+                > config.filter_issues_below_confidence
+            ):
+                issues.append(result.issue)
+            elif not result.issue.confidence_score:
+                # Issues without confidence scores are always included
+                issues.append(result.issue)
     issue_identification_debug_info = results_generator_with_capture.return_value
 
     return tuple(issues), issue_identification_debug_info, project_context
