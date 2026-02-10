@@ -77,7 +77,7 @@ jobs:
           gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
             --method POST --input "$RUNNER_TEMP/review-final.json" || \
             gh pr comment "${{ github.event.pull_request.number }}" \
-              --body "$(jq -r '.body' "$RUNNER_TEMP/review-final.json")"
+              --body "$(jq -r '[.body] + [.comments[] | "**\(.path):\(.line)**\n\n\(.body)"] | join("\n\n---\n\n")' "$RUNNER_TEMP/review-final.json")"
           exit 0
 ```
 
