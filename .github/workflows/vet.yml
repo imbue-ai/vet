@@ -18,7 +18,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install git+https://github.com/imbue-ai/vet.git
+      # Install from the checked-out PR branch (other repos should use:
+      #   pip install git+https://github.com/imbue-ai/vet.git)
+      - run: pip install .
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
