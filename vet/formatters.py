@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
 
-OUTPUT_FORMATS = ["text", "json"]
+OUTPUT_FORMATS = ["text", "json", "github"]
 
 OUTPUT_FIELDS = [
     "issue_code",
@@ -91,3 +91,55 @@ def issue_to_dict(issue: IdentifiedVerifyIssue, fields: list[str]) -> dict:
     if "line_number" in fields and output.line_number_end is not None:
         include_fields.add("line_number_end")
     return output.model_dump(mode="json", include=include_fields)
+
+
+def _escape_github_annotation(text: str) -> str:
+    """Escape text for use in GitHub Actions workflow commands.
+
+    GitHub Actions workflow commands use newlines as delimiters, so any newlines
+    in the message must be percent-encoded. The `%` and `\r` characters must
+    also be encoded to avoid ambiguity.
+    """
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def format_issue_github(issue: IdentifiedVerifyIssue, fields: list[str]) -> str:
+    """Format an issue as a GitHub Actions workflow command (::warning or ::error).
+
+    These commands are parsed by GitHub Actions and rendered as annotations
+    inline on the PR diff in the "Files changed" tab.
+    """
+    # Use ::error for severity >= 4, ::warning for lower
+    severity_raw = issue.severity_score.raw if issue.severity_score else 0
+    command = "error" if severity_raw >= 4 else "warning"
+
+    # Build annotation parameters
+    params: list[str] = []
+    if issue.location and issue.location[0].filename and ("file_path" in fields or "line_number" in fields):
+        loc = issue.location[0]
+        params.append(f"file={loc.filename}")
+        if "line_number" in fields:
+            params.append(f"line={loc.line_start}")
+            if loc.line_end != loc.line_start:
+                params.append(f"endLine={loc.line_end}")
+
+    # Build title
+    title_parts: list[str] = []
+    if "issue_code" in fields:
+        title_parts.append(f"[{issue.code}]")
+    if "severity" in fields and issue.severity_score:
+        title_parts.append(f"(severity {issue.severity_score.raw:.0f}/5)")
+    if title_parts:
+        params.append(f"title={' '.join(title_parts)}")
+
+    # Build message body
+    message_parts: list[str] = []
+    if "description" in fields:
+        message_parts.append(issue.description)
+    if "confidence" in fields and issue.confidence_score:
+        message_parts.append(f"Confidence: {issue.confidence_score.normalized:.2f}")
+
+    params_str = ",".join(params)
+    message = " | ".join(message_parts)
+
+    return f"::{command} {params_str}::{_escape_github_annotation(message)}"

@@ -28,19 +28,19 @@ vet "Refactor storage layer" --base-commit main
 
 Vet can run on pull requests.
 
-Create `.github/workflows/vet.yml`:
+See [`.github/workflows/vet.yml`](.github/workflows/vet.yml) for the full workflow used by this repo. It posts a PR review with inline comments on the specific lines where issues are found, and also emits GitHub Actions annotations (visible on the Files Changed tab).
+
+A minimal workflow that just posts annotations:
 
 ```yaml
 name: Vet
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, synchronize, reopened]
 
 jobs:
   vet:
@@ -58,7 +58,6 @@ jobs:
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VET_GOAL: |
             ${{ github.event.pull_request.title }}
 
@@ -66,17 +65,13 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          vet "$VET_GOAL" --quiet --base-commit "${{ github.event.pull_request.base.sha }}" > "$RUNNER_TEMP/vet-output.txt" 2>&1
+          vet "$VET_GOAL" --quiet --output-format github --base-commit "${{ github.event.pull_request.base.sha }}"
           status=$?
-          if [ ! -s "$RUNNER_TEMP/vet-output.txt" ]; then
-            echo "Vet found no issues." > "$RUNNER_TEMP/vet-output.txt"
-          fi
-          gh pr comment "${{ github.event.pull_request.number }}" --body-file "$RUNNER_TEMP/vet-output.txt"
           if [ "$status" -eq 1 ]; then exit 0; fi
           exit "$status"
 ```
 
-NOTE: This will not fail in CI if Vet finds an issue. This will only add a comment to the PR.
+NOTE: This will not fail in CI if Vet finds an issue. The `github` output format emits `::warning`/`::error` workflow commands that GitHub renders as inline annotations on the PR diff.
 
 #### Environment variables
 
@@ -123,8 +118,9 @@ Vet snapshots the repo and diff, optionally adds a goal and agent conversation, 
 - Exit code `2`: invalid usage/configuration error
 
 Output formats:
-- `text`
-- `json`
+- `text` — human-readable (default)
+- `json` — machine-readable structured output
+- `github` — GitHub Actions workflow commands (`::warning`/`::error` annotations)
 
 ## Configuration
 

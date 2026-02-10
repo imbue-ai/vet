@@ -33,6 +33,7 @@ from vet.cli.models import get_models_by_provider
 from vet.cli.models import validate_model_id
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
+from vet.formatters import format_issue_github
 from vet.formatters import format_issue_text
 from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
@@ -510,6 +511,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.output_format == "json":
             issues_list = [issue_to_dict(issue, output_fields) for issue in issues]
             print(json.dumps({"issues": issues_list}, indent=2), file=output_stream)
+        elif args.output_format == "github":
+            for issue in issues:
+                print(format_issue_github(issue, output_fields), file=output_stream)
         else:
             for issue in issues:
                 print(format_issue_text(issue, output_fields), file=output_stream)
