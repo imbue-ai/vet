@@ -96,43 +96,46 @@ def parse_custom_guide_markdown(file_path: Path) -> CustomGuideOverride | None:
     for line in content.split("\n"):
         stripped = line.strip()
 
-        # Check for section headers (exact match, case-sensitive)
-        if stripped == "# vet_custom_guideline_prefix":
-            # Save previous section if any
+        if stripped.lower() == "# vet_custom_guideline_prefix":
             if current_section and current_content:
                 sections[current_section] = "\n".join(current_content).strip()
             current_section = "prefix"
             current_content = []
 
-        elif stripped == "# vet_custom_guideline_suffix":
+        elif stripped.lower() == "# vet_custom_guideline_suffix":
             if current_section and current_content:
                 sections[current_section] = "\n".join(current_content).strip()
             current_section = "suffix"
             current_content = []
 
-        elif stripped == "# vet_custom_guideline_replace":
+        elif stripped.lower() == "# vet_custom_guideline_replace":
             if current_section and current_content:
                 sections[current_section] = "\n".join(current_content).strip()
             current_section = "replace"
             current_content = []
 
         else:
-            # Accumulate content for current section
             if current_section is not None:
                 current_content.append(line)
 
-    # Save final section
     if current_section and current_content:
         sections[current_section] = "\n".join(current_content).strip()
 
-    # Build override object (empty strings become None)
-    return CustomGuideOverride(
+    custom_guide_override = CustomGuideOverride(
         issue_code=issue_code,
         prefix=sections.get("prefix") or None,
         suffix=sections.get("suffix") or None,
         replace=sections.get("replace") or None,
         source_file=file_path,
     )
+
+    if custom_guide_override.is_empty():
+        logger.warning(
+            "Invalid issue code guide format in {}, please use # vet_custom_guideline_<prefix|suffix|replace> tags. Check README.md for more info.",
+            file_path,
+        )
+
+    return custom_guide_override
 
 
 def load_custom_guides_from_directory(directory: Path) -> dict[IssueCode, CustomGuideOverride]:

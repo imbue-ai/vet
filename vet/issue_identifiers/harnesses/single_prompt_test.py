@@ -250,29 +250,31 @@ def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None
     - type_safety_violation: left as default (no override)
     - correctness_syntax_issues: left as default (no override)
     """
-    merged_guides = build_merged_guides({
-        IssueCode.LOGIC_ERROR: CustomGuideOverride(
-            issue_code=IssueCode.LOGIC_ERROR,
-            prefix="CUSTOM PREFIX: Always check edge cases for off-by-one errors.",
-        ),
-        IssueCode.RUNTIME_ERROR_RISK: CustomGuideOverride(
-            issue_code=IssueCode.RUNTIME_ERROR_RISK,
-            suffix="CUSTOM SUFFIX: Pay special attention to null pointer dereferences.",
-        ),
-        IssueCode.INCORRECT_ALGORITHM: CustomGuideOverride(
-            issue_code=IssueCode.INCORRECT_ALGORITHM,
-            replace="CUSTOM REPLACEMENT: This entirely replaces the default incorrect_algorithm guide.",
-        ),
-        IssueCode.ERROR_HANDLING_MISSING: CustomGuideOverride(
-            issue_code=IssueCode.ERROR_HANDLING_MISSING,
-            prefix="CUSTOM PREFIX: Check all I/O operations.",
-            suffix="CUSTOM SUFFIX: Ensure timeouts are set for network calls.",
-        ),
-        IssueCode.ASYNC_CORRECTNESS: CustomGuideOverride(
-            issue_code=IssueCode.ASYNC_CORRECTNESS,
-            prefix="CUSTOM PREFIX (should be ignored due to replace taking precedence).",
-            replace="CUSTOM REPLACE WINS: Replace takes precedence over prefix.",
-        ),
-    })
+    merged_guides = build_merged_guides(
+        {
+            IssueCode.LOGIC_ERROR: CustomGuideOverride(
+                issue_code=IssueCode.LOGIC_ERROR,
+                prefix="CUSTOM PREFIX: Always check edge cases for off-by-one errors.",
+            ),
+            IssueCode.RUNTIME_ERROR_RISK: CustomGuideOverride(
+                issue_code=IssueCode.RUNTIME_ERROR_RISK,
+                suffix="CUSTOM SUFFIX: Pay special attention to null pointer dereferences.",
+            ),
+            IssueCode.INCORRECT_ALGORITHM: CustomGuideOverride(
+                issue_code=IssueCode.INCORRECT_ALGORITHM,
+                replace="CUSTOM REPLACEMENT: This entirely replaces the default incorrect_algorithm guide.",
+            ),
+            IssueCode.ERROR_HANDLING_MISSING: CustomGuideOverride(
+                issue_code=IssueCode.ERROR_HANDLING_MISSING,
+                prefix="CUSTOM PREFIX: Check all I/O operations.",
+                suffix="CUSTOM SUFFIX: Ensure timeouts are set for network calls.",
+            ),
+            IssueCode.ASYNC_CORRECTNESS: CustomGuideOverride(
+                issue_code=IssueCode.ASYNC_CORRECTNESS,
+                prefix="CUSTOM PREFIX (should be ignored due to replace taking precedence).",
+                replace="CUSTOM REPLACE WINS: Replace takes precedence over prefix.",
+            ),
+        }
+    )
     prompt = _run_single_prompt_with_guides(merged_guides)
     assert prompt == snapshot

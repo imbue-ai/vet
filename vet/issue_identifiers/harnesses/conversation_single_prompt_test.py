@@ -168,9 +168,7 @@ def _run_conversation_prompt_with_guides(
     """Helper: run identify_issues with given guides and return the captured prompt."""
     harness = ConversationSinglePromptHarness()
     identifier = harness.make_issue_identifier(
-        identification_guides=tuple(
-            guides[code] for code in ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK
-        )
+        identification_guides=tuple(guides[code] for code in ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK)
     )
 
     mock_language_model = ConversationSinglePromptHarnessMock(response_text='{"issues": []}')
@@ -218,16 +216,18 @@ def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None
     - instruction_file_disobeyed: replace (fully replaces the default guide)
     - instruction_to_save: left as default (no override)
     """
-    merged_guides = build_merged_guides({
-        IssueCode.MISLEADING_BEHAVIOR: CustomGuideOverride(
-            issue_code=IssueCode.MISLEADING_BEHAVIOR,
-            prefix="CUSTOM PREFIX: Pay close attention to claims about test results.",
-            suffix="CUSTOM SUFFIX: Also flag any fabricated error messages.",
-        ),
-        IssueCode.INSTRUCTION_FILE_DISOBEYED: CustomGuideOverride(
-            issue_code=IssueCode.INSTRUCTION_FILE_DISOBEYED,
-            replace="CUSTOM REPLACEMENT: Check that the agent follows all instruction files exactly.",
-        ),
-    })
+    merged_guides = build_merged_guides(
+        {
+            IssueCode.MISLEADING_BEHAVIOR: CustomGuideOverride(
+                issue_code=IssueCode.MISLEADING_BEHAVIOR,
+                prefix="CUSTOM PREFIX: Pay close attention to claims about test results.",
+                suffix="CUSTOM SUFFIX: Also flag any fabricated error messages.",
+            ),
+            IssueCode.INSTRUCTION_FILE_DISOBEYED: CustomGuideOverride(
+                issue_code=IssueCode.INSTRUCTION_FILE_DISOBEYED,
+                replace="CUSTOM REPLACEMENT: Check that the agent follows all instruction files exactly.",
+            ),
+        }
+    )
     prompt = _run_conversation_prompt_with_guides(merged_guides)
     assert prompt == snapshot

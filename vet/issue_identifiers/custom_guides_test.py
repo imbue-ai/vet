@@ -198,23 +198,6 @@ def test_parse_custom_guide_markdown_sections_with_no_content(tmp_path: Path) ->
     assert result.is_empty()  # Empty strings become None
 
 
-def test_parse_custom_guide_markdown_case_sensitive_headers(tmp_path: Path) -> None:
-    """Test that section headers are case-sensitive."""
-    guide_file = tmp_path / "logic_error.md"
-    guide_file.write_text(
-        """# VET_CUSTOM_GUIDELINE_PREFIX
-This should NOT be captured (wrong case)
-
-# vet_custom_guideline_prefix
-This SHOULD be captured
-"""
-    )
-
-    result = parse_custom_guide_markdown(guide_file)
-
-    assert result is not None
-    assert result.prefix == "This SHOULD be captured"
-
 
 def test_parse_custom_guide_markdown_similar_headers_not_matched(tmp_path: Path) -> None:
     """Test that similar but not exact headers are not matched."""
