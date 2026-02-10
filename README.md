@@ -115,7 +115,6 @@ Vet snapshots the repo and diff, optionally adds a goal and agent conversation, 
 - **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
 - **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
-- **No telemetry collected by us**: Vet does not collect any user data.
 
 ## Output & exit codes
 
@@ -182,8 +181,6 @@ Profiles set defaults like model choice, enabled issue codes, output format, and
 
 See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this project.
 
-## Privacy / telemetry
+## License
 
-Vet does **not** collect telemetry and does not send usage data to external services.
-
-If you configure Vet to use a hosted inference provider, that provider may log requests; selecting a provider is the user’s responsibility.
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0-only)](LICENSE).
