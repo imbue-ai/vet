@@ -198,7 +198,6 @@ def test_parse_custom_guide_markdown_sections_with_no_content(tmp_path: Path) ->
     assert result.is_empty()  # Empty strings become None
 
 
-
 def test_parse_custom_guide_markdown_similar_headers_not_matched(tmp_path: Path) -> None:
     """Test that similar but not exact headers are not matched."""
     guide_file = tmp_path / "logic_error.md"
