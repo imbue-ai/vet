@@ -36,7 +36,7 @@ from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
 from vet.truncation import ContextBudget
-from vet.truncation import get_available_tokens
+from vet.truncation import compute_tokens_remaining
 from vet.truncation import get_token_budget
 from vet.truncation import truncate_to_token_limit
 
@@ -168,6 +168,20 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
             }
         )
 
+    def _calculate_prompt_overhead(self, config: VetConfig) -> int:
+        """Calculate the token overhead for this identifier's prompt template and guides."""
+        minimal_prompt = self._render_prompt(
+            cached_prompt_prefix="",
+            cache_full_prompt=config.cache_full_prompt,
+            goal="",
+            goal_truncated=False,
+            diff="",
+            diff_truncated=False,
+            extra_context=None,
+            extra_context_truncated=False,
+        )
+        return config.language_model_generation_config.count_tokens(minimal_prompt)
+
     def _get_prompt(
         self,
         project_context: ProjectContext,
@@ -175,7 +189,7 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         identifier_inputs: CommitInputs,
     ) -> str:
         lm_config = config.language_model_generation_config
-        available_tokens = get_available_tokens(config)
+        available_tokens = compute_tokens_remaining(config, self._calculate_prompt_overhead(config))
         goal_budget = get_token_budget(available_tokens, ContextBudget.GOAL)
         extra_context_budget = get_token_budget(available_tokens, ContextBudget.EXTRA_CONTEXT)
 
@@ -268,21 +282,6 @@ class SinglePromptHarness(IssueIdentifierHarness[CommitInputs]):
         config: VetConfig,
     ) -> int:
         identifier = self.make_issue_identifier(identification_guides)
-
-        # Render minimal prompt with empty dynamic content (no truncation/budgeting needed)
-        minimal_prompt = identifier._render_prompt(
-            cached_prompt_prefix="",
-            cache_full_prompt=config.cache_full_prompt,
-            goal="",
-            goal_truncated=False,
-            diff="",
-            diff_truncated=False,
-            extra_context=None,
-            extra_context_truncated=False,
-        )
-
-        # Use configured model's tokenizer (handles Anthropic/OpenAI/custom models)
-        overhead = config.language_model_generation_config.count_tokens(minimal_prompt)
-
+        overhead = identifier._calculate_prompt_overhead(config)
         logger.debug("SinglePrompt with {} guides: {} tokens", len(identification_guides), overhead)
         return overhead

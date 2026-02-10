@@ -30,7 +30,7 @@ from vet.issue_identifiers.identification_guides import (
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.identification_guides import build_merged_guides
 from vet.issue_identifiers.registry import _build_identifiers
-from vet.issue_identifiers.registry import _get_enabled_identifier_names
+from vet.issue_identifiers.registry import get_enabled_identifier_names
 
 
 def test_to_required_inputs() -> None:
@@ -89,7 +89,7 @@ def _build_conversation_identifier(
     if guides_by_code is None:
         guides_by_code = config.guides_by_code
     identifiers = _build_identifiers(
-        _get_enabled_identifier_names(config),
+        get_enabled_identifier_names(config),
         get_enabled_issue_codes(config),
         guides_by_code,
     )

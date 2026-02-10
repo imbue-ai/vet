@@ -18,10 +18,23 @@ def get_token_budget(total_available: int, budget: ContextBudget) -> int:
     return int(total_available * budget.value / 100)
 
 
-def get_available_tokens(config: VetConfig) -> int:
+def compute_tokens_remaining(config: VetConfig, prompt_overhead: int) -> int:
+    """Compute available tokens for dynamic content given a specific prompt overhead.
+
+    Available tokens = context_window - prompt_overhead - max_output_tokens.
+    """
     lm_config = config.language_model_generation_config
     context_window = lm_config.get_max_context_length()
-    return context_window - config.max_prompt_overhead - config.max_output_tokens
+    return context_window - prompt_overhead - config.max_output_tokens
+
+
+def get_available_tokens(config: VetConfig) -> int:
+    """Compute available tokens using the max prompt overhead across all enabled harnesses.
+
+    Use this for shared resources (e.g., diff, repo context) that are common across all
+    identifiers and must fit within the budget of every harness.
+    """
+    return compute_tokens_remaining(config, config.max_prompt_overhead)
 
 
 def truncate_to_token_limit(

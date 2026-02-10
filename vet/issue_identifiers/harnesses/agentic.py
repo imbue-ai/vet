@@ -397,6 +397,43 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     def identifies_code_issues(self) -> bool:
         return True
 
+    def _calculate_prompt_overhead(self, config: VetConfig) -> int:
+        """Calculate the token overhead for this identifier's prompt template and guides.
+
+        Handles both parallel and non-parallel modes:
+        - Non-parallel: Single prompt with all guides (larger overhead)
+        - Parallel: Multiple prompts with one guide each (smaller overhead per request)
+
+        Returns the maximum overhead for a single request.
+        """
+        count_tokens = config.language_model_generation_config.count_tokens
+
+        if config.enable_parallel_agentic_issue_identification:
+            # Parallel mode: Each worker gets ONE issue type
+            # Calculate overhead for each and return the max
+            overheads = []
+            for guide in self._identification_guides:
+                minimal_prompt = self._render_prompt_for_issue_type(
+                    repo_path="",
+                    goal="",
+                    goal_truncated=False,
+                    diff="",
+                    diff_truncated=False,
+                    guide=guide,
+                )
+                overheads.append(count_tokens(minimal_prompt))
+            return max(overheads)
+        else:
+            # Non-parallel mode: Single prompt with ALL issue types
+            minimal_prompt = self._render_prompt(
+                repo_path="",
+                goal="",
+                goal_truncated=False,
+                diff="",
+                diff_truncated=False,
+            )
+            return count_tokens(minimal_prompt)
+
 
 class AgenticHarness(IssueIdentifierHarness[CommitInputs]):
     def make_issue_identifier(
@@ -409,53 +446,18 @@ class AgenticHarness(IssueIdentifierHarness[CommitInputs]):
         identification_guides: tuple[IssueIdentificationGuide, ...],
         config: VetConfig,
     ) -> int:
-        """
-        Calculate prompt overhead for agentic harness.
-
-        Handles both parallel and non-parallel modes:
-        - Non-parallel: Single prompt with all guides (larger overhead)
-        - Parallel: Multiple prompts with one guide each (smaller overhead per request)
-
-        Returns the maximum overhead for a single request.
-        """
         identifier = self.make_issue_identifier(identification_guides)
-        count_tokens = config.language_model_generation_config.count_tokens
-
+        overhead = identifier._calculate_prompt_overhead(config)
         if config.enable_parallel_agentic_issue_identification:
-            # Parallel mode: Each worker gets ONE issue type
-            # Calculate overhead for each and return the max (though typically similar)
-            overheads = []
-            for guide in identification_guides:
-                minimal_prompt = identifier._render_prompt_for_issue_type(
-                    repo_path="",
-                    goal="",
-                    goal_truncated=False,
-                    diff="",
-                    diff_truncated=False,
-                    guide=guide,
-                )
-                overheads.append(count_tokens(minimal_prompt))
-
-            max_overhead = max(overheads)
             logger.debug(
-                "Agentic parallel mode: {} prompts, max overhead {} tokens",
-                len(overheads),
-                max_overhead,
+                "Agentic parallel mode: {} guides, max overhead {} tokens",
+                len(identification_guides),
+                overhead,
             )
-            return max_overhead
         else:
-            # Non-parallel mode: Single prompt with ALL issue types
-            minimal_prompt = identifier._render_prompt(
-                repo_path="",
-                goal="",
-                goal_truncated=False,
-                diff="",
-                diff_truncated=False,
-            )
-            overhead = count_tokens(minimal_prompt)
             logger.debug(
                 "Agentic non-parallel mode: 1 prompt with {} guides, overhead {} tokens",
                 len(identification_guides),
                 overhead,
             )
-            return overhead
+        return overhead

@@ -43,7 +43,7 @@ from vet.issue_identifiers.identification_guides import (
     IssueIdentificationGuide,
 )
 from vet.truncation import ContextBudget
-from vet.truncation import get_available_tokens
+from vet.truncation import compute_tokens_remaining
 from vet.truncation import get_token_budget
 
 PROMPT_TEMPLATE = (
@@ -110,6 +110,17 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
             guides=formatted_guides,
         )
 
+    def _calculate_prompt_overhead(self, config: VetConfig) -> int:
+        """Calculate the token overhead for this identifier's prompt template and guides."""
+        minimal_prompt = self._render_prompt(
+            cached_prompt_prefix="",
+            cache_full_prompt=config.cache_full_prompt,
+            conversation_history="",
+            conversation_truncated=False,
+            instruction_context=None,
+        )
+        return config.language_model_generation_config.count_tokens(minimal_prompt)
+
     def _get_prompt(
         self,
         project_context: ProjectContext,
@@ -117,7 +128,7 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
         identifier_inputs: ConversationInputs,
     ) -> str:
         lm_config = config.language_model_generation_config
-        available_tokens = get_available_tokens(config)
+        available_tokens = compute_tokens_remaining(config, self._calculate_prompt_overhead(config))
         conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
 
         conversation_history, conversation_truncated = format_conversation_history_for_prompt(
@@ -192,18 +203,6 @@ class ConversationSinglePromptHarness(IssueIdentifierHarness[ConversationInputs]
         config: VetConfig,
     ) -> int:
         identifier = self.make_issue_identifier(identification_guides)
-
-        # Render minimal prompt with empty conversation (no truncation/budgeting needed)
-        minimal_prompt = identifier._render_prompt(
-            cached_prompt_prefix="",
-            cache_full_prompt=config.cache_full_prompt,
-            conversation_history="",
-            conversation_truncated=False,
-            instruction_context=None,
-        )
-
-        # Use configured model's tokenizer
-        overhead = config.language_model_generation_config.count_tokens(minimal_prompt)
-
+        overhead = identifier._calculate_prompt_overhead(config)
         logger.debug("ConversationSinglePrompt with {} guides: {} tokens", len(identification_guides), overhead)
         return overhead

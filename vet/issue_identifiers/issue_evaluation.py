@@ -40,7 +40,7 @@ from vet.issue_identifiers.harnesses.single_prompt import (
 )
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 from vet.truncation import ContextBudget
-from vet.truncation import get_available_tokens
+from vet.truncation import compute_tokens_remaining
 from vet.truncation import get_token_budget
 
 CODE_BASED_CRITERIA = (
@@ -98,6 +98,55 @@ def _get_full_prompt_template(is_code_based_issue: bool) -> str:
     return prefix + PROMPT_TEMPLATE
 
 
+def _render_conversation_evaluation_prompt(
+    issue: GeneratedIssueSchema,
+    config: VetConfig,
+    cached_prompt_prefix: str,
+    conversation_history: str,
+    conversation_truncated: bool,
+) -> str:
+    """Render the conversation-based evaluation prompt. No truncation or budgeting."""
+    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+    prompt_template = _get_full_prompt_template(is_code_based_issue=False)
+    jinja_template = env.from_string(prompt_template)
+    issue_code = IssueCode(issue.issue_code)
+    guide = format_issue_identification_guide_for_llm(config.guides_by_code[issue_code])
+
+    template_vars = {
+        "cached_prompt_prefix": cached_prompt_prefix,
+        "cache_full_prompt": config.cache_full_prompt,
+        "issue_description": issue.description,
+        "issue_code": issue_code,
+        "guide": guide,
+        "criteria": CONVERSATION_BASED_CRITERIA,
+        "response_schema": ConversationBasedEvaluationResponse.model_json_schema(),
+        "is_code_based_issue": False,
+        "conversation_history": conversation_history,
+        "conversation_truncated": conversation_truncated,
+    }
+
+    return jinja_template.render(template_vars)
+
+
+def _calculate_conversation_evaluation_overhead(
+    issue: GeneratedIssueSchema,
+    config: VetConfig,
+) -> int:
+    """Calculate token overhead for the conversation-based evaluation prompt.
+
+    Renders the evaluator template with the specific issue and guide but empty
+    conversation history, to determine the prompt overhead for conversation budgeting.
+    """
+    minimal_prompt = _render_conversation_evaluation_prompt(
+        issue=issue,
+        config=config,
+        cached_prompt_prefix="",
+        conversation_history="",
+        conversation_truncated=False,
+    )
+    return config.language_model_generation_config.count_tokens(minimal_prompt)
+
+
 class CodeBasedEvaluationResponse(SerializableModel):
     q1: bool
     q2: bool
@@ -124,39 +173,38 @@ def _format_prompt(
     inputs: IdentifierInputs,
     is_code_based_issue: bool,
 ) -> str:
-    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
-    prompt_template = _get_full_prompt_template(is_code_based_issue)
-    jinja_template = env.from_string(prompt_template)
-    issue_code = IssueCode(issue.issue_code)
-    guide = format_issue_identification_guide_for_llm(config.guides_by_code[issue_code])
-
-    criteria = CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
-    response_class = CodeBasedEvaluationResponse if is_code_based_issue else ConversationBasedEvaluationResponse
-
-    template_vars = {
-        "cached_prompt_prefix": project_context.cached_prompt_prefix,
-        "cache_full_prompt": config.cache_full_prompt,
-        "issue_description": issue.description,
-        "issue_code": issue_code,
-        "guide": guide,
-        "criteria": criteria,
-        "response_schema": response_class.model_json_schema(),
-        "is_code_based_issue": is_code_based_issue,
-    }
-
     if is_code_based_issue:
-        template_vars["include_request_and_diff"] = True
-        template_vars["commit_message"] = escape_prompt_markers(inputs.maybe_goal or "")
-        template_vars["goal_truncated"] = inputs.goal_truncated
-        template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
-        template_vars["diff_truncated"] = inputs.diff_truncated
-        template_vars["extra_context"] = (
-            escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
-        )
-        template_vars["extra_context_truncated"] = inputs.extra_context_truncated
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        prompt_template = _get_full_prompt_template(is_code_based_issue=True)
+        jinja_template = env.from_string(prompt_template)
+        issue_code = IssueCode(issue.issue_code)
+        guide = format_issue_identification_guide_for_llm(config.guides_by_code[issue_code])
+
+        template_vars = {
+            "cached_prompt_prefix": project_context.cached_prompt_prefix,
+            "cache_full_prompt": config.cache_full_prompt,
+            "issue_description": issue.description,
+            "issue_code": issue_code,
+            "guide": guide,
+            "criteria": CODE_BASED_CRITERIA,
+            "response_schema": CodeBasedEvaluationResponse.model_json_schema(),
+            "is_code_based_issue": True,
+            "include_request_and_diff": True,
+            "commit_message": escape_prompt_markers(inputs.maybe_goal or ""),
+            "goal_truncated": inputs.goal_truncated,
+            "unified_diff": escape_prompt_markers(inputs.maybe_diff or ""),
+            "diff_truncated": inputs.diff_truncated,
+            "extra_context": (
+                escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
+            ),
+            "extra_context_truncated": inputs.extra_context_truncated,
+        }
+
+        return jinja_template.render(template_vars)
     else:
         lm_config = config.language_model_generation_config
-        available_tokens = get_available_tokens(config)
+        overhead = _calculate_conversation_evaluation_overhead(issue, config)
+        available_tokens = compute_tokens_remaining(config, overhead)
         conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
 
         conversation_history, conversation_truncated = format_conversation_history_for_prompt(
@@ -164,10 +212,14 @@ def _format_prompt(
             max_tokens=conversation_budget,
             count_tokens=lm_config.count_tokens,
         )
-        template_vars["conversation_history"] = conversation_history
-        template_vars["conversation_truncated"] = conversation_truncated or inputs.conversation_truncated
 
-    return jinja_template.render(template_vars)
+        return _render_conversation_evaluation_prompt(
+            issue=issue,
+            config=config,
+            cached_prompt_prefix=project_context.cached_prompt_prefix,
+            conversation_history=conversation_history,
+            conversation_truncated=conversation_truncated or inputs.conversation_truncated,
+        )
 
 
 def _parse_response(
