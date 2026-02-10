@@ -2,7 +2,7 @@
 # name: test_format_github_review_mixed_issues
   dict({
     'body': '''
-      **Vet found 2 issue(s)**
+      **Vet found 2 issues.**
       
       ---
       
@@ -27,7 +27,7 @@
 # ---
 # name: test_format_github_review_no_issues
   dict({
-    'body': '**Vet found no issues.**',
+    'body': '**Vet found 0 issues.**',
     'comments': list([
     ]),
     'event': 'COMMENT',

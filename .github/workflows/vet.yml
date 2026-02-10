@@ -19,7 +19,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-        # TODO: Should this run the current version or the main version? There are pros and cons both ways.
+      # we want to run the current version of vet against the PR, not necessarily the deployed / main version.
+      # this is the only difference between this vet.yml and the recommended one in the readme. 
       - run: pip install .
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository

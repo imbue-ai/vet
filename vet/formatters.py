@@ -116,10 +116,9 @@ def format_github_review(
     inline = [i for i in issues if i.location and i.location[0].filename]
     body_only = [i for i in issues if not i.location or not i.location[0].filename]
 
-    if not issues:
-        body = "**Vet found no issues.**"
-    else:
-        body = f"**Vet found {len(issues)} issue(s)**"
+    count = len(issues)
+    noun = "issue" if count == 1 else "issues"
+    body = f"**Vet found {count} {noun}.**"
     if body_only:
         sections = [_format_review_comment_body(i, fields) for i in body_only]
         body += "\n\n---\n\n" + "\n\n".join(sections)
