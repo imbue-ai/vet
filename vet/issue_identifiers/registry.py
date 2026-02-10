@@ -99,7 +99,7 @@ def _convert_all_to_enum(
     return tuple(results)
 
 
-def _get_enabled_identifier_names(
+def get_enabled_identifier_names(
     config: VetConfig,
 ) -> set[IssueIdentifierType]:
     all_names = get_all_valid_identifier_names()
@@ -176,7 +176,7 @@ def run(
     Run all the registered and configured issue identifiers on the given inputs.
     """
     enabled_issue_codes = get_enabled_issue_codes(config)
-    identifiers = _build_identifiers(_get_enabled_identifier_names(config), enabled_issue_codes, config.guides_by_code)
+    identifiers = _build_identifiers(get_enabled_identifier_names(config), enabled_issue_codes, config.guides_by_code)
     ensure_global_resource_limits(
         max_dollars=(
             config.max_identifier_spend_dollars if config.max_identifier_spend_dollars is not None else float("inf")

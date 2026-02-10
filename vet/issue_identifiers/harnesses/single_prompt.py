@@ -7,6 +7,7 @@ from typing import Any
 from typing import Generator
 
 import jinja2
+from loguru import logger
 
 from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
@@ -131,18 +132,48 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
     def _response_schema(self) -> dict[str, Any]:
         return GeneratedResponseSchema.model_json_schema()
 
-    def _get_prompt(
+    def _render_prompt(
         self,
-        project_context: ProjectContext,
-        config: VetConfig,
-        identifier_inputs: CommitInputs,
+        cached_prompt_prefix: str,
+        cache_full_prompt: bool,
+        goal: str,
+        goal_truncated: bool,
+        diff: str,
+        diff_truncated: bool,
+        extra_context: str | None,
+        extra_context_truncated: bool,
     ) -> str:
+        """Render the prompt template with the given content. No truncation or budgeting."""
         # Sort the guides by issue code to ensure prompt caching (and snapshotting in tests) works.
         sorted_guides = sorted(self._identification_guides, key=lambda guide: guide.issue_code)
         formatted_guides = {
             guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
         }
 
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        jinja_template = env.from_string(PROMPT_TEMPLATE)
+        return jinja_template.render(
+            {
+                "include_request_and_diff": True,
+                "cached_prompt_prefix": cached_prompt_prefix,
+                "cache_full_prompt": cache_full_prompt,
+                "extra_context": (escape_prompt_markers(extra_context) if extra_context else None),
+                "extra_context_truncated": extra_context_truncated,
+                "commit_message": escape_prompt_markers(goal),
+                "goal_truncated": goal_truncated,
+                "unified_diff": escape_prompt_markers(diff),
+                "diff_truncated": diff_truncated,
+                "guides": formatted_guides,
+                "response_schema": self._response_schema,
+            }
+        )
+
+    def _get_prompt(
+        self,
+        project_context: ProjectContext,
+        config: VetConfig,
+        identifier_inputs: CommitInputs,
+    ) -> str:
         lm_config = config.language_model_generation_config
         available_tokens = get_available_tokens(config)
         goal_budget = get_token_budget(available_tokens, ContextBudget.GOAL)
@@ -169,22 +200,15 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
         else:
             extra_context_truncated = False
 
-        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
-        jinja_template = env.from_string(PROMPT_TEMPLATE)
-        return jinja_template.render(
-            {
-                "include_request_and_diff": True,
-                "cached_prompt_prefix": project_context.cached_prompt_prefix,
-                "cache_full_prompt": config.cache_full_prompt,
-                "extra_context": (escape_prompt_markers(extra_context) if extra_context else None),
-                "extra_context_truncated": extra_context_truncated,
-                "commit_message": escape_prompt_markers(goal),
-                "goal_truncated": goal_truncated or identifier_inputs.goal_truncated,
-                "unified_diff": escape_prompt_markers(identifier_inputs.diff),
-                "diff_truncated": identifier_inputs.diff_truncated,
-                "guides": formatted_guides,
-                "response_schema": self._response_schema,
-            }
+        return self._render_prompt(
+            cached_prompt_prefix=project_context.cached_prompt_prefix,
+            cache_full_prompt=config.cache_full_prompt,
+            goal=goal,
+            goal_truncated=goal_truncated or identifier_inputs.goal_truncated,
+            diff=identifier_inputs.diff,
+            diff_truncated=identifier_inputs.diff_truncated,
+            extra_context=extra_context or None,
+            extra_context_truncated=extra_context_truncated,
         )
 
     def identify_issues(
@@ -237,3 +261,28 @@ class SinglePromptHarness(IssueIdentifierHarness[CommitInputs]):
         self, identification_guides: tuple[IssueIdentificationGuide, ...]
     ) -> IssueIdentifier[CommitInputs]:
         return _SinglePromptIssueIdentifier(identification_guides=identification_guides)
+
+    def calculate_prompt_overhead(
+        self,
+        identification_guides: tuple[IssueIdentificationGuide, ...],
+        config: VetConfig,
+    ) -> int:
+        identifier = self.make_issue_identifier(identification_guides)
+
+        # Render minimal prompt with empty dynamic content (no truncation/budgeting needed)
+        minimal_prompt = identifier._render_prompt(
+            cached_prompt_prefix="",
+            cache_full_prompt=config.cache_full_prompt,
+            goal="",
+            goal_truncated=False,
+            diff="",
+            diff_truncated=False,
+            extra_context=None,
+            extra_context_truncated=False,
+        )
+
+        # Use configured model's tokenizer (handles Anthropic/OpenAI/custom models)
+        overhead = config.language_model_generation_config.count_tokens(minimal_prompt)
+
+        logger.debug("SinglePrompt with {} guides: {} tokens", len(identification_guides), overhead)
+        return overhead

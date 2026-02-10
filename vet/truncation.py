@@ -3,8 +3,6 @@ from typing import Callable
 
 from loguru import logger
 
-from vet.repo_utils import VET_MAX_PROMPT_TOKENS
-
 from vet.imbue_tools.types.vet_config import VetConfig
 
 
@@ -20,10 +18,10 @@ def get_token_budget(total_available: int, budget: ContextBudget) -> int:
     return int(total_available * budget.value / 100)
 
 
-def get_available_tokens(config: "VetConfig") -> int:
+def get_available_tokens(config: VetConfig) -> int:
     lm_config = config.language_model_generation_config
     context_window = lm_config.get_max_context_length()
-    return context_window - VET_MAX_PROMPT_TOKENS - config.max_output_tokens
+    return context_window - config.max_prompt_overhead - config.max_output_tokens
 
 
 def truncate_to_token_limit(

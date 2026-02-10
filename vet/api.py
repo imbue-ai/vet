@@ -24,7 +24,6 @@ from vet.imbue_tools.util_prompts.goal_from_conversation import (
 from vet.issue_identifiers import registry
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 from vet.repo_utils import get_code_to_check
-from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget
@@ -82,7 +81,7 @@ def get_issues_with_raw_responses(
         language_model_name=lm_config.model_name,
         repo_path=repo_path,
         # This needs to account for the vet prompt, as well as the max_tokens output tokens.
-        tokens_to_reserve=VET_MAX_PROMPT_TOKENS + diff_no_binary_tokens + config.max_output_tokens,
+        tokens_to_reserve=config.max_prompt_overhead + diff_no_binary_tokens + config.max_output_tokens,
         context_window=lm_config.get_max_context_length(),
         is_custom_model=lm_config.is_custom_model(),
     )

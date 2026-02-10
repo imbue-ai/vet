@@ -200,35 +200,77 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     def _response_schema(self) -> dict[str, Any]:
         return GeneratedResponseSchema.model_json_schema()
 
+    def _render_prompt(
+        self,
+        repo_path: str | None,
+        goal: str,
+        goal_truncated: bool,
+        diff: str,
+        diff_truncated: bool,
+    ) -> str:
+        """Render the prompt template with the given content. No truncation or budgeting."""
+        formatted_guides = {
+            guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in self._identification_guides
+        }
+        additional_guidance_by_issue_code = {
+            guide.issue_code: guide.additional_guide_for_agent for guide in self._identification_guides
+        }
+
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        jinja_template = env.from_string(PROMPT_TEMPLATE)
+        return jinja_template.render(
+            {
+                "repo_path": repo_path,
+                "commit_message": escape_prompt_markers(goal),
+                "goal_truncated": goal_truncated,
+                "unified_diff": escape_prompt_markers(diff),
+                "diff_truncated": diff_truncated,
+                "guides": formatted_guides,
+                "response_schema": self._response_schema,
+                "additional_guidance": additional_guidance_by_issue_code,
+            }
+        )
+
+    def _render_prompt_for_issue_type(
+        self,
+        repo_path: str | None,
+        goal: str,
+        goal_truncated: bool,
+        diff: str,
+        diff_truncated: bool,
+        guide: IssueIdentificationGuide,
+    ) -> str:
+        """Render the per-issue-type prompt template with the given content. No truncation or budgeting."""
+        formatted_guide = format_issue_identification_guide_for_llm(guide)
+
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        jinja_template = env.from_string(ISSUE_TYPE_PROMPT_TEMPLATE)
+        return jinja_template.render(
+            {
+                "repo_path": repo_path,
+                "commit_message": escape_prompt_markers(goal),
+                "goal_truncated": goal_truncated,
+                "unified_diff": escape_prompt_markers(diff),
+                "diff_truncated": diff_truncated,
+                "guide": formatted_guide,
+                "response_schema": self._response_schema,
+                "issue_type": guide.issue_code,
+            }
+        )
+
     def _get_prompt(
         self,
         project_context: ProjectContext,
         config: VetConfig,  # unused
         identifier_inputs: CommitInputs,
     ) -> str:
-        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
-        jinja_template = env.from_string(PROMPT_TEMPLATE)
-        additional_guidance_by_issue_code = {
-            guide.issue_code: guide.additional_guide_for_agent for guide in self._identification_guides
-        }
-
-        formatted_guides = {
-            guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in self._identification_guides
-        }
-
-        prompt = jinja_template.render(
-            {
-                "repo_path": project_context.repo_path,
-                "commit_message": escape_prompt_markers(identifier_inputs.goal),
-                "goal_truncated": identifier_inputs.goal_truncated,
-                "unified_diff": escape_prompt_markers(identifier_inputs.diff),
-                "diff_truncated": identifier_inputs.diff_truncated,
-                "guides": formatted_guides,
-                "response_schema": self._response_schema,
-                "additional_guidance": additional_guidance_by_issue_code,
-            }
+        return self._render_prompt(
+            repo_path=project_context.repo_path,
+            goal=identifier_inputs.goal,
+            goal_truncated=identifier_inputs.goal_truncated,
+            diff=identifier_inputs.diff,
+            diff_truncated=identifier_inputs.diff_truncated,
         )
-        return prompt
 
     def _get_prompt_for_issue_type(
         self,
@@ -236,24 +278,14 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         identifier_inputs: CommitInputs,
         guide: IssueIdentificationGuide,
     ) -> str:
-        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
-        jinja_template = env.from_string(ISSUE_TYPE_PROMPT_TEMPLATE)
-
-        formatted_guide = format_issue_identification_guide_for_llm(guide)
-
-        prompt = jinja_template.render(
-            {
-                "repo_path": project_context.repo_path,
-                "commit_message": escape_prompt_markers(identifier_inputs.goal),
-                "goal_truncated": identifier_inputs.goal_truncated,
-                "unified_diff": escape_prompt_markers(identifier_inputs.diff),
-                "diff_truncated": identifier_inputs.diff_truncated,
-                "guide": formatted_guide,
-                "response_schema": self._response_schema,
-                "issue_type": guide.issue_code,
-            }
+        return self._render_prompt_for_issue_type(
+            repo_path=project_context.repo_path,
+            goal=identifier_inputs.goal,
+            goal_truncated=identifier_inputs.goal_truncated,
+            diff=identifier_inputs.diff,
+            diff_truncated=identifier_inputs.diff_truncated,
+            guide=guide,
         )
-        return prompt
 
     def identify_issues(
         self,
@@ -371,3 +403,59 @@ class AgenticHarness(IssueIdentifierHarness[CommitInputs]):
         self, identification_guides: tuple[IssueIdentificationGuide, ...]
     ) -> IssueIdentifier[CommitInputs]:
         return _AgenticIssueIdentifier(identification_guides=identification_guides)
+
+    def calculate_prompt_overhead(
+        self,
+        identification_guides: tuple[IssueIdentificationGuide, ...],
+        config: VetConfig,
+    ) -> int:
+        """
+        Calculate prompt overhead for agentic harness.
+
+        Handles both parallel and non-parallel modes:
+        - Non-parallel: Single prompt with all guides (larger overhead)
+        - Parallel: Multiple prompts with one guide each (smaller overhead per request)
+
+        Returns the maximum overhead for a single request.
+        """
+        identifier = self.make_issue_identifier(identification_guides)
+        count_tokens = config.language_model_generation_config.count_tokens
+
+        if config.enable_parallel_agentic_issue_identification:
+            # Parallel mode: Each worker gets ONE issue type
+            # Calculate overhead for each and return the max (though typically similar)
+            overheads = []
+            for guide in identification_guides:
+                minimal_prompt = identifier._render_prompt_for_issue_type(
+                    repo_path="",
+                    goal="",
+                    goal_truncated=False,
+                    diff="",
+                    diff_truncated=False,
+                    guide=guide,
+                )
+                overheads.append(count_tokens(minimal_prompt))
+
+            max_overhead = max(overheads)
+            logger.debug(
+                "Agentic parallel mode: {} prompts, max overhead {} tokens",
+                len(overheads),
+                max_overhead,
+            )
+            return max_overhead
+        else:
+            # Non-parallel mode: Single prompt with ALL issue types
+            minimal_prompt = identifier._render_prompt(
+                repo_path="",
+                goal="",
+                goal_truncated=False,
+                diff="",
+                diff_truncated=False,
+            )
+            overhead = count_tokens(minimal_prompt)
+            logger.debug(
+                "Agentic non-parallel mode: 1 prompt with {} guides, overhead {} tokens",
+                len(identification_guides),
+                overhead,
+            )
+            return overhead

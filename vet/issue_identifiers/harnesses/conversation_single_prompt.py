@@ -9,6 +9,7 @@ from typing import Any
 from typing import Generator
 
 import jinja2
+from loguru import logger
 
 from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
@@ -82,18 +83,39 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
     def _response_schema(self) -> dict[str, Any]:
         return GeneratedResponseSchema.model_json_schema()
 
-    def _get_prompt(
+    def _render_prompt(
         self,
-        project_context: ProjectContext,
-        config: VetConfig,
-        identifier_inputs: ConversationInputs,
+        cached_prompt_prefix: str,
+        cache_full_prompt: bool,
+        conversation_history: str,
+        conversation_truncated: bool,
+        instruction_context: str | None,
     ) -> str:
+        """Render the prompt template with the given content. No truncation or budgeting."""
         # Sort the guides by issue code to ensure prompt caching (and snapshotting in tests) works.
         sorted_guides = sorted(self._identification_guides, key=lambda guide: guide.issue_code)
         formatted_guides = {
             guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in sorted_guides
         }
 
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        jinja_template = env.from_string(PROMPT_TEMPLATE)
+        return jinja_template.render(
+            cached_prompt_prefix=cached_prompt_prefix,
+            cache_full_prompt=cache_full_prompt,
+            conversation_history=conversation_history,
+            conversation_truncated=conversation_truncated,
+            instruction_context=instruction_context,
+            response_schema=self._response_schema,
+            guides=formatted_guides,
+        )
+
+    def _get_prompt(
+        self,
+        project_context: ProjectContext,
+        config: VetConfig,
+        identifier_inputs: ConversationInputs,
+    ) -> str:
         lm_config = config.language_model_generation_config
         available_tokens = get_available_tokens(config)
         conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
@@ -104,17 +126,13 @@ class _ConversationSinglePromptIssueIdentifier(IssueIdentifier[ConversationInput
             count_tokens=lm_config.count_tokens,
         )
 
-        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
-        jinja_template = env.from_string(PROMPT_TEMPLATE)
-        return jinja_template.render(
+        return self._render_prompt(
             cached_prompt_prefix=project_context.cached_prompt_prefix,
             cache_full_prompt=config.cache_full_prompt,
             conversation_history=conversation_history,
             conversation_truncated=conversation_truncated or identifier_inputs.conversation_truncated,
             # pyre-fixme[16]: SubrepoContext need not have a formatted_repo_context, and instruction_context can be None
             instruction_context=project_context.instruction_context.formatted_repo_context,
-            response_schema=self._response_schema,
-            guides=formatted_guides,
         )
 
     def identify_issues(
@@ -167,3 +185,25 @@ class ConversationSinglePromptHarness(IssueIdentifierHarness[ConversationInputs]
         self, identification_guides: tuple[IssueIdentificationGuide, ...]
     ) -> IssueIdentifier[ConversationInputs]:
         return _ConversationSinglePromptIssueIdentifier(identification_guides=identification_guides)
+
+    def calculate_prompt_overhead(
+        self,
+        identification_guides: tuple[IssueIdentificationGuide, ...],
+        config: VetConfig,
+    ) -> int:
+        identifier = self.make_issue_identifier(identification_guides)
+
+        # Render minimal prompt with empty conversation (no truncation/budgeting needed)
+        minimal_prompt = identifier._render_prompt(
+            cached_prompt_prefix="",
+            cache_full_prompt=config.cache_full_prompt,
+            conversation_history="",
+            conversation_truncated=False,
+            instruction_context=None,
+        )
+
+        # Use configured model's tokenizer
+        overhead = config.language_model_generation_config.count_tokens(minimal_prompt)
+
+        logger.debug("ConversationSinglePrompt with {} guides: {} tokens", len(identification_guides), overhead)
+        return overhead
