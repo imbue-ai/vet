@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.11"
       # we want to run the current version of vet against the PR, not necessarily the deployed / main version.
-      # this is the only difference between this vet.yml and the recommended one in the readme. 
+      # this is the only difference between this vet.yml and the recommended one in the readme.
       - run: pip install .
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
