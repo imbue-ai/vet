@@ -81,7 +81,7 @@ jobs:
           exit 0
 ```
 
-NOTE: This will not fail in CI if Vet finds an issue. This will only add a comment to the PR.
+NOTE: This will not fail in CI if Vet finds an issue.
 
 #### Environment variables
 
