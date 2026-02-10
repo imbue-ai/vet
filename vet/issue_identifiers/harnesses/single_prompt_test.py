@@ -16,6 +16,7 @@ from vet.imbue_core.agents.llm_apis.data_types import LanguageModelResponseWithL
 from vet.imbue_core.agents.llm_apis.data_types import ResponseStopReason
 from vet.imbue_core.agents.llm_apis.mock_api import LanguageModelMock
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentifierType
 from vet.imbue_core.frozen_utils import FrozenDict
 from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
@@ -24,6 +25,7 @@ from vet.imbue_tools.get_conversation_history.input_data_types import (
 )
 from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.types.vet_config import get_enabled_issue_codes
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
 from vet.issue_identifiers.custom_guides import CustomGuideOverride
@@ -33,7 +35,10 @@ from vet.issue_identifiers.identification_guides import (
 from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.identification_guides import build_merged_guides
+from vet.issue_identifiers.registry import _build_identifiers
+from vet.issue_identifiers.registry import _get_enabled_identifier_names
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 
@@ -180,62 +185,39 @@ def test_identify_issues_integration() -> None:
         assert len(llm_responses) > 0  # Should have LLM responses
 
 
+def _build_single_prompt_identifier(
+    guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = None,
+) -> IssueIdentifier:
+    """Build the single prompt identifier via the production path (_build_identifiers)."""
+    config = VetConfig()
+    if guides_by_code is None:
+        guides_by_code = config.guides_by_code
+    identifiers = _build_identifiers(
+        _get_enabled_identifier_names(config),
+        get_enabled_issue_codes(config),
+        guides_by_code,
+    )
+    for name, identifier in identifiers:
+        if IssueIdentifierType.CORRECTNESS_COMMIT_CLASSIFIER.value in name:
+            return identifier
+    raise ValueError("Single prompt identifier not found")
+
+
+SNAPSHOT_PROJECT_CONTEXT = BaseProjectContext(
+    file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
+    cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
+)
+SNAPSHOT_COMMIT_INPUTS = CommitInputs(
+    maybe_goal="Add hello world function",
+    maybe_diff="+def hello():\n+    print('hello')",
+)
+
+
 def test_prompt_snapshot(snapshot: SnapshotAssertion) -> None:
     """Snapshot the exact prompt sent to the LLM to catch unintended prompt regressions."""
-    identifier = make_identifier()
-
-    mock_language_model = SinglePromptHarnessMock(response_text='{"issues": []}')
-    with mock.patch(
-        "vet.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
-        return_value=mock_language_model,
-    ):
-        project_context = BaseProjectContext(
-            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
-            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
-        )
-        commit_inputs = CommitInputs(
-            maybe_goal="Add hello world function",
-            maybe_diff="+def hello():\n+    print('hello')",
-        )
-        config = VetConfig()
-
-        generator = identifier.identify_issues(commit_inputs, project_context, config)
-        # Drain the generator to trigger the LLM call
-        list(generator)
-
-    assert len(mock_language_model.captured_prompts) == 1
-    assert mock_language_model.captured_prompts[0] == snapshot
-
-
-def _run_single_prompt_with_guides(
-    guides: dict[IssueCode, object],
-) -> str:
-    """Helper: run identify_issues with given guides and return the captured prompt."""
-    harness = SinglePromptHarness()
-    identifier = harness.make_issue_identifier(
-        identification_guides=tuple(guides[code] for code in ISSUE_CODES_FOR_CORRECTNESS_CHECK)
-    )
-
-    mock_language_model = SinglePromptHarnessMock(response_text='{"issues": []}')
-    with mock.patch(
-        "vet.issue_identifiers.harnesses.single_prompt.build_language_model_from_config",
-        return_value=mock_language_model,
-    ):
-        project_context = BaseProjectContext(
-            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
-            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
-        )
-        commit_inputs = CommitInputs(
-            maybe_goal="Add hello world function",
-            maybe_diff="+def hello():\n+    print('hello')",
-        )
-        config = VetConfig()
-
-        generator = identifier.identify_issues(commit_inputs, project_context, config)
-        list(generator)
-
-    assert len(mock_language_model.captured_prompts) == 1
-    return mock_language_model.captured_prompts[0]
+    identifier = _build_single_prompt_identifier()
+    prompt = identifier._get_prompt(SNAPSHOT_PROJECT_CONTEXT, VetConfig(), SNAPSHOT_COMMIT_INPUTS)
+    assert prompt == snapshot
 
 
 def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None:
@@ -276,5 +258,6 @@ def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None
             ),
         }
     )
-    prompt = _run_single_prompt_with_guides(merged_guides)
+    identifier = _build_single_prompt_identifier(guides_by_code=merged_guides)
+    prompt = identifier._get_prompt(SNAPSHOT_PROJECT_CONTEXT, VetConfig(), SNAPSHOT_COMMIT_INPUTS)
     assert prompt == snapshot

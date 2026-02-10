@@ -1,16 +1,8 @@
-from unittest import mock
-
 import pytest
-from pydantic import Field
 from syrupy.assertion import SnapshotAssertion
 
-from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
-from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
-from vet.imbue_core.agents.llm_apis.data_types import LanguageModelResponseUsage
-from vet.imbue_core.agents.llm_apis.data_types import LanguageModelResponseWithLogits
-from vet.imbue_core.agents.llm_apis.data_types import ResponseStopReason
-from vet.imbue_core.agents.llm_apis.mock_api import LanguageModelMock
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueIdentifierType
 from vet.imbue_core.frozen_utils import FrozenDict
 from vet.imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
@@ -20,53 +12,25 @@ from vet.imbue_tools.get_conversation_history.input_data_types import (
 from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.repo_utils.context_prefix import SubrepoContextWithFormattedContext
 from vet.imbue_tools.types.vet_config import VetConfig
+from vet.imbue_tools.types.vet_config import get_enabled_issue_codes
 from vet.vet_types.chat_state import TextBlock
 from vet.vet_types.ids import AssistantMessageID
 from vet.vet_types.messages import AgentMessageSource
 from vet.vet_types.messages import ChatInputUserMessage
 from vet.vet_types.messages import LLMModel
 from vet.vet_types.messages import ResponseBlockAgentMessage
+from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.custom_guides import CustomGuideOverride
 from vet.issue_identifiers.harnesses.conversation_single_prompt import (
     ConversationSinglePromptHarness,
 )
 from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
     ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
 )
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.identification_guides import build_merged_guides
-
-
-class ConversationSinglePromptHarnessMock(LanguageModelMock):
-    """Mock language model for testing ConversationSinglePromptHarness."""
-
-    response_text: str = ""
-    captured_prompts: list[str] = Field(default_factory=list)
-
-    def complete_with_usage_sync(
-        self,
-        prompt: str,
-        params: LanguageModelGenerationParams,
-        is_caching_enabled: bool = True,
-    ) -> CostedLanguageModelResponse:
-        self.captured_prompts.append(prompt)
-        self.stats.complete_calls += 1
-        response = LanguageModelResponseWithLogits(
-            text=self.response_text,
-            token_count=len(self.response_text.split()),
-            stop_reason=ResponseStopReason.END_TURN,
-            network_failure_count=0,
-            token_probabilities=self._get_token_probabilities(self.response_text),
-        )
-        usage = LanguageModelResponseUsage(
-            prompt_tokens_used=100,
-            completion_tokens_used=50,
-            dollars_used=0.001,
-            caching_info=None,
-        )
-        return CostedLanguageModelResponse(usage=usage, responses=(response,))
+from vet.issue_identifiers.registry import _build_identifiers
+from vet.issue_identifiers.registry import _get_enabled_identifier_names
 
 
 def test_to_required_inputs() -> None:
@@ -117,95 +81,54 @@ def test_to_required_inputs() -> None:
         classifier.to_required_inputs(no_inputs)
 
 
+def _build_conversation_identifier(
+    guides_by_code: dict[IssueCode, IssueIdentificationGuide] | None = None,
+) -> IssueIdentifier:
+    """Build the conversation identifier via the production path (_build_identifiers)."""
+    config = VetConfig()
+    if guides_by_code is None:
+        guides_by_code = config.guides_by_code
+    identifiers = _build_identifiers(
+        _get_enabled_identifier_names(config),
+        get_enabled_issue_codes(config),
+        guides_by_code,
+    )
+    for name, identifier in identifiers:
+        if IssueIdentifierType.CONVERSATION_HISTORY_IDENTIFIER.value in name:
+            return identifier
+    raise ValueError("Conversation identifier not found")
+
+
+SNAPSHOT_PROJECT_CONTEXT = BaseProjectContext(
+    file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
+    cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
+    instruction_context=SubrepoContextWithFormattedContext(
+        repo_context_files=(),
+        subrepo_context_strategy_label="docs",
+        formatted_repo_context="Instruction context here",
+    ),
+)
+SNAPSHOT_CONVERSATION_INPUTS = ConversationInputs(
+    maybe_conversation_history=(
+        ChatInputUserMessage(
+            text="Please add a hello world function",
+            model_name=LLMModel.CLAUDE_4_SONNET,
+        ),
+        ResponseBlockAgentMessage(
+            source=AgentMessageSource.AGENT,
+            role="assistant",
+            assistant_message_id=AssistantMessageID("msg_001"),
+            content=(TextBlock(text="I'll add a hello world function for you."),),
+        ),
+    ),
+)
+
+
 def test_prompt_snapshot(snapshot: SnapshotAssertion) -> None:
     """Snapshot the exact prompt sent to the LLM to catch unintended prompt regressions."""
-    harness = ConversationSinglePromptHarness()
-    identifier = harness.make_issue_identifier(
-        identification_guides=(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[IssueCode.MISLEADING_BEHAVIOR],)
-    )
-
-    mock_language_model = ConversationSinglePromptHarnessMock(response_text='{"issues": []}')
-    with mock.patch(
-        "vet.issue_identifiers.harnesses.conversation_single_prompt.build_language_model_from_config",
-        return_value=mock_language_model,
-    ):
-        project_context = BaseProjectContext(
-            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
-            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
-            instruction_context=SubrepoContextWithFormattedContext(
-                repo_context_files=(),
-                subrepo_context_strategy_label="docs",
-                formatted_repo_context="Instruction context here",
-            ),
-        )
-        conversation_inputs = ConversationInputs(
-            maybe_conversation_history=(
-                ChatInputUserMessage(
-                    text="Please add a hello world function",
-                    model_name=LLMModel.CLAUDE_4_SONNET,
-                ),
-                ResponseBlockAgentMessage(
-                    source=AgentMessageSource.AGENT,
-                    role="assistant",
-                    assistant_message_id=AssistantMessageID("msg_001"),
-                    content=(TextBlock(text="I'll add a hello world function for you."),),
-                ),
-            ),
-        )
-        config = VetConfig()
-
-        generator = identifier.identify_issues(conversation_inputs, project_context, config)
-        # Drain the generator to trigger the LLM call
-        list(generator)
-
-    assert len(mock_language_model.captured_prompts) == 1
-    assert mock_language_model.captured_prompts[0] == snapshot
-
-
-def _run_conversation_prompt_with_guides(
-    guides: dict[IssueCode, object],
-) -> str:
-    """Helper: run identify_issues with given guides and return the captured prompt."""
-    harness = ConversationSinglePromptHarness()
-    identifier = harness.make_issue_identifier(
-        identification_guides=tuple(guides[code] for code in ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK)
-    )
-
-    mock_language_model = ConversationSinglePromptHarnessMock(response_text='{"issues": []}')
-    with mock.patch(
-        "vet.issue_identifiers.harnesses.conversation_single_prompt.build_language_model_from_config",
-        return_value=mock_language_model,
-    ):
-        project_context = BaseProjectContext(
-            file_contents_by_path=FrozenDict({"test.py": "print('hello')"}),
-            cached_prompt_prefix="[ROLE=SYSTEM]\nSystem context here",
-            instruction_context=SubrepoContextWithFormattedContext(
-                repo_context_files=(),
-                subrepo_context_strategy_label="docs",
-                formatted_repo_context="Instruction context here",
-            ),
-        )
-        conversation_inputs = ConversationInputs(
-            maybe_conversation_history=(
-                ChatInputUserMessage(
-                    text="Please add a hello world function",
-                    model_name=LLMModel.CLAUDE_4_SONNET,
-                ),
-                ResponseBlockAgentMessage(
-                    source=AgentMessageSource.AGENT,
-                    role="assistant",
-                    assistant_message_id=AssistantMessageID("msg_001"),
-                    content=(TextBlock(text="I'll add a hello world function for you."),),
-                ),
-            ),
-        )
-        config = VetConfig()
-
-        generator = identifier.identify_issues(conversation_inputs, project_context, config)
-        list(generator)
-
-    assert len(mock_language_model.captured_prompts) == 1
-    return mock_language_model.captured_prompts[0]
+    identifier = _build_conversation_identifier()
+    prompt = identifier._get_prompt(SNAPSHOT_PROJECT_CONTEXT, VetConfig(), SNAPSHOT_CONVERSATION_INPUTS)
+    assert prompt == snapshot
 
 
 def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None:
@@ -229,5 +152,6 @@ def test_prompt_snapshot_with_custom_guides(snapshot: SnapshotAssertion) -> None
             ),
         }
     )
-    prompt = _run_conversation_prompt_with_guides(merged_guides)
+    identifier = _build_conversation_identifier(guides_by_code=merged_guides)
+    prompt = identifier._get_prompt(SNAPSHOT_PROJECT_CONTEXT, VetConfig(), SNAPSHOT_CONVERSATION_INPUTS)
     assert prompt == snapshot
