@@ -61,6 +61,10 @@ vet "goal"
 
 **Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the correct conversation using the approach described above for opencode that uses textual search.
 
+## Interpreting Results
+
+Vet analyzes the full git diff from the base commit. This may include changes from other agents or sessions working in the same repository. If vet reports issues that relate to changes you did not make in this session, disregard them, assuming they belong to another agent or the user.
+
 ## Common Options
 
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
