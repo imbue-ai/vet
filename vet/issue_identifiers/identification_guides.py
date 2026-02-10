@@ -1,5 +1,6 @@
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
+from vet.issue_identifiers.custom_guides import CustomGuideOverride
 
 
 class IssueIdentificationGuide(SerializableModel):
@@ -461,7 +462,7 @@ ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK: tuple[IssueCode, ...] = (
 
 def merge_guide_with_custom(
     default_guide: IssueIdentificationGuide,
-    custom_override: "CustomGuideOverride | None",  # type: ignore  # Forward reference to avoid circular import
+    custom_override: CustomGuideOverride | None,
 ) -> IssueIdentificationGuide:
     """
     Merge a custom override with the default guide.
@@ -499,7 +500,7 @@ def merge_guide_with_custom(
 
 
 def build_merged_guides(
-    custom_overrides: dict[IssueCode, "CustomGuideOverride"],  # type: ignore  # Forward reference
+    custom_overrides: dict[IssueCode, CustomGuideOverride],
 ) -> dict[IssueCode, IssueIdentificationGuide]:
     """
     Build complete guides dictionary with custom overrides merged in.

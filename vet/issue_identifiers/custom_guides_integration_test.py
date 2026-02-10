@@ -30,8 +30,8 @@ def test_get_custom_guides_directories_with_repo_path(tmp_path: Path) -> None:
         paths = get_custom_guides_directories(repo_path)
 
     assert len(paths) == 2
-    assert paths[0] == repo_path / ".vet" / "custom_guides"
-    assert paths[1] == xdg_config / "vet" / "custom_guides"
+    assert paths[0] == xdg_config / "vet" / "custom_guides"
+    assert paths[1] == repo_path / ".vet" / "custom_guides"
 
 
 def test_get_custom_guides_directories_without_repo_path(tmp_path: Path) -> None:
@@ -58,7 +58,7 @@ def test_get_custom_guides_directories_finds_git_root(tmp_path: Path) -> None:
         paths = get_custom_guides_directories(subdir)
 
     # Should use git root, not subdir
-    assert paths[0] == git_root / ".vet" / "custom_guides"
+    assert paths[1] == git_root / ".vet" / "custom_guides"
 
 
 def test_end_to_end_local_custom_guides_only(tmp_path: Path) -> None:
@@ -79,7 +79,7 @@ LOCAL: Check for edge cases
 
     # Load guides
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
-        directories = list(reversed(get_custom_guides_directories(repo_path)))
+        directories = get_custom_guides_directories(repo_path)
         custom_overrides = {}
         for guides_dir in directories:
             dir_overrides = load_custom_guides_from_directory(guides_dir)
@@ -112,7 +112,7 @@ GLOBAL: Always check OWASP Top 10
 
     # Load guides
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
-        directories = list(reversed(get_custom_guides_directories(repo_path)))
+        directories = get_custom_guides_directories(repo_path)
         custom_overrides = {}
         for guides_dir in directories:
             dir_overrides = load_custom_guides_from_directory(guides_dir)
@@ -155,7 +155,7 @@ LOCAL PREFIX (should win)
 
     # Load guides (global first, then local overrides)
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
-        directories = list(reversed(get_custom_guides_directories(repo_path)))
+        directories = get_custom_guides_directories(repo_path)
         custom_overrides = {}
         for guides_dir in directories:
             dir_overrides = load_custom_guides_from_directory(guides_dir)
@@ -196,7 +196,7 @@ LOCAL SECURITY
 
     # Load guides
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
-        directories = list(reversed(get_custom_guides_directories(repo_path)))
+        directories = get_custom_guides_directories(repo_path)
         custom_overrides = {}
         for guides_dir in directories:
             dir_overrides = load_custom_guides_from_directory(guides_dir)
@@ -223,7 +223,7 @@ def test_end_to_end_no_custom_guides_uses_defaults(tmp_path: Path) -> None:
 
     # Load guides
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
-        directories = list(reversed(get_custom_guides_directories(repo_path)))
+        directories = get_custom_guides_directories(repo_path)
         custom_overrides = {}
         for guides_dir in directories:
             dir_overrides = load_custom_guides_from_directory(guides_dir)

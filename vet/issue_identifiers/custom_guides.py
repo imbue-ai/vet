@@ -73,8 +73,10 @@ def parse_custom_guide_markdown(file_path: Path) -> CustomGuideOverride | None:
     valid_issue_codes = {code.value for code in IssueCode}
     if issue_code_str not in valid_issue_codes:
         logger.warning(
-            f"Invalid issue code '{issue_code_str}' in filename: {file_path.name}. "
-            f"Skipping this file. Valid codes: {', '.join(sorted(valid_issue_codes))}"
+            "Invalid issue code '{}' in filename: {}. Skipping this file. Valid codes: {}",
+            issue_code_str,
+            file_path.name,
+            ", ".join(sorted(valid_issue_codes)),
         )
         return None
 
@@ -148,11 +150,11 @@ def load_custom_guides_from_directory(directory: Path) -> dict[IssueCode, Custom
     """
     # If directory doesn't exist, return empty dict (no custom guides)
     if not directory.exists():
-        logger.debug(f"Custom guides directory does not exist: {directory}")
+        logger.debug("Custom guides directory does not exist: {}", directory)
         return {}
 
     if not directory.is_dir():
-        logger.warning(f"Custom guides path is not a directory: {directory}")
+        logger.warning("Custom guides path is not a directory: {}", directory)
         return {}
 
     custom_guides: dict[IssueCode, CustomGuideOverride] = {}
@@ -161,7 +163,7 @@ def load_custom_guides_from_directory(directory: Path) -> dict[IssueCode, Custom
     md_files = list(directory.glob("*.md"))
 
     if not md_files:
-        logger.debug(f"No .md files found in custom guides directory: {directory}")
+        logger.debug("No .md files found in custom guides directory: {}", directory)
         return {}
 
     for md_file in md_files:
@@ -176,14 +178,14 @@ def load_custom_guides_from_directory(directory: Path) -> dict[IssueCode, Custom
             if not override.is_empty():
                 custom_guides[override.issue_code] = override
             else:
-                logger.debug(f"Skipping {md_file.name}: all sections are empty")
+                logger.debug("Skipping {}: all sections are empty", md_file.name)
 
         except Exception as e:
-            logger.error(f"Failed to parse {md_file.name}: {e}. Skipping this file.")
+            logger.error("Failed to parse {}: {}. Skipping this file.", md_file.name, e)
             continue
 
     if custom_guides:
-        logger.info(f"Loaded {len(custom_guides)} custom guide override(s) from {directory}")
+        logger.info("Loaded {} custom guide override(s) from {}", len(custom_guides), directory)
 
     return custom_guides
 
@@ -201,20 +203,10 @@ def validate_custom_guides(custom_guides: dict[IssueCode, CustomGuideOverride]) 
     Logs warnings for conflicts but does not raise errors.
     Replace mode takes precedence and prefix/suffix are ignored.
     """
-    has_conflicts = False
-
     for issue_code, override in custom_guides.items():
         if override.has_conflict():
             logger.warning(
-                f"⚠️  Issue '{issue_code}': 'replace' mode is specified together with "
-                f"'prefix' or 'suffix'. The 'replace' will be used and 'prefix'/'suffix' "
-                f"will be IGNORED. "
-                f"(Source: {override.source_file})"
+                "Issue '{}': conflicting 'replace' with 'prefix'/'suffix', ignoring prefix/suffix: {}",
+                issue_code,
+                override.source_file,
             )
-            has_conflicts = True
-
-    if has_conflicts:
-        logger.warning(
-            "\nCustom guide conflicts detected. Please review the warnings above. "
-            "To fix, remove 'prefix' and 'suffix' sections when using 'replace'."
-        )

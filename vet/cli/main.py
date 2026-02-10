@@ -488,25 +488,22 @@ def main(argv: list[str] | None = None) -> int:
         max_identifier_spend_dollars=args.max_spend,
     )
 
-    # Load and merge custom guides from standard locations
-    # Priority: global config first, then local config overrides
     custom_overrides: dict[IssueCode, CustomGuideOverride] = {}
 
-    # Get directories in reverse priority order (global first, then local)
-    guides_directories = list(reversed(get_custom_guides_directories(repo_path)))
+    # [global, local]
+    guides_directories = get_custom_guides_directories(repo_path)
 
     for guides_dir in guides_directories:
         dir_overrides = load_custom_guides_from_directory(guides_dir)
         if dir_overrides:
-            logger.debug(f"Loaded {len(dir_overrides)} custom guide(s) from: {guides_dir}")
-            # Later directories override earlier ones (local overrides global)
+            logger.debug("Loaded {} custom guide(s) from: {}", len(dir_overrides), guides_dir)
             custom_overrides.update(dir_overrides)
 
     if custom_overrides:
         validate_custom_guides(custom_overrides)
         merged_guides = build_merged_guides(custom_overrides)
         config.set_merged_guides(merged_guides)
-        logger.info(f"Applied {len(custom_overrides)} custom guide override(s)")
+        logger.info("Applied {} custom guide override(s)", len(custom_overrides))
 
     issues = find_issues(
         repo_path=repo_path,
