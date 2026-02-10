@@ -174,6 +174,42 @@ Then:
 vet "Harden error handling" --model gpt-4o-mini
 ```
 
+### Custom issue guides
+
+Vet's built-in issue guides can be customized per-project or globally. Create markdown files named after the issue code you want to customize:
+
+- **Project-specific**: `<repo-root>/.vet/custom_guides/<issue_code>.md`
+- **Global**: `~/.config/vet/custom_guides/<issue_code>.md`
+
+Project-specific guides take priority over global ones for the same issue code.
+
+Each file can contain one or more of these sections:
+
+```markdown
+# vet_custom_guideline_prefix
+Content prepended to the default guide.
+
+# vet_custom_guideline_suffix
+Content appended to the default guide.
+
+# vet_custom_guideline_replace
+Content that fully replaces the default guide.
+```
+
+`replace` cannot be combined with `prefix`/`suffix`. If both are present, `replace` takes precedence.
+
+#### Examples
+
+Add project-specific context to the logic error check:
+
+```markdown
+<!-- .vet/custom_guides/logic_error.md -->
+# vet_custom_guideline_prefix
+Pay special attention to off-by-one errors in loop bounds.
+```
+
+See more examples in [`examples/custom_guides/`](examples/custom_guides/).
+
 ### Configuration profiles (TOML)
 
 Vet supports named profiles so teams can standardize CI usage without long CLI invocations.
