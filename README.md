@@ -73,39 +73,6 @@ NOTE: This will not fail in CI if Vet finds an issue. The `github` output format
 
 #### Environment variables
 
-- `ANTHROPIC_API_KEY` is required for the default model configuration.
-
-## Using Vet with Coding Agents
-
-Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
-
-### Install the skill
-
-```bash
-for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
-  mkdir -p "$dir/skills/vet/scripts"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/SKILL.md \
-    -o "$dir/skills/vet/SKILL.md"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_opencode_session.py \
-    -o "$dir/skills/vet/scripts/export_opencode_session.py"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_codex_session.py \
-    -o "$dir/skills/vet/scripts/export_codex_session.py"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_claude_code_session.py \
-    -o "$dir/skills/vet/scripts/export_claude_code_session.py"
-done
-```
-
-This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
-
-## How it works
-
-Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
-
-![architecture](architecture.svg)
-
-## Why Vet
-
-- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
 - **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
 
