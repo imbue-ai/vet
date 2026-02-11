@@ -32,19 +32,16 @@ jobs:
 
             Additional context (not necessarily part of the goal):
             ${{ github.event.pull_request.body }}
+          VET_REVIEW_JSON: ${{ runner.temp }}/review.json
+          VET_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          VET_REPO: ${{ github.repository }}
+          VET_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set +e
           vet "$VET_GOAL" --quiet --output-format github \
             --base-commit "${{ github.event.pull_request.base.sha }}" \
-            > "$RUNNER_TEMP/review.json"
+            > "$VET_REVIEW_JSON"
           status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
 
-          jq --arg sha "${{ github.event.pull_request.head.sha }}" \
-            '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
-
-          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
-            --method POST --input "$RUNNER_TEMP/review-final.json" > /dev/null || \
-            gh pr comment "${{ github.event.pull_request.number }}" \
-              --body "$(jq -r '[.body] + [.comments[] | "**\(.path):\(.line)**\n\n\(.body)"] | join("\n\n---\n\n")' "$RUNNER_TEMP/review-final.json")"
-          exit 0
+          python -m vet.cli.post_review
