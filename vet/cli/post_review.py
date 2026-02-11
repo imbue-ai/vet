@@ -108,6 +108,5 @@ def main() -> int:
     return 0
 
 
-# THIS IS A BAD COMMENT CATCH ME IN REVIEW
 if __name__ == "__main__":
     sys.exit(main())
