@@ -58,7 +58,7 @@ def test_get_config_file_paths_returns_global_path(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path)}):
         paths = get_config_file_paths(repo_path=None)
         assert len(paths) == 1
-        assert paths[0] == tmp_path / "imbue" / "models.json"
+        assert paths[0] == tmp_path / "vet" / "models.json"
 
 
 def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
@@ -72,7 +72,7 @@ def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
         paths = get_config_file_paths(repo_path=subdir)
         assert len(paths) == 2
-        assert paths[0] == xdg_config / "imbue" / "models.json"
+        assert paths[0] == xdg_config / "vet" / "models.json"
         assert paths[1] == git_root / "models.json"
 
 
@@ -187,8 +187,8 @@ def test_load_models_config_loads_project_config(tmp_path: Path) -> None:
 
 def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
     xdg_config = tmp_path / "xdg"
-    (xdg_config / "imbue").mkdir(parents=True)
-    global_config = xdg_config / "imbue" / "models.json"
+    (xdg_config / "vet").mkdir(parents=True)
+    global_config = xdg_config / "vet" / "models.json"
     global_config.write_text(
         json.dumps(
             {

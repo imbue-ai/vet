@@ -75,7 +75,10 @@ There are also things we explicitly don't want to catch with this system:
 from enum import StrEnum
 from typing import Literal
 
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 from vet.imbue_core.common import generate_id
 from vet.imbue_core.pydantic_serialization import SerializableModel
@@ -235,6 +238,34 @@ class IssueCode(StrEnum):
 
     # Deprecated
     _DEPRECATED_LLM_ARTIFACTS_LEFT_IN_CODE = "llm_artifacts_left_in_code"
+
+
+def get_valid_issue_code_values() -> set[str]:
+    return {code.value for code in IssueCode if not code.name.startswith("_DEPRECATED")}
+
+
+class CustomGuideConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    prefix: str | None = None
+    suffix: str | None = None
+    replace: str | None = None
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> "CustomGuideConfig":
+        has_prefix_or_suffix = self.prefix is not None or self.suffix is not None
+        has_replace = self.replace is not None
+        if has_replace and has_prefix_or_suffix:
+            raise ValueError("'replace' cannot be used together with 'prefix' or 'suffix'")
+        if not has_replace and not has_prefix_or_suffix:
+            raise ValueError("At least one of 'prefix', 'suffix', or 'replace' must be set")
+        return self
+
+
+class CustomGuidesConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    guides: dict[str, CustomGuideConfig] = Field(default_factory=dict)
 
 
 class IssueLocation(SerializableModel):

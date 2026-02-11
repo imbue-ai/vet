@@ -6,14 +6,17 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
-from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
-from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
 from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
 from vet.cli.config.schema import ModelsConfig
 from vet.cli.config.schema import ProviderConfig
+from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
+from vet.imbue_core.data_types import CustomGuideConfig
+from vet.imbue_core.data_types import CustomGuidesConfig
+from vet.imbue_core.data_types import get_valid_issue_code_values
 
 
 class ConfigLoadError(Exception):
@@ -66,7 +69,7 @@ def _get_config_file_paths(
 
 
 def get_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("imbue", "models.json", "models.json", repo_path)
+    return _get_config_file_paths("vet", "models.json", "models.json", repo_path)
 
 
 def _load_single_config_file(config_path: Path) -> ModelsConfig:
@@ -208,3 +211,44 @@ def get_config_preset(
                 f"No configuration files found. Create a config at one of these locations:\n{paths_list}"
             )
     return cli_configs[config_name]
+
+
+def get_guides_config_file_paths(repo_path: Path | None = None) -> list[Path]:
+    return _get_config_file_paths("vet", "guides.toml", "guides.toml", repo_path)
+
+
+def _load_single_guides_file(config_path: Path) -> CustomGuidesConfig:
+    try:
+        with open(config_path, "rb") as f:
+            data = tomllib.load(f)
+    except tomllib.TOMLDecodeError as e:
+        raise ConfigLoadError(f"Invalid TOML in {config_path}: {e}") from e
+    except OSError as e:
+        raise ConfigLoadError(f"Cannot read {config_path}: {e}") from e
+
+    all_issue_code_values = get_valid_issue_code_values()
+    guides: dict[str, CustomGuideConfig] = {}
+    for key, value in data.items():
+        if key not in all_issue_code_values:
+            raise ConfigLoadError(
+                f"Unknown issue code '{key}' in {config_path}. " f"Use --list-issue-codes to see valid codes."
+            )
+        if not isinstance(value, dict):
+            raise ConfigLoadError(f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}")
+        try:
+            guides[key] = CustomGuideConfig.model_validate(value)
+        except ValidationError as e:
+            raise ConfigLoadError(f"Invalid guide configuration for '{key}' in {config_path}: {e}") from e
+
+    return CustomGuidesConfig(guides=guides)
+
+
+def load_custom_guides_config(repo_path: Path | None = None) -> CustomGuidesConfig:
+    merged_guides: dict[str, CustomGuideConfig] = {}
+
+    for config_path in get_guides_config_file_paths(repo_path):
+        if config_path.exists():
+            config = _load_single_guides_file(config_path)
+            merged_guides.update(config.guides)
+
+    return CustomGuidesConfig(guides=merged_guides)

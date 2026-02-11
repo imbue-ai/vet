@@ -12,6 +12,7 @@ from pathlib import Path
 from loguru import logger
 
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
@@ -25,6 +26,7 @@ from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
 from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import load_cli_config
+from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
@@ -242,17 +244,13 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _get_available_issue_codes() -> list[IssueCode]:
-    return [code for code in IssueCode if not code.name.startswith("_DEPRECATED")]
-
-
 # TODO: There are logical groupings of codes we should consider because some issue_codes are associated with the same prompts / categories of issues.
 # This should likely be used to dictate the ordering instead of sorting.
 def list_issue_codes() -> None:
     print("Available issue codes:")
     print()
-    for code in sorted(_get_available_issue_codes(), key=lambda c: c.value):
-        print(f"  {code.value}")
+    for code in sorted(get_valid_issue_code_values()):
+        print(f"  {code}")
 
 
 def list_models(user_config: ModelsConfig | None = None) -> None:
@@ -354,6 +352,12 @@ def main(argv: list[str] | None = None) -> int:
         user_config = load_models_config(repo_path)
     except ConfigLoadError as e:
         print(f"Error loading model configuration: {e}", file=sys.stderr)
+        return 2
+
+    try:
+        custom_guides_config = load_custom_guides_config(repo_path)
+    except ConfigLoadError as e:
+        print(f"Error loading custom guides: {e}", file=sys.stderr)
         return 2
 
     if args.list_issue_codes:
@@ -480,6 +484,7 @@ def main(argv: list[str] | None = None) -> int:
         max_identify_workers=args.max_workers,
         max_output_tokens=max_output_tokens or 20000,
         max_identifier_spend_dollars=args.max_spend,
+        custom_guides_config=custom_guides_config,
     )
 
     issues = find_issues(

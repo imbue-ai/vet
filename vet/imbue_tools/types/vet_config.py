@@ -2,7 +2,9 @@ from pathlib import Path
 
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
@@ -22,6 +24,9 @@ class VetConfig(SerializableModel):
     # (Use the values from the vet.data_types.IssueCode enum.)
     enabled_issue_codes: tuple[IssueCode, ...] | None = None
     disabled_issue_codes: tuple[IssueCode, ...] | None = ()
+
+    # Custom guides to override built-in guides for issue codes.
+    custom_guides_config: CustomGuidesConfig | None = None
 
     # Todo: Different models for different issue identifiers
     language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(
@@ -87,7 +92,7 @@ class VetConfig(SerializableModel):
 
 
 def get_enabled_issue_codes(config: VetConfig) -> set[IssueCode]:
-    all_issue_code_values = {item.value for item in IssueCode}
+    all_issue_code_values = get_valid_issue_code_values()
     explicitly_enabled = config.enabled_issue_codes or tuple()
     explicitly_disabled = config.disabled_issue_codes or tuple()
     for code in explicitly_enabled + explicitly_disabled:
