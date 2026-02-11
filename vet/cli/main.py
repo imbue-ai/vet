@@ -38,7 +38,7 @@ from vet.formatters import format_issue_text
 from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
 
-VERSION = version("vet")
+VERSION = version("verify-everything")
 
 _ISSUE_CODE_FIELDS = frozenset({"enabled_issue_codes", "disabled_issue_codes"})
 _PATH_FIELDS = frozenset({"repo", "output"})

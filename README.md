@@ -7,6 +7,12 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 ## Installation
 
 ```bash
+pip install verify-everything
+```
+
+Or install from source:
+
+```bash
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
@@ -52,7 +58,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install git+https://github.com/imbue-ai/vet.git
+      - run: pip install verify-everything
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
