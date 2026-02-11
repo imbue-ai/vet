@@ -7,7 +7,7 @@ description: Run vet immediately after ANY logical unit of code changes. Do not 
 
 **Run vet immediately after ANY logical unit of code changes. Do not batch changes, do not wait to be asked to run vet, make sure you are proactive.**
 
-Vet reviews git diffs and conversation history to find issues in code changes and conversation history. It is most effective when run frequently with conversation history, which helps it catch misunderstandings between what was requested and what was implemented.
+Vet reviews git diffs and conversation history to find issues in code changes and conversation history. It is most effective when run frequently with conversation history, which helps it catch misunderstandings between what was requested and what was implemented. Despite this, vet is not a replacement for running tests.
 
 ## Installation
 
