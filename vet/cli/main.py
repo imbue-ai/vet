@@ -244,16 +244,12 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _get_available_issue_codes() -> set[str]:
-    return get_valid_issue_code_values()
-
-
 # TODO: There are logical groupings of codes we should consider because some issue_codes are associated with the same prompts / categories of issues.
 # This should likely be used to dictate the ordering instead of sorting.
 def list_issue_codes() -> None:
     print("Available issue codes:")
     print()
-    for code in sorted(_get_available_issue_codes()):
+    for code in sorted(get_valid_issue_code_values()):
         print(f"  {code}")
 
 
