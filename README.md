@@ -119,7 +119,7 @@ This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-![architecture](architecture.svg)
+![architecture](https://github.com/imbue-ai/vet/blob/main/architecture.svg)
 
 ## Why Vet
 
