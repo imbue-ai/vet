@@ -30,9 +30,8 @@ def _get_env_vars() -> dict[str, str]:
             values[var] = value
 
     if missing:
-        print(
-            "Missing required environment variables:\n" + "\n".join(missing),
-            file=sys.stderr,
+        logger.error(
+            "Missing required environment variables:\n" + "\n".join(missing)
         )
         sys.exit(2)
 
@@ -40,12 +39,7 @@ def _get_env_vars() -> dict[str, str]:
 
 
 def _build_fallback_comment_body(review: dict) -> str:
-    """Build a markdown comment body from the review JSON.
-
-    Replicates the logic of the original jq expression:
-      [.body] + [.comments[] | "**\\(.path):\\(.line)**\\n\\n\\(.body)"]
-      | join("\\n\\n---\\n\\n")
-    """
+    """Build a markdown comment body from the review JSON."""
     sections = [review["body"]]
     for comment in review.get("comments", []):
         sections.append(f"**{comment['path']}:{comment['line']}**\n\n{comment['body']}")
