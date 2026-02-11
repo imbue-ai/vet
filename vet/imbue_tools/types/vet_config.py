@@ -76,11 +76,12 @@ class VetConfig(SerializableModel):
         # Fallback to defaults if customs weren't loaded
         return ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 
-    def calculate_max_prompt_overhead(self) -> int:
+    @cached_property
+    def max_prompt_overhead(self) -> int:
         """
-        Calculate maximum prompt overhead across enabled harnesses.
+        Maximum prompt token overhead across all enabled identifiers.
 
-        Merges issue codes per harness instance (mirroring _build_identifiers in registry.py)
+        Calculated on first access and cached. Merges issue codes per harness instance
         to correctly account for cases where multiple presets share the same harness.
 
         Returns:
@@ -91,10 +92,7 @@ class VetConfig(SerializableModel):
 
         enabled_identifier_names = get_enabled_identifier_names(self)
         enabled_issue_codes = get_enabled_issue_codes(self)
-
-        # Merge issue codes per harness instance (mirrors _build_identifiers in registry.py).
-        # When multiple presets share the same harness (e.g. BATCHED and CORRECTNESS both use
-        # SinglePromptHarness), their codes get merged into a single prompt in production.
+        
         merged_codes_per_harness = defaultdict(set)
         for name, harness, default_issue_codes in HARNESS_PRESETS:
             if name in enabled_identifier_names:
@@ -115,22 +113,6 @@ class VetConfig(SerializableModel):
         max_overhead = max(overheads)
         logger.info("Maximum prompt overhead across enabled harnesses: {} tokens", max_overhead)
         return max_overhead
-
-    @cached_property
-    def max_prompt_overhead(self) -> int:
-        """
-        Maximum prompt token overhead across all enabled identifiers.
-
-        Calculated on first access and cached. Accounts for:
-        - Enabled identifiers and issue codes
-        - Custom guides if loaded
-        - Each harness's specific prompt structure
-        - Parallel vs non-parallel agentic mode
-
-        Returns:
-            Number of tokens used by prompt overhead (excluding dynamic content)
-        """
-        return self.calculate_max_prompt_overhead()
 
     @classmethod
     def build(
