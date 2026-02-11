@@ -240,6 +240,10 @@ class IssueCode(StrEnum):
     _DEPRECATED_LLM_ARTIFACTS_LEFT_IN_CODE = "llm_artifacts_left_in_code"
 
 
+def get_valid_issue_code_values() -> set[str]:
+    return {code.value for code in IssueCode if not code.name.startswith("_DEPRECATED")}
+
+
 class CustomGuideConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 

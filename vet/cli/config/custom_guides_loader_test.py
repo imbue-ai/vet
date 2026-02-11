@@ -41,7 +41,7 @@ def test_custom_guide_config_no_fields_fails() -> None:
 
 def test_custom_guide_config_extra_field_fails() -> None:
     with pytest.raises(ValidationError, match="extra"):
-        CustomGuideConfig(mode="suffix", suffix="text")  # type: ignore[call-arg]
+        CustomGuideConfig.model_validate({"mode": "suffix", "suffix": "text"})
 
 
 def test_load_single_guides_file_valid(tmp_path: Path) -> None:

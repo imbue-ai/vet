@@ -12,6 +12,7 @@ from pathlib import Path
 from loguru import logger
 
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_tools.get_conversation_history.get_conversation_history import (
     parse_conversation_history,
 )
@@ -243,8 +244,8 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _get_available_issue_codes() -> list[IssueCode]:
-    return [code for code in IssueCode if not code.name.startswith("_DEPRECATED")]
+def _get_available_issue_codes() -> set[str]:
+    return get_valid_issue_code_values()
 
 
 # TODO: There are logical groupings of codes we should consider because some issue_codes are associated with the same prompts / categories of issues.
@@ -252,8 +253,8 @@ def _get_available_issue_codes() -> list[IssueCode]:
 def list_issue_codes() -> None:
     print("Available issue codes:")
     print()
-    for code in sorted(_get_available_issue_codes(), key=lambda c: c.value):
-        print(f"  {code.value}")
+    for code in sorted(_get_available_issue_codes()):
+        print(f"  {code}")
 
 
 def list_models(user_config: ModelsConfig | None = None) -> None:

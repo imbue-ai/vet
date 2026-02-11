@@ -4,6 +4,7 @@ from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
@@ -91,7 +92,7 @@ class VetConfig(SerializableModel):
 
 
 def get_enabled_issue_codes(config: VetConfig) -> set[IssueCode]:
-    all_issue_code_values = {item.value for item in IssueCode}
+    all_issue_code_values = get_valid_issue_code_values()
     explicitly_enabled = config.enabled_issue_codes or tuple()
     explicitly_disabled = config.disabled_issue_codes or tuple()
     for code in explicitly_enabled + explicitly_disabled:

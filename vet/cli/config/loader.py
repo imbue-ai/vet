@@ -6,17 +6,17 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
-from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
-from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
-from vet.imbue_core.data_types import IssueCode
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
 from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
 from vet.cli.config.schema import ModelsConfig
+from vet.cli.config.schema import ProviderConfig
+from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
 from vet.imbue_core.data_types import CustomGuideConfig
 from vet.imbue_core.data_types import CustomGuidesConfig
-from vet.cli.config.schema import ProviderConfig
+from vet.imbue_core.data_types import get_valid_issue_code_values
 
 
 class ConfigLoadError(Exception):
@@ -226,7 +226,7 @@ def _load_single_guides_file(config_path: Path) -> CustomGuidesConfig:
     except OSError as e:
         raise ConfigLoadError(f"Cannot read {config_path}: {e}") from e
 
-    all_issue_code_values = {item.value for item in IssueCode}
+    all_issue_code_values = get_valid_issue_code_values()
     guides: dict[str, CustomGuideConfig] = {}
     for key, value in data.items():
         if key not in all_issue_code_values:
