@@ -69,7 +69,7 @@ def _get_config_file_paths(
 
 
 def get_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("imbue", "models.json", "models.json", repo_path)
+    return _get_config_file_paths("vet", "models.json", "models.json", repo_path)
 
 
 def _load_single_config_file(config_path: Path) -> ModelsConfig:

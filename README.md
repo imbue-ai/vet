@@ -145,7 +145,7 @@ Output formats:
 
 Vet supports custom model definitions using OpenAI-compatible endpoints via JSON config files searched in:
 
-- `$XDG_CONFIG_HOME/imbue/models.json` (or `~/.config/imbue/models.json`)
+- `$XDG_CONFIG_HOME/vet/models.json` (or `~/.config/vet/models.json`)
 - `models.json` at your repo root
 
 #### Example `models.json`
@@ -193,6 +193,33 @@ Vet supports named profiles so teams can standardize CI usage without long CLI i
 Profiles set defaults like model choice, enabled issue codes, output format, and thresholds.
 
 See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this project.
+
+### Custom issue guides
+
+You can customize the guide text for the issue codes via `guides.toml`. Guide files are loaded from:
+
+- `$XDG_CONFIG_HOME/vet/guides.toml` (or `~/.config/vet/guides.toml`)
+- `guides.toml` at your repo root
+
+```toml
+[logic_error]
+mode = "Suffix"
+guide = """
+- Check for integer overflow in arithmetic operations
+"""
+
+[insecure_code]
+mode = "Replace"
+guide = """
+- Check for SQL injection: flag any string concatenation or f-string formatting used to build SQL queries rather than parameterized queries
+- Check for XSS: flag user-supplied data rendered into HTML templates without proper escaping or sanitization
+- Check for path traversal: flag file operations where user input flows into file paths without validation against directory traversal (e.g. ../)
+- Check for insecure cryptography: flag use of deprecated or weak algorithms (e.g. MD5, SHA1 for security purposes, DES, RC4)
+- Check for hardcoded credentials: flag passwords, API keys, or tokens embedded directly in source code
+"""
+```
+
+Section keys must be valid issue codes (`vet --list-issue-codes`). `mode` controls merging: **Prefix** prepends, **Suffix** appends, **Replace** replaces the built-in guide text. Guide text should be formatted as a list.
 
 ## License
 
