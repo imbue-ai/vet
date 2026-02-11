@@ -1,83 +1,22 @@
-# vet
+# Development
 
-Vet is a library and CLI tool for verifying code quality and correctness.
+For general usage, installation, and configuration, see the [README](README.md).
 
-## Installation
-
-**From git (pip/uv):**
-
-```bash
-pip install git+https://github.com/imbue-ai/vet.git
-# or
-uv pip install git+https://github.com/imbue-ai/vet.git
-```
-
-**For development (from repository root):**
+## Dev Setup
 
 ```bash
 uv sync
-# or
-pip install -e .
 ```
 
-## Usage
+## Running Tests
+
+All tests are run with:
 
 ```bash
-uv run vet --help
-uv run vet "description of what the code change accomplishes"
-uv run vet --list-models
-uv run vet "description of what the code change accomplishes" --model claude-opus-4-5-20251101
-uv run vet --model claude-opus-4-5-20251101 # no goal specified
-uv run vet --model claude-opus-4-5-20251101 --base-commit main # default is HEAD
+uv run pytest
 ```
 
-## Custom Models
-
-You can configure custom models (e.g., Ollama, OpenRouter, or other OpenAI-compatible APIs) by creating a `models.json` file in one of these locations:
-
-- `~/.config/imbue/models.json` - Global configuration
-- `<git-repo-root>/models.json` - Project-specific configuration (overrides global)
-
-Example configuration:
-
-```json
-{
-  "providers": {
-    "openai": {
-      "name": "OpenAI",
-      "api_type": "openai_compatible",
-      "base_url": "https://api.openai.com/v1",
-      "api_key_env": "OPENAI_API_KEY",
-      "models": {
-        "gpt-4o": {
-          "model_id": "gpt-4o-2024-08-06",
-          "context_window": 128000,
-          "max_output_tokens": 16384
-        },
-        "gpt-4o-mini": {
-          "model_id": "gpt-4o-mini-2024-07-18",
-          "context_window": 128000,
-          "max_output_tokens": 16384
-        },
-        "o1": {
-          "model_id": "o1-2024-12-17",
-          "context_window": 200000,
-          "max_output_tokens": 100000
-        }
-      }
-    }
-  }
-}
-```
-
-## Exit Status
-
-The following are the **expected** exit status codes for vet:
-
-- `0` - No issues found
-- `1` - Unexpected runtime error
-- `2` - Invalid arguments or configuration
-- `10` - Issues were found in the code
+This must remain the sole way to run the test suite. Any new tests or test infrastructure changes should preserve `uv run pytest` as the single entry point for running tests.
 
 ## Concepts
 
@@ -105,6 +44,29 @@ Based on your needs, instead of the above, you can also extend one of the existi
       (for commit checking)
 In that case you would simply expand the rubric in the prompt. That is actually the preferred way to catch issues at the moment due to efficiency.
 Refer to the source code for more details.
+
+## Continuous Deployment (CD)
+
+Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. Deployment is triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).
+
+### Releasing a new version
+
+1. Update the version in `pyproject.toml`.
+2. Commit and push the change.
+3. Tag the commit and push the tag:
+   ```bash
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+4. The `Publish to PyPI` workflow will automatically build and publish the package.
+5. After the package is published, update the recommended GitHub action pinned version in the `README.md` 
+   ```yaml
+   - run: pip install verify-everything==0.2.0
+   ```
+
+### Why pin the version in the README?
+
+The README contains a sample GitHub Actions workflow that users copy into their repos. The `pip install verify-everything==X.Y.Z` line in that sample should always reference the latest stable release so that new adopters get a known-good version. Vet is very much experimental. While we give guarantees about it working in a barebones sense, it is not guaranteed that breaking changes won't be made over time so pinning a version for CI makes sense for most use cases.
 
 ## Development Notes
 

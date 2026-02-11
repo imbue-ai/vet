@@ -58,7 +58,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install verify-everything
+      - run: pip install verify-everything==0.1.0
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -102,14 +102,10 @@ Vet ships as an [agent skill](https://agentskills.io) that coding agents like [O
 ```bash
 for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
   mkdir -p "$dir/skills/vet/scripts"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/SKILL.md \
-    -o "$dir/skills/vet/SKILL.md"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_opencode_session.py \
-    -o "$dir/skills/vet/scripts/export_opencode_session.py"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_codex_session.py \
-    -o "$dir/skills/vet/scripts/export_codex_session.py"
-  curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/scripts/export_claude_code_session.py \
-    -o "$dir/skills/vet/scripts/export_claude_code_session.py"
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+    curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
+      -o "$dir/skills/vet/$file"
+  done
 done
 ```
 
