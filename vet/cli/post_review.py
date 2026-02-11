@@ -30,9 +30,7 @@ def _get_env_vars() -> dict[str, str]:
             values[var] = value
 
     if missing:
-        logger.error(
-            "Missing required environment variables:\n" + "\n".join(missing)
-        )
+        logger.error("Missing required environment variables:\n" + "\n".join(missing))
         sys.exit(2)
 
     return values
@@ -57,9 +55,7 @@ def _post_review(
     try:
         response = client.post(url, json=payload)
     except httpx.HTTPError:
-        logger.warning(
-            "Review API call failed (network error), falling back to PR comment"
-        )
+        logger.warning("Review API call failed (network error), falling back to PR comment")
         return False
     if response.is_success:
         return True
