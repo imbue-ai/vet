@@ -58,7 +58,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install verify-everything==0.1.1
+      - run: pip install verify-everything==0.1.2
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
@@ -119,7 +119,7 @@ The `--history-loader` option executes the specified shell command as the curren
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-![architecture](https://github.com/imbue-ai/vet/blob/main/architecture.svg)
+![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/architecture.svg)
 
 ## Why Vet
 
