@@ -4,6 +4,7 @@ from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
+from vet.cli.config.schema import CustomGuidesConfig
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
 
@@ -22,6 +23,9 @@ class VetConfig(SerializableModel):
     # (Use the values from the vet.data_types.IssueCode enum.)
     enabled_issue_codes: tuple[IssueCode, ...] | None = None
     disabled_issue_codes: tuple[IssueCode, ...] | None = ()
+
+    # Custom guides to override built-in guides for issue codes.
+    custom_guides_config: CustomGuidesConfig | None = None
 
     # Todo: Different models for different issue identifiers
     language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(

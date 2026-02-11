@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from vet.cli.config.schema import CustomGuidesConfig
+from vet.cli.config.schema import GuideMode
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
@@ -452,3 +456,34 @@ ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK: tuple[IssueCode, ...] = (
     IssueCode.INSTRUCTION_FILE_DISOBEYED,
     IssueCode.INSTRUCTION_TO_SAVE,
 )
+
+
+def apply_custom_guides(
+    guides_by_code: dict[IssueCode, IssueIdentificationGuide],
+    custom_config: CustomGuidesConfig | None,
+) -> dict[IssueCode, IssueIdentificationGuide]:
+    if custom_config is None or not custom_config.guides:
+        return guides_by_code
+
+    result = dict(guides_by_code)
+    for issue_code_str, custom in custom_config.guides.items():
+        issue_code = IssueCode(issue_code_str)
+        built_in = result[issue_code]
+
+        match custom.mode:
+            case GuideMode.PREFIX:
+                merged_guide = custom.guide + "\n" + built_in.guide
+            case GuideMode.SUFFIX:
+                merged_guide = built_in.guide + "\n" + custom.guide
+            case GuideMode.REPLACE:
+                merged_guide = custom.guide
+
+        result[issue_code] = IssueIdentificationGuide(
+            issue_code=issue_code,
+            guide=merged_guide,
+            additional_guide_for_agent=built_in.additional_guide_for_agent,
+            examples=built_in.examples,
+            exceptions=built_in.exceptions,
+        )
+
+    return result

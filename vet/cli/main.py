@@ -25,6 +25,7 @@ from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
 from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import load_cli_config
+from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
@@ -356,6 +357,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error loading model configuration: {e}", file=sys.stderr)
         return 2
 
+    try:
+        custom_guides_config = load_custom_guides_config(repo_path)
+    except ConfigLoadError as e:
+        print(f"Error loading custom guides: {e}", file=sys.stderr)
+        return 2
+
     if args.list_issue_codes:
         list_issue_codes()
         return 0
@@ -480,6 +487,7 @@ def main(argv: list[str] | None = None) -> int:
         max_identify_workers=args.max_workers,
         max_output_tokens=max_output_tokens or 20000,
         max_identifier_spend_dollars=args.max_spend,
+        custom_guides_config=custom_guides_config,
     )
 
     issues = find_issues(
