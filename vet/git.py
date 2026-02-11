@@ -62,7 +62,6 @@ class SyncLocalGitRepo:
         self,
         command: Sequence[str],
         check: bool = True,
-        secrets: dict[str, str] | None = None,
         cwd: AnyPath | None = None,
         is_error_logged: bool = True,
     ) -> str:
@@ -72,7 +71,7 @@ class SyncLocalGitRepo:
         """
         command_string = shlex.join(command)
         logger.trace(
-            f"Running command: {command_string=} from cwd={cwd or self.base_path} with {secrets=} {check=} {is_error_logged=}"
+            f"Running command: {command_string=} from cwd={cwd or self.base_path} with {check=} {is_error_logged=}"
         )
         completed_proc = subprocess.run(
             command,
@@ -80,7 +79,6 @@ class SyncLocalGitRepo:
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=secrets,
         )
         # note, need to be carefull not to strip() lines since whitespace may be important (e.g. for diffs)
         # return joined lines since mostly we only use the output for logging, and this way we arn't
