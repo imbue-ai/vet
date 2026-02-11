@@ -1522,7 +1522,7 @@ wheels = [
 ]
 
 [[package]]
-name = "vet"
+name = "verify-everything"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -1544,8 +1544,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pygit2" },
     { name = "pyhumps" },
-    { name = "pytest" },
-    { name = "syrupy" },
     { name = "tblib" },
     { name = "tiktoken" },
     { name = "toml" },
@@ -1557,6 +1555,8 @@ dependencies = [
 dev = [
     { name = "black" },
     { name = "hypothesis" },
+    { name = "pytest" },
+    { name = "syrupy" },
 ]
 
 [package.metadata]
@@ -1579,8 +1579,6 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "pygit2", specifier = ">=1.18.0" },
     { name = "pyhumps" },
-    { name = "pytest" },
-    { name = "syrupy" },
     { name = "tblib", specifier = "==2.0.0" },
     { name = "tiktoken" },
     { name = "toml" },
@@ -1592,6 +1590,8 @@ requires-dist = [
 dev = [
     { name = "black" },
     { name = "hypothesis" },
+    { name = "pytest" },
+    { name = "syrupy" },
 ]
 
 [[package]]
