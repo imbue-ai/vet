@@ -79,3 +79,7 @@ from vet.imbue_core.log_utils import ensure_core_log_levels_configured
 
 ensure_core_log_levels_configured()
 ```
+
+### README links
+
+The README is rendered on PyPI which does not resolve relative links that otherwise work on GitHub. Always use full URLs when linking to resources from the README.
