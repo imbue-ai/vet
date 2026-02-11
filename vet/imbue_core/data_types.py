@@ -75,6 +75,8 @@ There are also things we explicitly don't want to catch with this system:
 from enum import StrEnum
 from typing import Literal
 
+from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import Field
 
 from vet.imbue_core.common import generate_id
@@ -235,6 +237,25 @@ class IssueCode(StrEnum):
 
     # Deprecated
     _DEPRECATED_LLM_ARTIFACTS_LEFT_IN_CODE = "llm_artifacts_left_in_code"
+
+
+class GuideMode(StrEnum):
+    PREFIX = "prefix"
+    SUFFIX = "suffix"
+    REPLACE = "replace"
+
+
+class CustomGuideConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mode: GuideMode
+    guide: str
+
+
+class CustomGuidesConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    guides: dict[str, CustomGuideConfig] = Field(default_factory=dict)
 
 
 class IssueLocation(SerializableModel):

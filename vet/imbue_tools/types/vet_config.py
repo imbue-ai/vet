@@ -2,9 +2,9 @@ from pathlib import Path
 
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
-from vet.cli.config.schema import CustomGuidesConfig
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.8
 

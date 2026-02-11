@@ -1,4 +1,3 @@
-from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel
@@ -30,22 +29,3 @@ class ModelsConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     providers: dict[str, ProviderConfig] = Field(default_factory=dict)
-
-
-class GuideMode(StrEnum):
-    PREFIX = "prefix"
-    SUFFIX = "suffix"
-    REPLACE = "replace"
-
-
-class CustomGuideConfig(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    mode: GuideMode
-    guide: str
-
-
-class CustomGuidesConfig(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-    guides: dict[str, CustomGuideConfig] = Field(default_factory=dict)

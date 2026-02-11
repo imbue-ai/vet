@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from vet.cli.config.schema import CustomGuidesConfig
-from vet.cli.config.schema import GuideMode
+from vet.imbue_core.data_types import CustomGuidesConfig
+from vet.imbue_core.data_types import GuideMode
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
 

@@ -13,9 +13,9 @@ from vet.imbue_core.data_types import IssueCode
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
 from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
-from vet.cli.config.schema import CustomGuideConfig
-from vet.cli.config.schema import CustomGuidesConfig
 from vet.cli.config.schema import ModelsConfig
+from vet.imbue_core.data_types import CustomGuideConfig
+from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.cli.config.schema import ProviderConfig
 
 
