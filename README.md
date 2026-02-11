@@ -111,6 +111,10 @@ done
 
 This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
 
+### Security note
+
+The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
+
 ## How it works
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
@@ -192,4 +196,4 @@ See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this pr
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0-only)](LICENSE).
+This project is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0-only)](https://github.com/imbue-ai/vet/blob/main/LICENSE).
