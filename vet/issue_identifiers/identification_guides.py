@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from vet.imbue_core.data_types import CustomGuidesConfig
-from vet.imbue_core.data_types import GuideMode
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
@@ -470,13 +469,14 @@ def apply_custom_guides(
         issue_code = IssueCode(issue_code_str)
         built_in = result[issue_code]
 
-        match custom.mode:
-            case GuideMode.PREFIX:
-                merged_guide = custom.guide + "\n" + built_in.guide
-            case GuideMode.SUFFIX:
-                merged_guide = built_in.guide + "\n" + custom.guide
-            case GuideMode.REPLACE:
-                merged_guide = custom.guide
+        if custom.replace is not None:
+            merged_guide = custom.replace
+        else:
+            merged_guide = built_in.guide
+            if custom.prefix is not None:
+                merged_guide = custom.prefix + "\n" + merged_guide
+            if custom.suffix is not None:
+                merged_guide = merged_guide + "\n" + custom.suffix
 
         result[issue_code] = IssueIdentificationGuide(
             issue_code=issue_code,

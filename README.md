@@ -203,14 +203,12 @@ You can customize the guide text for the issue codes via `guides.toml`. Guide fi
 
 ```toml
 [logic_error]
-mode = "Suffix"
-guide = """
+suffix = """
 - Check for integer overflow in arithmetic operations
 """
 
 [insecure_code]
-mode = "Replace"
-guide = """
+replace = """
 - Check for SQL injection: flag any string concatenation or f-string formatting used to build SQL queries rather than parameterized queries
 - Check for XSS: flag user-supplied data rendered into HTML templates without proper escaping or sanitization
 - Check for path traversal: flag file operations where user input flows into file paths without validation against directory traversal (e.g. ../)
@@ -219,7 +217,7 @@ guide = """
 """
 ```
 
-Section keys must be valid issue codes (`vet --list-issue-codes`). `mode` controls merging: **Prefix** prepends, **Suffix** appends, **Replace** replaces the built-in guide text. Guide text should be formatted as a list.
+Section keys must be valid issue codes (`vet --list-issue-codes`). Each section supports three optional fields: `prefix` (prepends to built-in guide), `suffix` (appends to built-in guide), and `replace` (fully replaces the built-in guide). `prefix` and `suffix` can be used together, but `replace` is mutually exclusive with the other two. Guide text should be formatted as a list of items starting with `-`.
 
 ## License
 

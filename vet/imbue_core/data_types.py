@@ -78,6 +78,7 @@ from typing import Literal
 from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import model_validator
 
 from vet.imbue_core.common import generate_id
 from vet.imbue_core.pydantic_serialization import SerializableModel
@@ -239,17 +240,22 @@ class IssueCode(StrEnum):
     _DEPRECATED_LLM_ARTIFACTS_LEFT_IN_CODE = "llm_artifacts_left_in_code"
 
 
-class GuideMode(StrEnum):
-    PREFIX = "prefix"
-    SUFFIX = "suffix"
-    REPLACE = "replace"
-
-
 class CustomGuideConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    mode: GuideMode
-    guide: str
+    prefix: str | None = None
+    suffix: str | None = None
+    replace: str | None = None
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> "CustomGuideConfig":
+        has_prefix_or_suffix = self.prefix is not None or self.suffix is not None
+        has_replace = self.replace is not None
+        if has_replace and has_prefix_or_suffix:
+            raise ValueError("'replace' cannot be used together with 'prefix' or 'suffix'")
+        if not has_replace and not has_prefix_or_suffix:
+            raise ValueError("At least one of 'prefix', 'suffix', or 'replace' must be set")
+        return self
 
 
 class CustomGuidesConfig(BaseModel):

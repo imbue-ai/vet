@@ -235,8 +235,6 @@ def _load_single_guides_file(config_path: Path) -> CustomGuidesConfig:
             )
         if not isinstance(value, dict):
             raise ConfigLoadError(f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}")
-        if "mode" in value:
-            value = {**value, "mode": value["mode"].lower()}
         try:
             guides[key] = CustomGuideConfig.model_validate(value)
         except ValidationError as e:
