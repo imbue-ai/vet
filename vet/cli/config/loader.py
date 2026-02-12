@@ -63,7 +63,7 @@ def _get_config_file_paths(
     if repo_path:
         git_root = find_git_repo_root(repo_path)
         root = git_root if git_root else repo_path
-        paths.append(root / project_filename)
+        paths.append(root / ".vet" / project_filename)
 
     return paths
 
@@ -163,7 +163,7 @@ def build_language_model_config(model_id: str, user_config: ModelsConfig) -> Lan
 
 
 def get_cli_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("vet", "config.toml", "vet.toml", repo_path)
+    return _get_config_file_paths("vet", "configs.toml", "configs.toml", repo_path)
 
 
 def _load_cli_config_file(config_path: Path) -> dict[str, CliConfigPreset]:

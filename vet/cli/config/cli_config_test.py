@@ -152,7 +152,7 @@ def test_get_cli_config_file_paths_returns_global_path(tmp_path: Path) -> None:
         paths = get_cli_config_file_paths(repo_path=None)
 
     assert len(paths) == 1
-    assert paths[0] == tmp_path / "vet" / "config.toml"
+    assert paths[0] == tmp_path / "vet" / "configs.toml"
 
 
 def test_get_cli_config_file_paths_includes_project_path(tmp_path: Path) -> None:
@@ -163,8 +163,8 @@ def test_get_cli_config_file_paths_includes_project_path(tmp_path: Path) -> None
         paths = get_cli_config_file_paths(repo_path=repo_path)
 
     assert len(paths) == 2
-    assert paths[0] == tmp_path / "xdg" / "vet" / "config.toml"
-    assert paths[1] == repo_path / "vet.toml"
+    assert paths[0] == tmp_path / "xdg" / "vet" / "configs.toml"
+    assert paths[1] == repo_path / ".vet" / "configs.toml"
 
 
 def test_get_cli_config_file_paths_finds_git_root(tmp_path: Path) -> None:
@@ -177,11 +177,11 @@ def test_get_cli_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path / "xdg")}):
         paths = get_cli_config_file_paths(repo_path=subdir)
 
-    assert paths[1] == git_root / "vet.toml"
+    assert paths[1] == git_root / ".vet" / "configs.toml"
 
 
 def test_load_cli_config_file_loads_valid_toml(tmp_path: Path) -> None:
-    config_file = tmp_path / "config.toml"
+    config_file = tmp_path / "configs.toml"
     config_file.write_text(
         """
 [ci]
@@ -206,7 +206,7 @@ model = "claude-4-sonnet"
 
 
 def test_load_cli_config_file_raises_on_invalid_toml(tmp_path: Path) -> None:
-    config_file = tmp_path / "config.toml"
+    config_file = tmp_path / "configs.toml"
     config_file.write_text("not = valid = toml")
 
     with pytest.raises(ConfigLoadError) as exc_info:
@@ -216,7 +216,7 @@ def test_load_cli_config_file_raises_on_invalid_toml(tmp_path: Path) -> None:
 
 
 def test_load_cli_config_file_raises_on_invalid_schema(tmp_path: Path) -> None:
-    config_file = tmp_path / "config.toml"
+    config_file = tmp_path / "configs.toml"
     config_file.write_text(
         """
 [ci]
@@ -231,7 +231,7 @@ confidence_threshold = "not-a-float"
 
 
 def test_load_cli_config_file_raises_on_unknown_field(tmp_path: Path) -> None:
-    config_file = tmp_path / "config.toml"
+    config_file = tmp_path / "configs.toml"
     config_file.write_text(
         """
 [ci]
@@ -255,7 +255,9 @@ def test_load_cli_config_returns_empty_when_no_files_exist(tmp_path: Path) -> No
 def test_load_cli_config_loads_single_file(tmp_path: Path) -> None:
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    config_file = repo_path / "vet.toml"
+    vet_dir = repo_path / ".vet"
+    vet_dir.mkdir()
+    config_file = vet_dir / "configs.toml"
     config_file.write_text(
         """
 [ci]
@@ -273,7 +275,7 @@ confidence_threshold = 0.9
 def test_load_cli_config_merges_global_and_project(tmp_path: Path) -> None:
     xdg_config = tmp_path / "xdg"
     (xdg_config / "vet").mkdir(parents=True)
-    global_config = xdg_config / "vet" / "config.toml"
+    global_config = xdg_config / "vet" / "configs.toml"
     global_config.write_text(
         """
 [ci]
@@ -287,7 +289,8 @@ model = "global-model"
 
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    project_config = repo_path / "vet.toml"
+    (repo_path / ".vet").mkdir()
+    project_config = repo_path / ".vet" / "configs.toml"
     project_config.write_text(
         """
 [ci]
@@ -349,8 +352,8 @@ def test_get_config_preset_raises_on_unknown_with_no_configs(tmp_path: Path) -> 
     assert "unknown" in error_msg
     assert "No configuration files found" in error_msg
     # Verify the error message contains dynamically generated paths with labels
-    assert f"{tmp_path / 'xdg' / 'vet' / 'config.toml'} (global)" in error_msg
-    assert f"{repo_path / 'vet.toml'} (project)" in error_msg
+    assert f"{tmp_path / 'xdg' / 'vet' / 'configs.toml'} (global)" in error_msg
+    assert f"{repo_path / '.vet' / 'configs.toml'} (project)" in error_msg
 
 
 def _create_default_args() -> argparse.Namespace:
