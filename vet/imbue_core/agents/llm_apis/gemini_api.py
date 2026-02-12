@@ -28,9 +28,7 @@ from loguru import logger
 from pydantic.functional_validators import field_validator
 
 from vet.imbue_core.agents.llm_apis.api_utils import convert_prompt_to_messages
-from vet.imbue_core.agents.llm_apis.api_utils import (
-    create_costed_language_model_response_for_single_result,
-)
+from vet.imbue_core.agents.llm_apis.api_utils import create_costed_language_model_response_for_single_result
 from vet.imbue_core.agents.llm_apis.data_types import CachedCountTokensResponse
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.agents.llm_apis.data_types import CountTokensInputs

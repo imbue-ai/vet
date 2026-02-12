@@ -3,9 +3,8 @@ from typing import Callable
 
 from loguru import logger
 
-from vet.repo_utils import VET_MAX_PROMPT_TOKENS
-
 from vet.imbue_tools.types.vet_config import VetConfig
+from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 
 
 class ContextBudget(Enum):

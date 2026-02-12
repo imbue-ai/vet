@@ -23,17 +23,11 @@ from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
-from vet.issue_identifiers.common import (
-    extract_invocation_info_from_costed_response,
-)
-from vet.issue_identifiers.common import (
-    format_issue_identification_guide_for_llm,
-)
+from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
+from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from vet.issue_identifiers.identification_guides import (
-    IssueIdentificationGuide,
-)
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget

@@ -5,13 +5,9 @@ from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
 from vet.imbue_core.itertools import only
+from vet.imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
+from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
 from vet.vet_types.messages import ConversationMessageUnion
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    format_conversation_history_for_prompt,
-)
-from vet.imbue_tools.util_prompts.conversation_prefix import (
-    CONVERSATION_PREFIX_TEMPLATE,
-)
 
 # TODO: see how this does on actual examples where the agent did something other than what the user asked for
 PROMPT_TEMPLATE = (

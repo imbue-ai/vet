@@ -10,25 +10,21 @@ from loguru import logger
 
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
-from vet.vet_types.messages import ConversationMessageUnion
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    ConversationLoadingError,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import ConversationLoadingError
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.goal_from_conversation import (
-    get_goal_from_conversation,
-)
+from vet.imbue_tools.util_prompts.goal_from_conversation import get_goal_from_conversation
 from vet.issue_identifiers import registry
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
-from vet.repo_utils import get_code_to_check
 from vet.repo_utils import VET_MAX_PROMPT_TOKENS
+from vet.repo_utils import get_code_to_check
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget
 from vet.truncation import truncate_to_token_limit
+from vet.vet_types.messages import ConversationMessageUnion
 
 
 def get_issues_with_raw_responses(

@@ -11,48 +11,30 @@ from typing import TypeVar
 
 from loguru import logger
 
-from vet.imbue_core.agents.primitives.resource_limits import (
-    ensure_global_resource_limits,
-)
+from vet.imbue_core.agents.primitives.resource_limits import ensure_global_resource_limits
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
 from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import IssueIdentifierResult
 from vet.imbue_core.data_types import IssueIdentifierType
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.get_conversation_history.input_data_types import (
-    IdentifierInputsMissingError,
-)
+from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.imbue_tools.types.vet_config import get_enabled_issue_codes
-from vet.issue_identifiers.agentic_issue_collation import (
-    collate_issues_with_agent,
-)
+from vet.issue_identifiers.agentic_issue_collation import collate_issues_with_agent
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import convert_to_issue_identifier_result
 from vet.issue_identifiers.harnesses.agentic import AgenticHarness
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from vet.issue_identifiers.harnesses.conversation_single_prompt import (
-    ConversationSinglePromptHarness,
-)
+from vet.issue_identifiers.harnesses.conversation_single_prompt import ConversationSinglePromptHarness
 from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
-from vet.issue_identifiers.identification_guides import (
-    IssueIdentificationGuide,
-)
+from vet.issue_identifiers.identification_guides import ISSUE_CODES_FOR_BATCHED_COMMIT_CHECK
+from vet.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CONVERSATION_HISTORY_CHECK
+from vet.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.identification_guides import apply_custom_guides
 from vet.issue_identifiers.issue_deduplication import deduplicate_issues
 from vet.issue_identifiers.issue_evaluation import filter_issues

@@ -4,9 +4,7 @@ from typing import TypeVar
 
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from vet.issue_identifiers.base import IssueIdentifier
-from vet.issue_identifiers.identification_guides import (
-    IssueIdentificationGuide,
-)
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 
 T = TypeVar("T", bound=IdentifierInputs)
 

@@ -17,19 +17,13 @@ from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.frozen_utils import FrozenDict
 from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.get_conversation_history.input_data_types import (
-    IdentifierInputsMissingError,
-)
+from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputsMissingError
 from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.harnesses.single_prompt import SinglePromptHarness
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
+from vet.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 

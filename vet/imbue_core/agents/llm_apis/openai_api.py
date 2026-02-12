@@ -38,9 +38,7 @@ from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import OpenAICompatibleAPI
-from vet.imbue_core.agents.llm_apis.openai_compatible_api import (
-    _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON,
-)
+from vet.imbue_core.agents.llm_apis.openai_compatible_api import _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON
 from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAICachingInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent

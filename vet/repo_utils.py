@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from vet.imbue_core.async_monkey_patches import log_exception
 from vet.errors import GitException
 from vet.errors import RunCommandError
 from vet.git import SyncLocalGitRepo
 from vet.git import find_relative_to_commit_hash
+from vet.imbue_core.async_monkey_patches import log_exception
 
 # Maximum length of LLM prompts used within vet in tokens, without the repository-specific context.
 # Currently, the prompt is well under 10k tokens, but this value might need to be bumped up if we add a lot of additional

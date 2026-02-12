@@ -12,3 +12,15 @@ def test_black_formatting():
         text=True,
     )
     assert result.returncode == 0, f"black found formatting issues:\n{result.stderr}{result.stdout}"
+
+
+def test_isort_ordering():
+    """Ensure all Python files have correctly sorted imports."""
+    repo_root = Path(__file__).resolve().parent.parent
+    result = subprocess.run(
+        ["isort", "--check-only", "--diff", "."],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, f"isort found import ordering issues:\n{result.stderr}{result.stdout}"

@@ -11,12 +11,6 @@ from pathlib import Path
 
 from loguru import logger
 
-from vet.imbue_core.data_types import IssueCode
-from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    parse_conversation_history,
-)
-from vet.imbue_tools.types.vet_config import VetConfig
 from vet.api import find_issues
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset
@@ -39,6 +33,10 @@ from vet.formatters import format_github_review
 from vet.formatters import format_issue_text
 from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import get_valid_issue_code_values
+from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
 

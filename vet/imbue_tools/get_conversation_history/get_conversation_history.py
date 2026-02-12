@@ -6,8 +6,8 @@ from loguru import logger
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
-from vet.vet_types.chat_state import ContentBlockTypes
 from vet.truncation import truncate_to_token_limit
+from vet.vet_types.chat_state import ContentBlockTypes
 from vet.vet_types.messages import ChatInputUserMessage
 from vet.vet_types.messages import ConversationMessageUnion
 from vet.vet_types.messages import ResponseBlockAgentMessage

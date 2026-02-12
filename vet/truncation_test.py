@@ -1,9 +1,14 @@
 from typing import Callable
 
 import tiktoken
-from hypothesis import given, settings, strategies as st, assume
+from hypothesis import assume
+from hypothesis import given
+from hypothesis import settings
+from hypothesis import strategies as st
 
-from vet.truncation import ContextBudget, get_token_budget, truncate_to_token_limit
+from vet.truncation import ContextBudget
+from vet.truncation import get_token_budget
+from vet.truncation import truncate_to_token_limit
 
 
 def word_count(text: str) -> int:

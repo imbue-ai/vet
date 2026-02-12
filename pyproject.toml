@@ -73,6 +73,7 @@ include = ["vet*"]
 dev = [
     "black",
     "hypothesis",
+    "isort",
     "pytest",
     "syrupy",
 ]
@@ -80,3 +81,12 @@ dev = [
 [tool.black]
 line-length = 120
 target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 120
+force_single_line = true
+case_sensitive = true
+order_by_type = false
+known_first_party = ["vet"]
+no_lines_before = ["future"]

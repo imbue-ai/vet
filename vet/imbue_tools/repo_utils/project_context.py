@@ -21,9 +21,7 @@ from vet.imbue_tools.repo_utils.context_prefix import create_context_prompt_pref
 from vet.imbue_tools.repo_utils.context_prefix import get_repo_context
 from vet.imbue_tools.repo_utils.context_retrieval import RepoContextManager
 from vet.imbue_tools.repo_utils.file_system import InMemoryFileSystem
-from vet.imbue_tools.repo_utils.subrepo_formatting import (
-    REPO_CONTEXT_TEMPLATE_WITH_NO_MENTION_OF_DIFF,
-)
+from vet.imbue_tools.repo_utils.subrepo_formatting import REPO_CONTEXT_TEMPLATE_WITH_NO_MENTION_OF_DIFF
 
 
 @lru_cache
