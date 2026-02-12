@@ -28,6 +28,7 @@ vet --help
 
 ### Standard Usage
 
+
 **OpenCode:**
 ```bash
 vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
@@ -60,6 +61,8 @@ vet "goal"
 **Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the correct conversation using the approach described above for opencode that uses textual search.
 
 **Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the correct conversation using the approach described above for opencode that uses textual search.
+
+NOTE: The examples in the standard usage section assume the user installed the vet skill at the user level, not the project level. Prior to trying to run vet, check if it was installed at the project level which should take precedence over the user level. If it is installed at the project level, ensure the history-loader option points to the correct location.
 
 ## Interpreting Results
 

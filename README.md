@@ -47,6 +47,24 @@ Vet ships as an [agent skill](https://agentskills.io) that coding agents like [O
 
 ### Install the skill
 
+#### Project Level
+
+From the root of your git repo:
+
+```bash
+for dir in .agents .claude; do
+  mkdir -p "$dir/skills/vet/scripts"
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+    curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
+      -o "$dir/skills/vet/$file"
+  done
+done
+```
+
+This places the skill in `.agents/skills/vet/` and `.claude/skills/vet/` at the repo root, which is sufficient for discovery by OpenCode, Claude Code, and Codex.
+
+#### User Level
+
 ```bash
 for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
   mkdir -p "$dir/skills/vet/scripts"
