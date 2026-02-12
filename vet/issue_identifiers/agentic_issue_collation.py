@@ -22,7 +22,7 @@ from vet.issue_identifiers.common import format_issue_identification_guide_for_l
 from vet.issue_identifiers.common import generate_issues_from_response_texts
 from vet.issue_identifiers.common import generate_response_from_claude_code
 from vet.issue_identifiers.common import get_claude_code_options
-from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 COLLATION_PROMPT_TEMPLATE = """You are reviewing the results from parallel code analysis for potential issues.
@@ -72,12 +72,12 @@ def _get_collation_prompt(
     identifier_inputs: CommitInputs,
     enabled_issue_codes: tuple[IssueCode, ...],
     generated_issues: str,
+    guides_by_issue_code: dict[IssueCode, IssueIdentificationGuide],
 ) -> str:
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[code])
-        for code in sorted_issue_codes
+        code: format_issue_identification_guide_for_llm(guides_by_issue_code[code]) for code in sorted_issue_codes
     }
 
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -118,6 +118,7 @@ def collate_issues_with_agent(
     project_context: ProjectContext,
     config: VetConfig,
     enabled_issue_codes: tuple[IssueCode, ...],
+    guides_by_issue_code: dict[IssueCode, IssueIdentificationGuide],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
     """
     Collate issues from multiple issue identifiers.
@@ -128,6 +129,7 @@ def collate_issues_with_agent(
         project_context: Loaded data corresponding to the inputs, e.g. diffs or files.
         config: Settings
         enabled_issue_codes: The issue types used by the issue identifiers.
+        guides_by_issue_code: Mapping from issue codes to their identification guides (including any custom overrides).
 
     Returns:
         A generator of collated issues. Returns IssueIdentificationDebugInfo after the generator is exhausted.
@@ -149,7 +151,11 @@ def collate_issues_with_agent(
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
     collation_prompt = _get_collation_prompt(
-        project_context, collation_inputs, enabled_issue_codes, combined_issues_string
+        project_context,
+        collation_inputs,
+        enabled_issue_codes,
+        combined_issues_string,
+        guides_by_issue_code,
     )
     claude_response = generate_response_from_claude_code(collation_prompt, options)
     assert claude_response is not None

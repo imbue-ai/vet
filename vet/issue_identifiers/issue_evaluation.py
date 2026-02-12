@@ -24,7 +24,7 @@ from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.harnesses.single_prompt import USER_REQUEST_PREFIX_TEMPLATE
-from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
@@ -110,12 +110,12 @@ def _format_prompt(
     config: VetConfig,
     inputs: IdentifierInputs,
     is_code_based_issue: bool,
+    formatted_guide: str,
 ) -> str:
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
     prompt_template = _get_full_prompt_template(is_code_based_issue)
     jinja_template = env.from_string(prompt_template)
     issue_code = IssueCode(issue.issue_code)
-    guide = format_issue_identification_guide_for_llm(ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE[issue_code])
 
     criteria = CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
     response_class = CodeBasedEvaluationResponse if is_code_based_issue else ConversationBasedEvaluationResponse
@@ -125,7 +125,7 @@ def _format_prompt(
         "cache_full_prompt": config.cache_full_prompt,
         "issue_description": issue.description,
         "issue_code": issue_code,
-        "guide": guide,
+        "guide": formatted_guide,
         "criteria": criteria,
         "response_schema": response_class.model_json_schema(),
         "is_code_based_issue": is_code_based_issue,
@@ -180,6 +180,7 @@ def evaluate_code_issue_through_llm(
     project_context: ProjectContext,
     config: VetConfig,
     is_code_based_issue: bool,
+    formatted_guide: str,
 ) -> tuple[bool, tuple[LLMResponse, ...]]:
     """
     Args:
@@ -206,7 +207,7 @@ def evaluate_code_issue_through_llm(
 
     language_model = build_language_model_from_config(config.language_model_generation_config)
 
-    prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue)
+    prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue, formatted_guide)
     costed_response = language_model.complete_with_usage_sync(
         prompt,
         params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
@@ -260,6 +261,7 @@ def filter_issues(
     config: VetConfig,
     # Currently, the LLM-based filter only works reliably for code-related issue types.
     is_code_based_issue_generator: bool,
+    guides_by_issue_code: dict[IssueCode, IssueIdentificationGuide],
 ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
     """
     Filter issues based on the evaluation.
@@ -269,6 +271,7 @@ def filter_issues(
         inputs: The inputs which determine the content provided to the evaluator.
         project_context: Loaded data corresponding to the inputs, e.g. diffs or files.
         config: Settings
+        guides_by_issue_code: Mapping from issue codes to their identification guides (including any custom overrides).
 
     Returns:
         A generator of issues with the passes_filtration flag set.
@@ -282,8 +285,15 @@ def filter_issues(
     for issue in issue_generator_with_capture:
         passes_filtration = evaluate_issue_through_confidence(issue, config)
         if passes_filtration:
+            issue_code = IssueCode(issue.issue_code)
+            formatted_guide = format_issue_identification_guide_for_llm(guides_by_issue_code[issue_code])
             passes_filtration, llm_responses = evaluate_code_issue_through_llm(
-                issue, inputs, project_context, config, is_code_based_issue_generator
+                issue,
+                inputs,
+                project_context,
+                config,
+                is_code_based_issue_generator,
+                formatted_guide,
             )
             filter_llm_responses.extend(llm_responses)
         issue.set_passes_filtration(passes_filtration)

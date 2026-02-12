@@ -206,6 +206,7 @@ def run(
                     project_context,
                     config,
                     identifier.enabled_issue_codes,
+                    guides_by_issue_code,
                 )
             except IdentifierInputsMissingError as e:
                 logger.warning(
@@ -224,6 +225,7 @@ def run(
                 project_context,
                 config,
                 is_code_based_issue_generator=identifier.identifies_code_issues,
+                guides_by_issue_code=guides_by_issue_code,
             )
         else:
             filtered_results_generator = collated_issues_generator
@@ -244,6 +246,7 @@ def run(
             multiplexed_generators_with_combined_debug_info,
             config,
             tuple(detectable_issue_codes),
+            guides_by_issue_code,
         )
     else:
         deduplicated_generator = multiplexed_generators_with_combined_debug_info
