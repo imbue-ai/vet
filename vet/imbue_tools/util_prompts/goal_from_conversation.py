@@ -33,11 +33,7 @@ def prompt_for_getting_goal_from_conversation(
 ) -> str:
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
     jinja_template = env.from_string(PROMPT_TEMPLATE)
-    formatted_history, conversation_truncated = format_conversation_history_for_prompt(conversation_history)
-    return jinja_template.render(
-        conversation_history=formatted_history,
-        conversation_truncated=conversation_truncated,
-    )
+    return jinja_template.render(conversation_history=format_conversation_history_for_prompt(conversation_history))
 
 
 def get_goal_from_conversation_with_usage(

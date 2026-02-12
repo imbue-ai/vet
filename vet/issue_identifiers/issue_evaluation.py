@@ -26,9 +26,6 @@ from vet.issue_identifiers.common import format_issue_identification_guide_for_l
 from vet.issue_identifiers.harnesses.single_prompt import USER_REQUEST_PREFIX_TEMPLATE
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
-from vet.truncation import ContextBudget
-from vet.truncation import get_available_tokens
-from vet.truncation import get_token_budget
 
 CODE_BASED_CRITERIA = (
     "1. The issue is based on specific code, and not merely on the absence of information in the codebase snapshot. (true/false)",
@@ -134,25 +131,14 @@ def _format_prompt(
     if is_code_based_issue:
         template_vars["include_request_and_diff"] = True
         template_vars["commit_message"] = escape_prompt_markers(inputs.maybe_goal or "")
-        template_vars["goal_truncated"] = inputs.goal_truncated
         template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
-        template_vars["diff_truncated"] = inputs.diff_truncated
         template_vars["extra_context"] = (
             escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
         )
-        template_vars["extra_context_truncated"] = inputs.extra_context_truncated
     else:
-        lm_config = config.language_model_generation_config
-        available_tokens = get_available_tokens(config)
-        conversation_budget = get_token_budget(available_tokens, ContextBudget.CONVERSATION)
-
-        conversation_history, conversation_truncated = format_conversation_history_for_prompt(
-            inputs.maybe_conversation_history or (),
-            max_tokens=conversation_budget,
-            count_tokens=lm_config.count_tokens,
+        template_vars["conversation_history"] = format_conversation_history_for_prompt(
+            inputs.maybe_conversation_history or ()
         )
-        template_vars["conversation_history"] = conversation_history
-        template_vars["conversation_truncated"] = conversation_truncated or inputs.conversation_truncated
 
     return jinja_template.render(template_vars)
 
