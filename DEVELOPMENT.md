@@ -63,6 +63,7 @@ Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. 
    git tag v0.2.0 -m "v0.2.0: Updated XYZ"
    git push origin v0.2.0
    ```
+5. Create a PR for the new branch
 6. The `Publish to PyPI` workflow will automatically build and publish the package
 7. Merge PR into main.
 
