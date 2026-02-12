@@ -10,19 +10,19 @@
 <title>VET_DataFlow</title>
 <g id="clust1" class="cluster">
 <title>cluster_inputs</title>
-<polygon fill="#f5f5f5" stroke="black" points="28.75,-280 28.75,-361.5 335.75,-361.5 335.75,-280 28.75,-280"/>
+<polygon fill="gainsboro" stroke="black" points="28.75,-280 28.75,-361.5 335.75,-361.5 335.75,-280 28.75,-280"/>
 <text xml:space="preserve" text-anchor="middle" x="182.25" y="-344.2" font-family="Times,serif" font-size="14.00">Inputs</text>
 </g>
 <!-- diff -->
 <g id="node1" class="node">
 <title>diff</title>
-<path fill="#e8e8e8" stroke="black" d="M81,-326.5C81,-326.5 48.5,-326.5 48.5,-326.5 42.5,-326.5 36.5,-320.5 36.5,-314.5 36.5,-314.5 36.5,-302.5 36.5,-302.5 36.5,-296.5 42.5,-290.5 48.5,-290.5 48.5,-290.5 81,-290.5 81,-290.5 87,-290.5 93,-296.5 93,-302.5 93,-302.5 93,-314.5 93,-314.5 93,-320.5 87,-326.5 81,-326.5"/>
+<path fill="lightgray" stroke="black" d="M81,-326.5C81,-326.5 48.5,-326.5 48.5,-326.5 42.5,-326.5 36.5,-320.5 36.5,-314.5 36.5,-314.5 36.5,-302.5 36.5,-302.5 36.5,-296.5 42.5,-290.5 48.5,-290.5 48.5,-290.5 81,-290.5 81,-290.5 87,-290.5 93,-296.5 93,-302.5 93,-302.5 93,-314.5 93,-314.5 93,-320.5 87,-326.5 81,-326.5"/>
 <text xml:space="preserve" text-anchor="middle" x="64.75" y="-303.45" font-family="Times,serif" font-size="14.00">Git diff</text>
 </g>
 <!-- context -->
 <g id="node4" class="node">
 <title>context</title>
-<path fill="#e8e8e8" stroke="black" d="M83.5,-252C83.5,-252 12,-252 12,-252 6,-252 0,-246 0,-240 0,-240 0,-228 0,-228 0,-222 6,-216 12,-216 12,-216 83.5,-216 83.5,-216 89.5,-216 95.5,-222 95.5,-228 95.5,-228 95.5,-240 95.5,-240 95.5,-246 89.5,-252 83.5,-252"/>
+<path fill="lightgray" stroke="black" d="M83.5,-252C83.5,-252 12,-252 12,-252 6,-252 0,-246 0,-240 0,-240 0,-228 0,-228 0,-222 6,-216 12,-216 12,-216 83.5,-216 83.5,-216 89.5,-216 95.5,-222 95.5,-228 95.5,-228 95.5,-240 95.5,-240 95.5,-246 89.5,-252 83.5,-252"/>
 <text xml:space="preserve" text-anchor="middle" x="47.75" y="-228.95" font-family="Times,serif" font-size="14.00">Repo snapshot</text>
 </g>
 <!-- diff&#45;&gt;context -->
@@ -34,7 +34,7 @@
 <!-- checks -->
 <g id="node5" class="node">
 <title>checks</title>
-<path fill="#e8e8e8" stroke="black" d="M173.62,-180C173.62,-180 111.88,-180 111.88,-180 105.88,-180 99.88,-174 99.88,-168 99.88,-168 99.88,-156 99.88,-156 99.88,-150 105.88,-144 111.88,-144 111.88,-144 173.62,-144 173.62,-144 179.62,-144 185.62,-150 185.62,-156 185.62,-156 185.62,-168 185.62,-168 185.62,-174 179.62,-180 173.62,-180"/>
+<path fill="lightgray" stroke="black" d="M173.62,-180C173.62,-180 111.88,-180 111.88,-180 105.88,-180 99.88,-174 99.88,-168 99.88,-168 99.88,-156 99.88,-156 99.88,-150 105.88,-144 111.88,-144 111.88,-144 173.62,-144 173.62,-144 179.62,-144 185.62,-150 185.62,-156 185.62,-156 185.62,-168 185.62,-168 185.62,-174 179.62,-180 173.62,-180"/>
 <text xml:space="preserve" text-anchor="middle" x="142.75" y="-156.95" font-family="Times,serif" font-size="14.00">LLM checks</text>
 </g>
 <!-- diff&#45;&gt;checks -->
@@ -46,7 +46,7 @@
 <!-- goal -->
 <g id="node2" class="node">
 <title>goal</title>
-<polygon fill="#e8e8e8" stroke="black" stroke-dasharray="5,2" points="180.38,-329 111.12,-329 111.12,-288 180.38,-288 180.38,-329"/>
+<polygon fill="lightgray" stroke="black" stroke-dasharray="5,2" points="180.38,-329 111.12,-329 111.12,-288 180.38,-288 180.38,-329"/>
 <text xml:space="preserve" text-anchor="middle" x="145.75" y="-311.7" font-family="Times,serif" font-size="14.00">Goal</text>
 <text xml:space="preserve" text-anchor="middle" x="145.75" y="-295.2" font-family="Times,serif" font-size="14.00">(optional)</text>
 </g>
@@ -59,7 +59,7 @@
 <!-- history -->
 <g id="node3" class="node">
 <title>history</title>
-<polygon fill="#e8e8e8" stroke="black" stroke-dasharray="5,2" points="327.38,-329 198.12,-329 198.12,-288 327.38,-288 327.38,-329"/>
+<polygon fill="lightgray" stroke="black" stroke-dasharray="5,2" points="327.38,-329 198.12,-329 198.12,-288 327.38,-288 327.38,-329"/>
 <text xml:space="preserve" text-anchor="middle" x="262.75" y="-311.7" font-family="Times,serif" font-size="14.00">Conversation history</text>
 <text xml:space="preserve" text-anchor="middle" x="262.75" y="-295.2" font-family="Times,serif" font-size="14.00">(optional)</text>
 </g>
@@ -78,7 +78,7 @@
 <!-- post -->
 <g id="node6" class="node">
 <title>post</title>
-<path fill="#e8e8e8" stroke="black" d="M192.38,-108C192.38,-108 93.12,-108 93.12,-108 87.12,-108 81.12,-102 81.12,-96 81.12,-96 81.12,-84 81.12,-84 81.12,-78 87.12,-72 93.12,-72 93.12,-72 192.38,-72 192.38,-72 198.38,-72 204.38,-78 204.38,-84 204.38,-84 204.38,-96 204.38,-96 204.38,-102 198.38,-108 192.38,-108"/>
+<path fill="lightgray" stroke="black" d="M192.38,-108C192.38,-108 93.12,-108 93.12,-108 87.12,-108 81.12,-102 81.12,-96 81.12,-96 81.12,-84 81.12,-84 81.12,-78 87.12,-72 93.12,-72 93.12,-72 192.38,-72 192.38,-72 198.38,-72 204.38,-78 204.38,-84 204.38,-84 204.38,-96 204.38,-96 204.38,-102 198.38,-108 192.38,-108"/>
 <text xml:space="preserve" text-anchor="middle" x="142.75" y="-84.95" font-family="Times,serif" font-size="14.00">Filter + deduplicate</text>
 </g>
 <!-- checks&#45;&gt;post -->
@@ -90,7 +90,7 @@
 <!-- issues -->
 <g id="node7" class="node">
 <title>issues</title>
-<path fill="#e8e8e8" stroke="black" d="M157.75,-36C157.75,-36 127.75,-36 127.75,-36 121.75,-36 115.75,-30 115.75,-24 115.75,-24 115.75,-12 115.75,-12 115.75,-6 121.75,0 127.75,0 127.75,0 157.75,0 157.75,0 163.75,0 169.75,-6 169.75,-12 169.75,-12 169.75,-24 169.75,-24 169.75,-30 163.75,-36 157.75,-36"/>
+<path fill="lightgray" stroke="black" d="M157.75,-36C157.75,-36 127.75,-36 127.75,-36 121.75,-36 115.75,-30 115.75,-24 115.75,-24 115.75,-12 115.75,-12 115.75,-6 121.75,0 127.75,0 127.75,0 157.75,0 157.75,0 163.75,0 169.75,-6 169.75,-12 169.75,-12 169.75,-24 169.75,-24 169.75,-30 163.75,-36 157.75,-36"/>
 <text xml:space="preserve" text-anchor="middle" x="142.75" y="-12.95" font-family="Times,serif" font-size="14.00">Issues</text>
 </g>
 <!-- post&#45;&gt;issues -->
