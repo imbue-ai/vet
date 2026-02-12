@@ -1,6 +1,5 @@
 digraph VET_DataFlow {
     rankdir=TB;
-    bgcolor="transparent";
     node [shape=box, style=rounded];
 
     subgraph cluster_inputs {
