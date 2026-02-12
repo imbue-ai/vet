@@ -15,10 +15,10 @@ Install vet using pip or uv:
 
 ```bash
 # Using pip
-pip install git+https://github.com/imbue-ai/vet.git
+pip install verify-everything
 
 # Using uv (recommended)
-uv pip install git+https://github.com/imbue-ai/vet.git
+uv pip install verify-everything
 
 Verify installation:
 vet --help
