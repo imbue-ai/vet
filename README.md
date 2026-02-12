@@ -2,7 +2,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/verify-everything)](https://pypi.python.org/pypi/verify-everything/)
-[![License](https://img.shields.io/github/license/imbue-ai/vet.svg)](https://github.com/imbue-ai/vet/blob/main/LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test.yml/badge.svg)
 
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
