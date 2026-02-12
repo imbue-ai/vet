@@ -73,7 +73,7 @@ def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
         paths = get_config_file_paths(repo_path=subdir)
         assert len(paths) == 2
         assert paths[0] == xdg_config / "vet" / "models.json"
-        assert paths[1] == git_root / "models.json"
+        assert paths[1] == git_root / ".vet" / "models.json"
 
 
 def test_load_single_config_file_loads_valid_config(tmp_path: Path) -> None:
@@ -162,7 +162,9 @@ def test_load_models_config_returns_empty_when_no_files_exist(tmp_path: Path) ->
 def test_load_models_config_loads_project_config(tmp_path: Path) -> None:
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    config_file = repo_path / "models.json"
+    vet_dir = repo_path / ".vet"
+    vet_dir.mkdir()
+    config_file = vet_dir / "models.json"
     config_data = {
         "providers": {
             "project-provider": {
@@ -211,7 +213,8 @@ def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
 
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
-    project_config = repo_path / "models.json"
+    (repo_path / ".vet").mkdir()
+    project_config = repo_path / ".vet" / "models.json"
     project_config.write_text(
         json.dumps(
             {

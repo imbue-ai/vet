@@ -145,7 +145,7 @@ Output formats:
 Vet supports custom model definitions using OpenAI-compatible endpoints via JSON config files searched in:
 
 - `$XDG_CONFIG_HOME/vet/models.json` (or `~/.config/vet/models.json`)
-- `models.json` at your repo root
+- `.vet/models.json` at your repo root
 
 #### Example `models.json`
 
@@ -191,14 +191,14 @@ Vet supports named profiles so teams can standardize CI usage without long CLI i
 
 Profiles set defaults like model choice, enabled issue codes, output format, and thresholds.
 
-See [the example](https://github.com/imbue-ai/vet/blob/main/vet.toml) in this project.
+See [the example](https://github.com/imbue-ai/vet/blob/main/.vet/configs.toml) in this project.
 
 ### Custom issue guides
 
 You can customize the guide text for the issue codes via `guides.toml`. Guide files are loaded from:
 
 - `$XDG_CONFIG_HOME/vet/guides.toml` (or `~/.config/vet/guides.toml`)
-- `guides.toml` at your repo root
+- `.vet/guides.toml` at your repo root
 
 #### Example `guides.toml`
 

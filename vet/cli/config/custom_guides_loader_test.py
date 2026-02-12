@@ -118,7 +118,7 @@ suffix = "- Global suffix"
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
     _write_guides_toml(
-        repo_path / "guides.toml",
+        repo_path / ".vet" / "guides.toml",
         """
 [logic_error]
 prefix = "- Project prefix"
@@ -147,7 +147,7 @@ suffix = "- Global logic error suffix"
     repo_path = tmp_path / "repo"
     repo_path.mkdir()
     _write_guides_toml(
-        repo_path / "guides.toml",
+        repo_path / ".vet" / "guides.toml",
         """
 [insecure_code]
 replace = "- Project insecure code replacement"
