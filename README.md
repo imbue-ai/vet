@@ -4,6 +4,12 @@ Vet is a standalone verification tool for **code changes** and **coding agent be
 
 It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
 
+## Why Vet
+
+- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
+- **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
+- **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
+
 ## Installation
 
 ```bash
@@ -29,6 +35,27 @@ Compare against a base ref/commit:
 ```bash
 vet "Refactor storage layer" --base-commit main
 ```
+
+## Using Vet with Coding Agents
+
+Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+
+### Install the skill
+
+```bash
+for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
+  mkdir -p "$dir/skills/vet/scripts"
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+    curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
+      -o "$dir/skills/vet/$file"
+  done
+done
+```
+This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
+
+### Security note
+
+The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
 
 ## GitHub PRs (Actions)
 
@@ -93,39 +120,11 @@ NOTE: This will not fail in CI if Vet finds an issue.
 
 - `ANTHROPIC_API_KEY` is required for the default model configuration.
 
-## Using Vet with Coding Agents
-
-Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
-
-### Install the skill
-
-```bash
-for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
-  mkdir -p "$dir/skills/vet/scripts"
-  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
-    curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
-      -o "$dir/skills/vet/$file"
-  done
-done
-```
-
-This places the skill in `~/.agents/skills/vet/`, `~/.opencode/skills/vet/`, `~/.claude/skills/vet/`, and `~/.codex/skills/vet/`, so it is discovered by OpenCode, Claude Code, and Codex.
-
-### Security note
-
-The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
-
 ## How it works
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
 ![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/architecture.svg)
-
-## Why Vet
-
-- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
-- **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
-- **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
 
 ## Output & exit codes
 
