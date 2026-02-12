@@ -55,7 +55,7 @@ Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. 
 2. Commit and push the change
 3. Tag the commit and push the tag:
    ```bash
-   git tag v0.2.0
+   git tag v0.2.0 -m "v0.2.0: Updated XYZ"
    git push origin v0.2.0
    ```
 4. The `Publish to PyPI` workflow will automatically build and publish the package
