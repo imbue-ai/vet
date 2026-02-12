@@ -12,7 +12,6 @@ from vet.imbue_core.pydantic_serialization import build_discriminator
 from vet.vet_types.ids import TaskID
 from vet.vet_types.ids import ToolUseID
 
-
 # ========================
 # Chat Type Definitions
 # ========================

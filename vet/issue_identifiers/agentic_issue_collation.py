@@ -11,24 +11,18 @@ from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import LLMResponse
 from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.get_conversation_history.input_data_types import (
-    to_specific_inputs_type,
-)
+from vet.imbue_tools.get_conversation_history.input_data_types import to_specific_inputs_type
 from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
-from vet.issue_identifiers.common import (
-    format_issue_identification_guide_for_llm,
-)
+from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
 from vet.issue_identifiers.common import generate_response_from_claude_code
 from vet.issue_identifiers.common import get_claude_code_options
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 COLLATION_PROMPT_TEMPLATE = """You are reviewing the results from parallel code analysis for potential issues.

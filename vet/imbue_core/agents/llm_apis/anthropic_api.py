@@ -10,20 +10,18 @@ from typing import Iterator
 
 import anthropic
 import httpx
+import tiktoken
 from anthropic._types import NOT_GIVEN
 from anthropic.types import CacheControlEphemeralParam
 from anthropic.types import MessageParam
 from anthropic.types import TextBlockParam
 from loguru import logger
 from pydantic.functional_validators import field_validator
-import tiktoken
 
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicModelInfo
 from vet.imbue_core.agents.llm_apis.api_utils import convert_prompt_to_messages
-from vet.imbue_core.agents.llm_apis.api_utils import (
-    create_costed_language_model_response_for_single_result,
-)
+from vet.imbue_core.agents.llm_apis.api_utils import create_costed_language_model_response_for_single_result
 from vet.imbue_core.agents.llm_apis.data_types import CachedCountTokensResponse
 from vet.imbue_core.agents.llm_apis.data_types import CachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -36,9 +34,7 @@ from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
 from vet.imbue_core.agents.llm_apis.errors import LanguageModelInvalidModelNameError
 from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
 from vet.imbue_core.agents.llm_apis.errors import NewSeedRetriableLanguageModelError
-from vet.imbue_core.agents.llm_apis.errors import (
-    SafelyRetriableTransientLanguageModelError,
-)
+from vet.imbue_core.agents.llm_apis.errors import SafelyRetriableTransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI

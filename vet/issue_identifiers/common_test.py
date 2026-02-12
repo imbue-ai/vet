@@ -7,27 +7,15 @@ from vet.imbue_core.data_types import IdentifiedVerifyIssue
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.frozen_utils import FrozenDict
 from vet.imbue_core.itertools import only
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
-    ResponseParsingError,
-)
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
-    parse_model_json_response,
-)
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
 from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.issue_identifiers.common import GeneratedResponseSchema
-from vet.issue_identifiers.common import (
-    convert_generated_issue_to_identified_issue,
-)
-from vet.issue_identifiers.common import (
-    format_issue_identification_guide_for_llm,
-)
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_CODES_FOR_CORRECTNESS_CHECK,
-)
-from vet.issue_identifiers.identification_guides import (
-    IssueIdentificationGuide,
-)
+from vet.issue_identifiers.common import convert_generated_issue_to_identified_issue
+from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
+from vet.issue_identifiers.identification_guides import ISSUE_CODES_FOR_CORRECTNESS_CHECK
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 
 
 def _parse_issues(

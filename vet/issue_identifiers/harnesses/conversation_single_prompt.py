@@ -18,29 +18,19 @@ from vet.imbue_core.data_types import IssueIdentificationDebugInfo
 from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import LLMResponse
 from vet.imbue_core.itertools import only
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    format_conversation_history_for_prompt,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
 from vet.imbue_tools.get_conversation_history.input_data_types import ConversationInputs
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.conversation_prefix import (
-    CONVERSATION_PREFIX_TEMPLATE,
-)
+from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
-from vet.issue_identifiers.common import (
-    extract_invocation_info_from_costed_response,
-)
-from vet.issue_identifiers.common import (
-    format_issue_identification_guide_for_llm,
-)
+from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
+from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
-from vet.issue_identifiers.identification_guides import (
-    IssueIdentificationGuide,
-)
+from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.truncation import ContextBudget
 from vet.truncation import get_available_tokens
 from vet.truncation import get_token_budget

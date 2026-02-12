@@ -19,9 +19,7 @@ from typing import TypeVar
 
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.errors import AgentCLIConnectionError
-from vet.imbue_core.agents.agent_api.errors import (
-    AgentCLIJSONDecodeError as SDKJSONDecodeError,
-)
+from vet.imbue_core.agents.agent_api.errors import AgentCLIJSONDecodeError as SDKJSONDecodeError
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.pydantic_serialization import SerializableModel

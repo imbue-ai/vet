@@ -7,9 +7,7 @@ from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
 from vet.imbue_core.pydantic_serialization import SerializableModel
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.get_conversation_history.input_data_types import (
-    to_specific_inputs_type,
-)
+from vet.imbue_tools.get_conversation_history.input_data_types import to_specific_inputs_type
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.common import GeneratedIssueSchema

@@ -16,16 +16,10 @@ from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
-from vet.issue_identifiers.common import (
-    extract_invocation_info_from_costed_response,
-)
-from vet.issue_identifiers.common import (
-    format_issue_identification_guide_for_llm,
-)
+from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
+from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
 DEDUPLICATION_PROMPT_TEMPLATE = """[ROLE=USER]

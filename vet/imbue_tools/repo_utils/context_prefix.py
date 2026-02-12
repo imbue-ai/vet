@@ -32,9 +32,7 @@ from vet.imbue_tools.repo_utils.subrepo_formatting import SubrepoContextMatchers
 from vet.imbue_tools.repo_utils.subrepo_formatting import UnionFilenamePattern
 from vet.imbue_tools.repo_utils.subrepo_formatting import compute_file_context_format_styles
 from vet.imbue_tools.repo_utils.subrepo_formatting import format_subrepo_context
-from vet.imbue_tools.repo_utils.subrepo_formatting import (
-    parse_subrepo_context_matchers_from_toml,
-)
+from vet.imbue_tools.repo_utils.subrepo_formatting import parse_subrepo_context_matchers_from_toml
 
 
 class SubrepoContext(SerializableModel):

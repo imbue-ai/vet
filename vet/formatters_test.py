@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from syrupy.assertion import SnapshotAssertion
 
-from vet.formatters import OUTPUT_FIELDS, format_github_review
-from vet.imbue_core.data_types import (
-    ConfidenceScore,
-    IdentifiedVerifyIssue,
-    IssueCode,
-    IssueLocation,
-    SeverityScore,
-)
+from vet.formatters import OUTPUT_FIELDS
+from vet.formatters import format_github_review
+from vet.imbue_core.data_types import ConfidenceScore
+from vet.imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import IssueCode
+from vet.imbue_core.data_types import IssueLocation
+from vet.imbue_core.data_types import SeverityScore
 
 
 def _make_issue(

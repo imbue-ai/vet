@@ -5,9 +5,7 @@ from vet.imbue_tools.get_conversation_history.input_data_types import CommitInpu
 from vet.imbue_tools.repo_utils.project_context import BaseProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers import registry
-from vet.issue_identifiers.identification_guides import (
-    ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE,
-)
+from vet.issue_identifiers.identification_guides import ISSUE_IDENTIFICATION_GUIDES_BY_ISSUE_CODE
 from vet.repo_utils import VET_MAX_PROMPT_TOKENS
 
 EMPTY_PROJECT_CONTEXT = BaseProjectContext(file_contents_by_path=FrozenDict(), cached_prompt_prefix="")

@@ -11,12 +11,8 @@ from vet.imbue_tools.repo_utils.errors import DiffApplicationError
 from vet.imbue_tools.repo_utils.file_system import FileContents
 from vet.imbue_tools.repo_utils.file_system import InMemoryFileSystem
 from vet.imbue_tools.repo_utils.file_system import SymlinkContents
-from vet.imbue_tools.repo_utils.file_system_utils import (
-    create_initial_placeholder_commit_for_dir,
-)
-from vet.imbue_tools.repo_utils.file_system_utils import (
-    temporary_local_dir_from_in_memory_file_system,
-)
+from vet.imbue_tools.repo_utils.file_system_utils import create_initial_placeholder_commit_for_dir
+from vet.imbue_tools.repo_utils.file_system_utils import temporary_local_dir_from_in_memory_file_system
 
 
 @alru_cache
