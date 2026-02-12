@@ -63,8 +63,6 @@ Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. 
    ```yaml
    - run: pip install verify-everything==0.2.0
    ```
-6. Update the pinned version for this project
-7. Commit and push this change
 
 ### Why pin the version in the README?
 
