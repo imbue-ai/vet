@@ -1,7 +1,7 @@
 digraph VET_DataFlow {
     rankdir=TB;
     bgcolor="transparent";
-    node [shape=box, style="filled,rounded",     fillcolor="lightgray", fontcolor="black", color="black"];
+    node [shape=box, style="filled,rounded", fillcolor="#e8e8e8", fontcolor="black", color="black"];
     edge [color="black"];
 
     subgraph cluster_inputs {
@@ -9,10 +9,10 @@ digraph VET_DataFlow {
         fontcolor="black";
         color="black";
         style="filled";
-        fillcolor="gainsboro";
+        fillcolor="#f5f5f5";
         diff [label="Git diff"];
-        goal [label="Goal\n(optional)", style="filled,dashed", fillcolor="lightgray"];
-        history [label="Conversation history\n(optional)", style="filled,dashed", fillcolor="lightgray"];
+        goal [label="Goal\n(optional)", style="filled,dashed", fillcolor="#e8e8e8"];
+        history [label="Conversation history\n(optional)", style="filled,dashed", fillcolor="#e8e8e8"];
     }
 
     context [label="Repo snapshot"];
