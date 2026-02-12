@@ -201,6 +201,8 @@ You can customize the guide text for the issue codes via `guides.toml`. Guide fi
 - `$XDG_CONFIG_HOME/vet/guides.toml` (or `~/.config/vet/guides.toml`)
 - `guides.toml` at your repo root
 
+#### Example `guides.toml`
+
 ```toml
 [logic_error]
 suffix = """
@@ -217,7 +219,7 @@ replace = """
 """
 ```
 
-Section keys must be valid issue codes (`vet --list-issue-codes`). Each section supports three optional fields: `prefix` (prepends to built-in guide), `suffix` (appends to built-in guide), and `replace` (fully replaces the built-in guide). `prefix` and `suffix` can be used together, but `replace` is mutually exclusive with the other two. Guide text should be formatted as a list of items starting with `-`.
+Section keys must be valid issue codes (`vet --list-issue-codes`). Each section supports three optional fields: `prefix` (prepends to built-in guide), `suffix` (appends to built-in guide), and `replace` (fully replaces the built-in guide). `prefix` and `suffix` can be used together, but `replace` is mutually exclusive with the other two. Guide text should be formatted as a list.
 
 ## License
 
