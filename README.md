@@ -1,5 +1,10 @@
 # Vet : Verify Everything
 
+[![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/verify-everything)](https://pypi.python.org/pypi/verify-everything/)
+[![License](https://img.shields.io/github/license/imbue-ai/vet.svg)](https://github.com/imbue-ai/vet)
+![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test.yml/badge.svg)
+
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
 It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
