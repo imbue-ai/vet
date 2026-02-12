@@ -90,7 +90,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install verify-everything==0.1.5
+      - run: pip install verify-everything==0.1.6
       - name: Run vet
         if: github.event.pull_request.head.repo.full_name == github.repository
         env:
