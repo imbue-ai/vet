@@ -1,18 +1,13 @@
 digraph VET_DataFlow {
     rankdir=TB;
     bgcolor="transparent";
-    node [shape=box, style="filled,rounded", fillcolor="#e8e8e8", fontcolor="black", color="black"];
-    edge [color="black"];
+    node [shape=box, style=rounded];
 
     subgraph cluster_inputs {
         label="Inputs";
-        fontcolor="black";
-        color="black";
-        style="filled";
-        fillcolor="#f5f5f5";
         diff [label="Git diff"];
-        goal [label="Goal\n(optional)", style="filled,dashed", fillcolor="#e8e8e8"];
-        history [label="Conversation history\n(optional)", style="filled,dashed", fillcolor="#e8e8e8"];
+        goal [label="Goal\n(optional)", style=dashed];
+        history [label="Conversation history\n(optional)", style=dashed];
     }
 
     context [label="Repo snapshot"];
