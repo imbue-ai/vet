@@ -33,6 +33,8 @@ from vet.formatters import format_github_review
 from vet.formatters import format_issue_text
 from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
+from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
@@ -338,6 +340,24 @@ def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> ar
     return args
 
 
+# TODO: This string matching is brittle. Ideally each provider's exception manager would raise PromptTooLongError directly.
+_CONTEXT_OVERFLOW_PATTERNS = [
+    "prompt is too long",
+    "context length exceeded",
+    "context_length_exceeded",
+    "maximum context length",
+    "too many tokens",
+    "reduce the length of the messages",
+]
+
+
+def _is_context_overflow(e: PromptTooLongError | BadAPIRequestError) -> bool:
+    if isinstance(e, PromptTooLongError):
+        return True
+    error_msg = e.error_message.lower()
+    return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
@@ -485,14 +505,28 @@ def main(argv: list[str] | None = None) -> int:
         custom_guides_config=custom_guides_config,
     )
 
-    issues = find_issues(
-        repo_path=repo_path,
-        relative_to=args.base_commit,
-        goal=goal,
-        config=config,
-        conversation_history=conversation_history,
-        extra_context=extra_context,
-    )
+    try:
+        issues = find_issues(
+            repo_path=repo_path,
+            relative_to=args.base_commit,
+            goal=goal,
+            config=config,
+            conversation_history=conversation_history,
+            extra_context=extra_context,
+        )
+    # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.
+    except (PromptTooLongError, BadAPIRequestError) as e:
+        if _is_context_overflow(e):
+            print(
+                "Error: The review failed because too much context was provided to the model. "
+                "Consider using a model with a larger context window.",
+                file=sys.stderr,
+            )
+            return 2
+        if isinstance(e, BadAPIRequestError):
+            print(f"Error: {e.error_message}", file=sys.stderr)
+            return 1
+        raise
 
     output_fields = args.output_fields if args.output_fields else OUTPUT_FIELDS
 
