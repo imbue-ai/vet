@@ -2,7 +2,7 @@
 [![PyPI - Status](https://img.shields.io/pypi/status/verify-everything)](https://pypi.python.org/pypi/verify-everything/)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/verify-everything)](https://pypi.python.org/pypi/verify-everything/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/verify-everything.svg)](https://github.com/imbue-ai/vet)
-[![License](https://img.shields.io/github/license/imbue-ai/verify-everything.svg)](https://github.com/imbue-ai/vet)
+[![License](https://img.shields.io/github/license/imbue-ai/vet.svg)](https://github.com/imbue-ai/vet)
 ![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test.yml/badge.svg)
 
 # Vet : Verify Everything
