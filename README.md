@@ -122,7 +122,7 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          MERGE_BASE=$(git merge-base "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+          MERGE_BASE=$(gh api "repos/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" --jq '.merge_base_commit.sha')
           vet "$VET_GOAL" --quiet --output-format github \
             --base-commit "$MERGE_BASE" \
             > "$RUNNER_TEMP/review.json"
