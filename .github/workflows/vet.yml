@@ -28,6 +28,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
           VET_GOAL: |
             ${{ github.event.pull_request.title }}
 
@@ -35,7 +36,7 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.sha }})
+          MERGE_BASE=$(git merge-base "origin/$BASE_REF" "${{ github.event.pull_request.head.sha }}")
           vet "$VET_GOAL" --quiet --output-format github \
             --base-commit "$MERGE_BASE" \
             > "$RUNNER_TEMP/review.json"
