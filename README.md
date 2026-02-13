@@ -103,6 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -113,6 +114,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
           VET_GOAL: |
             ${{ github.event.pull_request.title }}
 
@@ -120,8 +122,9 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
+          MERGE_BASE=$(git merge-base "origin/$BASE_REF" "${{ github.event.pull_request.head.sha }}")
           vet "$VET_GOAL" --quiet --output-format github \
-            --base-commit "${{ github.event.pull_request.base.sha }}" \
+            --base-commit "$MERGE_BASE" \
             > "$RUNNER_TEMP/review.json"
           status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
