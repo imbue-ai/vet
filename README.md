@@ -122,7 +122,7 @@ jobs:
         run: |
           set +e
           vet "$VET_GOAL" --quiet --output-format github \
-            --base-commit "${{ github.event.pull_request.base.sha }}" \
+            --base-commit "origin/${{ github.event.pull_request.base.ref }}" \
             > "$RUNNER_TEMP/review.json"
           status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
