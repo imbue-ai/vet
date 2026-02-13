@@ -20,14 +20,13 @@ pip install verify-everything
 # Using uv (recommended)
 uv pip install verify-everything
 
-Verify installation:
+# Verify installation:
 vet --help
 ```
 
 ## Running Vet
 
 ### Standard Usage
-
 
 **OpenCode:**
 ```bash
