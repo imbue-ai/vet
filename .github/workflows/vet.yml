@@ -35,7 +35,10 @@ jobs:
             ${{ github.event.pull_request.body }}
         run: |
           set +e
-          MERGE_BASE=$(gh api "repos/${{ github.repository }}/compare/${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}" --jq '.merge_base_commit.sha')
+          # Use git merge-base locally against the current base branch ref, not the
+          # (potentially stale) base.sha from the event payload. This ensures vet reviews
+          # the same diff that GitHub shows in the "Files changed" tab.
+          MERGE_BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.sha }})
           vet "$VET_GOAL" --quiet --output-format github \
             --base-commit "$MERGE_BASE" \
             > "$RUNNER_TEMP/review.json"
