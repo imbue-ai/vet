@@ -30,17 +30,7 @@ run "pacman -U --noconfirm /build/verify-everything-*-any.pkg.tar.zst" >/dev/nul
 run "command -v vet"
 run "vet --help" >/dev/null
 run "vet --version"
-
-run "
-    mkdir /tmp/testrepo && cd /tmp/testrepo &&
-    git init -q &&
-    git config user.email test@test.com &&
-    git config user.name Test &&
-    echo hello > file.txt &&
-    git add . && git commit -q -m init &&
-    echo world >> file.txt &&
-    vet --list-issue-codes >/dev/null
-"
+run "vet --list-issue-codes" >/dev/null
 
 run "pacman -R --noconfirm verify-everything" >/dev/null 2>&1
 
