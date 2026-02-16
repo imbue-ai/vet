@@ -6,8 +6,6 @@ on:
     paths:
       - 'pkg/arch/**'
       - 'pkg/test_pkgbuild.sh'
-    tags:
-      - 'v*'
 
 jobs:
   test-pkgbuild:
