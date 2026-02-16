@@ -47,9 +47,28 @@ Based on your needs, instead of the above, you can also extend one of the existi
 In that case you would simply expand the rubric in the prompt. That is actually the preferred way to catch issues at the moment due to efficiency.
 Refer to the source code for more details.
 
-## Continuous Deployment (CD)
+## CI / CD
 
-Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. Deployment is triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).
+### GitHub Actions naming conventions
+
+Workflows follow a consistent naming scheme across three layers:
+
+- **File name**: `<verb>-<target>.yml` (e.g. `test-unit.yml`)
+- **Display name** (`name:`): `<Verb> / <Target>` (e.g. `Test / Unit`)
+- **Job name**: short target identifier (e.g. `unit`)
+
+The `/` in display names creates visual grouping in the GitHub Actions UI. Group related workflows under a shared prefix (e.g. `Test /`, `Publish /`). Standalone workflows (e.g. `Vet`) don't need a prefix.
+
+Current workflows:
+
+- `test-unit.yml` (`Test / Unit`, job: `unit`) — pytest suite (lint + unit tests)
+- `test-pkgbuild.yml` (`Test / PKGBUILD`, job: `pkgbuild`) — Arch Linux package build + smoke test
+- `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs
+- `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
+
+### Continuous Deployment
+
+Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Deployment is triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).
 
 ### Releasing a new version
 
@@ -67,7 +86,7 @@ Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. 
    git push origin v0.2.0
    ```
 7. Create a PR for the new branch
-8. The `Publish to PyPI` workflow will automatically build and publish the package
+8. The `Publish / PyPI` workflow will automatically build and publish the package
 9. Merge PR into main.
 
 ### Why pin the version in the README?

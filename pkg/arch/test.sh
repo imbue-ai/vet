@@ -10,13 +10,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-docker run --name "$CONTAINER_NAME" -d -v "$REPO_ROOT":/repo:ro archlinux:base-devel sleep 600 >/dev/null 2>&1
+docker run --name "$CONTAINER_NAME" -d -v "$REPO_ROOT":/repo:ro archlinux:base-devel sleep 600
 
 run() {
     docker exec "$CONTAINER_NAME" bash -c "$1"
 }
 
-run "pacman -Syu --noconfirm python git" >/dev/null 2>&1
+run "pacman -Syu --noconfirm python git"
 
 run "
     useradd -m builder &&
@@ -31,16 +31,16 @@ run "
     chown -R builder:builder /build
 "
 
-run "su - builder -c 'cd /build && makepkg -sf --noconfirm'" >/dev/null 2>&1
+run "su - builder -c 'cd /build && makepkg -sf --noconfirm'"
 
-run "pacman -U --noconfirm /build/verify-everything-*-any.pkg.tar.zst" >/dev/null 2>&1
+run "pacman -U --noconfirm /build/verify-everything-*-any.pkg.tar.zst"
 
 run "command -v vet"
-run "vet --help" >/dev/null
+run "vet --help"
 run "vet --version"
-run "vet --list-issue-codes" >/dev/null
+run "vet --list-issue-codes"
 
-run "pacman -R --noconfirm verify-everything" >/dev/null 2>&1
+run "pacman -R --noconfirm verify-everything"
 
 if run "command -v vet" 2>/dev/null; then
     echo "FAIL: vet still found after uninstall"
