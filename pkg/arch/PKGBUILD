@@ -1,0 +1,36 @@
+# Maintainer:
+pkgname=verify-everything
+pkgver=0.1.6
+pkgrel=1
+pkgdesc='LLM-based code review tool that finds issues tests and linters miss'
+arch=('any')
+url='https://github.com/imbue-ai/vet'
+license=('AGPL-3.0-only')
+depends=('python>=3.11' 'git')
+install=verify-everything.install
+source=("$url/archive/refs/tags/v$pkgver.tar.gz")
+sha512sums=('SKIP')
+
+package() {
+    local _installdir="/opt/$pkgname"
+    local _venv="$pkgdir/$_installdir"
+
+    python -m venv "$_venv"
+
+    "$_venv/bin/pip" install --no-warn-script-location "$srcdir/vet-$pkgver"
+
+    "$_venv/bin/pip" uninstall -y pip setuptools 2>/dev/null || true
+
+    find "$_venv" -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+
+    find "$_venv" -name direct_url.json -delete 2>/dev/null || true
+
+    find "$_venv" -name '*.dist-info' -path '*/pip-*' -exec rm -rf {} + 2>/dev/null || true
+    find "$_venv" -name '*.dist-info' -path '*/setuptools-*' -exec rm -rf {} + 2>/dev/null || true
+
+    sed -i "s|$pkgdir||g" "$_venv/pyvenv.cfg"
+    find "$_venv/bin" -maxdepth 1 -type f -exec sed -i "s|$pkgdir||g" {} +
+
+    install -d "$pkgdir/usr/bin"
+    ln -s "$_installdir/bin/vet" "$pkgdir/usr/bin/vet"
+}
