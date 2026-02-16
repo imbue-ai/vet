@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# builds Arch package from working tree, installs it, runs a few non-llm vet commands, tests uninstall
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONTAINER_NAME="vet-pkgbuild-test-$$"
@@ -10,6 +12,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# arch container w/ read-only mounted code
 docker run --name "$CONTAINER_NAME" -d -v "$REPO_ROOT":/repo:ro archlinux:base-devel sleep 600
 
 run() {
@@ -18,6 +21,7 @@ run() {
 
 run "pacman -Syu --noconfirm python git"
 
+# prep build env
 run "
     useradd -m builder &&
     mkdir /build && cp /repo/pkg/arch/PKGBUILD /repo/pkg/arch/verify-everything.install /build/ &&
@@ -31,15 +35,17 @@ run "
     chown -R builder:builder /build
 "
 
+# build + install
 run "su - builder -c 'cd /build && makepkg -sf --noconfirm'"
-
 run "pacman -U --noconfirm /build/verify-everything-*-any.pkg.tar.zst"
 
+# basic non-llm commands
 run "command -v vet"
 run "vet --help"
 run "vet --version"
 run "vet --list-issue-codes"
 
+# uninstall
 run "pacman -R --noconfirm verify-everything"
 
 if run "command -v vet" 2>/dev/null; then
