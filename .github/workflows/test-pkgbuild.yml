@@ -3,11 +3,13 @@ name: Test PKGBUILD
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'pkg/arch/**'
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   test-pkgbuild:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

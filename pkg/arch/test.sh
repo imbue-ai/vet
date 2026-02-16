@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CONTAINER_NAME="vet-pkgbuild-test-$$"
 
 cleanup() {
@@ -9,7 +10,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-docker run --name "$CONTAINER_NAME" -d -v "$SCRIPT_DIR":/repo:ro archlinux:base-devel sleep 600 >/dev/null 2>&1
+docker run --name "$CONTAINER_NAME" -d -v "$REPO_ROOT":/repo:ro archlinux:base-devel sleep 600 >/dev/null 2>&1
 
 run() {
     docker exec "$CONTAINER_NAME" bash -c "$1"
@@ -19,7 +20,14 @@ run "pacman -Syu --noconfirm python git" >/dev/null 2>&1
 
 run "
     useradd -m builder &&
-    mkdir /build && cp /repo/PKGBUILD /repo/verify-everything.install /build/ &&
+    mkdir /build && cp /repo/pkg/arch/PKGBUILD /repo/pkg/arch/verify-everything.install /build/ &&
+
+    tar -czf /build/vet-current.tar.gz -C /repo --transform='s,^\.,vet-current,' \
+        --exclude='.git' --exclude='pkg/arch/test.sh' . &&
+
+    sed -i 's|^source=.*|source=(\"vet-current.tar.gz\")|' /build/PKGBUILD &&
+    sed -i 's|\$srcdir/vet-\$pkgver|\$srcdir/vet-current|' /build/PKGBUILD &&
+
     chown -R builder:builder /build
 "
 
