@@ -77,6 +77,13 @@ secrets.toml
 .aider*
 wandb/
 
+# makepkg (Arch Linux PKGBUILD)
+src/
+pkg/
+*.pkg.tar*
+*.src.tar*
+*.tar.gz
+
 # Project-specific
 .imbue/
 vet-output.txt

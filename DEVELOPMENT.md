@@ -10,13 +10,15 @@ uv sync
 
 ## Running Tests
 
-All tests are run with:
+### Unit tests
+
+All unit tests are run with:
 
 ```bash
 uv run pytest
 ```
 
-This must remain the sole way to run the test suite. Any new tests or test infrastructure changes should preserve `uv run pytest` as the single entry point for running tests.
+This command should be preserved the sole way to run unit tests.
 
 ## Concepts
 
