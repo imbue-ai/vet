@@ -21,7 +21,6 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.async_monkey_patches import log_exception
@@ -36,8 +35,12 @@ from vet.imbue_core.data_types import IssueLocation
 from vet.imbue_core.data_types import LineRange
 from vet.imbue_core.data_types import SeverityScore
 from vet.imbue_core.pydantic_serialization import SerializableModel
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -193,7 +196,7 @@ def convert_to_issue_identifier_result(
     return generator_with_capture.return_value
 
 
-def get_agent_options(cwd: Path | None, agent_harness_type: AgentHarnessType) -> AgentOptions:
+def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
     if agent_harness_type == AgentHarnessType.CODEX:
         return CodexOptions(
             cwd=cwd,
@@ -201,9 +204,9 @@ def get_agent_options(cwd: Path | None, agent_harness_type: AgentHarnessType) ->
         )
     return ClaudeCodeOptions(
         cwd=cwd,
-        permission_mode="bypassPermissions",
+        permission_mode="bypassPermissions",  # Equivalent to --dangerously-skip-permissions
         allowed_tools=list(READ_ONLY_TOOLS) + [AgentToolName.BASH],
-        model=AnthropicModelName.CLAUDE_4_6_OPUS,
+        model=model_name,
     )
 
 

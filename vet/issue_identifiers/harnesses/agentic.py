@@ -10,9 +10,11 @@ from typing import Any
 from typing import Generator
 
 import jinja2
+from loguru import logger
 
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
@@ -244,8 +246,20 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         assert project_context.repo_path is not None, "Project context must have a valid repo_path, got None"
 
+        config_model_name = config.language_model_generation_config.model_name
+        if config_model_name in [anthropic_model.value for anthropic_model in AnthropicModelName]:
+            model_name = config_model_name
+        else:
+            model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
+            logger.info(
+                "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
+                config_model_name=config_model_name,
+                model_name=model_name,
+            )
+
         options = get_agent_options(
             cwd=project_context.repo_path,
+            model_name=model_name,
             agent_harness_type=config.agent_harness_type,
         )
 
