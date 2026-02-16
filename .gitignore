@@ -78,11 +78,11 @@ secrets.toml
 wandb/
 
 # makepkg (Arch Linux PKGBUILD)
-src/
-pkg/
+pkg/arch/src/
+pkg/arch/pkg/
 *.pkg.tar*
 *.src.tar*
-*.tar.gz
+v*.tar.gz
 
 # Project-specific
 .imbue/

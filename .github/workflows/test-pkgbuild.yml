@@ -1,0 +1,17 @@
+name: Test PKGBUILD
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'pkg/arch/**'
+      - 'pkg/test_pkgbuild.sh'
+    tags:
+      - 'v*'
+
+jobs:
+  test-pkgbuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./pkg/test_pkgbuild.sh
