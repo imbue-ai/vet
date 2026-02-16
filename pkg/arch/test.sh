@@ -19,7 +19,7 @@ run "pacman -Syu --noconfirm python git" >/dev/null 2>&1
 
 run "
     useradd -m builder &&
-    mkdir /build && cp /repo/arch/PKGBUILD /repo/arch/verify-everything.install /build/ &&
+    mkdir /build && cp /repo/PKGBUILD /repo/verify-everything.install /build/ &&
     chown -R builder:builder /build
 "
 

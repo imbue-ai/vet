@@ -5,11 +5,10 @@ on:
   push:
     paths:
       - 'pkg/arch/**'
-      - 'pkg/test_pkgbuild.sh'
 
 jobs:
   test-pkgbuild:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ./pkg/test_pkgbuild.sh
+      - run: ./pkg/arch/test.sh
