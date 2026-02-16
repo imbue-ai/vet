@@ -55,19 +55,20 @@ Vet is published to PyPI via the `publish-to-pypi.yml` GitHub Actions workflow. 
 
 1. Create and checkout a branch to bump the version
 2. Update the version in `pyproject.toml`
-3. Update the recommended GitHub action pinned version in the `README.md` 
+3. Update `pkgver` in `pkg/arch/PKGBUILD`
+4. Update the recommended GitHub action pinned version in the `README.md` 
    ```yaml
    - run: pip install verify-everything==0.2.0
    ```
-4. Commit and push the changes
-5. Tag the commit and push the tag:
+5. Commit and push the changes
+6. Tag the commit and push the tag:
    ```bash
    git tag v0.2.0 -m "v0.2.0: Updated XYZ"
    git push origin v0.2.0
    ```
-5. Create a PR for the new branch
-6. The `Publish to PyPI` workflow will automatically build and publish the package
-7. Merge PR into main.
+7. Create a PR for the new branch
+8. The `Publish to PyPI` workflow will automatically build and publish the package
+9. Merge PR into main.
 
 ### Why pin the version in the README?
 
