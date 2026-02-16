@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from vet.errors import GitCommandError
 from vet.errors import GitException
 from vet.errors import RunCommandError
 from vet.git import SyncLocalGitRepo
@@ -22,7 +23,11 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
     try:
         base_commit = find_relative_to_commit_hash(relative_to, repo_path=repo_path)
     except RunCommandError as e:
-        raise GitException(f"Unable to determine base commit for code verification: {e}") from e
+        raise GitCommandError(
+            e,
+            "determine base commit for verification",
+            repo_path,
+        ) from e
 
     repo = SyncLocalGitRepo(repo_path)
 
@@ -31,13 +36,17 @@ def get_code_to_check(relative_to: str, repo_path: Path) -> tuple[str, str, str]
         combined_diff = repo.get_git_diff(commit_hash=base_commit)
         combined_diff_no_binary = repo.get_git_diff(commit_hash=base_commit, include_binary=False)
     except RunCommandError as e:
-        raise GitException(f"Unable to get diff to {base_commit}: {e}") from e
+        raise GitCommandError(
+            e,
+            f"get diff since commit {base_commit}",
+            repo_path,
+        ) from e
 
     # Get untracked files since we want to include these as part of the unstaged and full changes
     try:
         untracked_files = repo.get_untracked_files()
     except RunCommandError as e:
-        raise GitException(f"Unable to get untracked files: {e}") from e
+        raise GitCommandError(e, "list untracked files", repo_path) from e
 
     # Create diffs for untracked files (treat them as new files)
     untracked_diffs = []
