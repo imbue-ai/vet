@@ -13,15 +13,19 @@ from pydantic import PrivateAttr
 
 from vet.imbue_core.agents.agent_api.api import get_agent_client
 from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
+from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.async_monkey_patches import log_exception
+from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import ConfidenceScore
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
 from vet.imbue_core.data_types import InvocationInfo
@@ -189,19 +193,21 @@ def convert_to_issue_identifier_result(
     return generator_with_capture.return_value
 
 
-def get_claude_code_options(cwd: Path | None, model_name: str) -> ClaudeCodeOptions:
-    options = ClaudeCodeOptions(
+def get_agent_options(cwd: Path | None, agent_harness_type: AgentHarnessType) -> AgentOptions:
+    if agent_harness_type == AgentHarnessType.CODEX:
+        return CodexOptions(
+            cwd=cwd,
+            sandbox_mode="read-only",
+        )
+    return ClaudeCodeOptions(
         cwd=cwd,
-        permission_mode="bypassPermissions",  # Equivalent to --dangerously-skip-permissions
+        permission_mode="bypassPermissions",
         allowed_tools=list(READ_ONLY_TOOLS) + [AgentToolName.BASH],
-        model=model_name,
+        model=AnthropicModelName.CLAUDE_4_6_OPUS,
     )
-    return options
 
 
-def generate_response_from_claude_code(
-    prompt: str, options: ClaudeCodeOptions
-) -> tuple[str, list[AgentMessage]] | None:
+def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[str, list[AgentMessage]] | None:
     messages = []
     assistant_messages = []
     result_message = None
@@ -214,7 +220,7 @@ def generate_response_from_claude_code(
                 elif isinstance(message, AgentResultMessage):
                     result_message = message
     except Exception as e:
-        log_exception(e, "Claude Code API call failed")
+        log_exception(e, "Agent API call failed")
         return None
 
     # Try to get response from result message first

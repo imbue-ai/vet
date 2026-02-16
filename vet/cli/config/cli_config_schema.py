@@ -19,6 +19,8 @@ from pydantic import BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 
+from vet.imbue_core.data_types import AgentHarnessType
+
 
 class CliConfigPreset(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -40,6 +42,7 @@ class CliConfigPreset(BaseModel):
     output_fields: list[str] | None = None
     verbose: bool | None = None
     quiet: bool | None = None
+    agent_harness: AgentHarnessType | None = None
 
 
 class CliDefaults(BaseModel):
@@ -64,6 +67,7 @@ class CliDefaults(BaseModel):
     output_fields: list[str] | None = None
     verbose: bool = False
     quiet: bool = False
+    agent_harness: AgentHarnessType = AgentHarnessType.CLAUDE
 
 
 CLI_DEFAULTS = CliDefaults()

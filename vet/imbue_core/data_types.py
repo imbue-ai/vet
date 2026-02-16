@@ -167,6 +167,11 @@ class AgenticPhase(StrEnum):
     DEDUPLICATION = "deduplication"
 
 
+class AgentHarnessType(StrEnum):
+    CLAUDE = "claude"
+    CODEX = "codex"
+
+
 class IssueIdentifierType(StrEnum):
     BATCHED_COMMIT_CHECK = "batched_commit_check"
     CORRECTNESS_COMMIT_CLASSIFIER = "correctness_commit_classifier"

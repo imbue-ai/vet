@@ -35,11 +35,10 @@ from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
 from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
 from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    parse_conversation_history,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
 from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
@@ -247,6 +246,14 @@ def create_parser() -> argparse.ArgumentParser:
         "--agentic",
         action="store_true",
         default=False,
+        help=argparse.SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--agent-harness",
+        type=AgentHarnessType,
+        choices=list(AgentHarnessType),
+        default=CLI_DEFAULTS.agent_harness,
         help=argparse.SUPPRESS,
     )
 
@@ -514,6 +521,7 @@ def main(argv: list[str] | None = None) -> int:
         max_output_tokens=max_output_tokens or 20000,
         max_identifier_spend_dollars=args.max_spend,
         custom_guides_config=custom_guides_config,
+        agent_harness_type=args.agent_harness,
     )
 
     try:

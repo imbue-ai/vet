@@ -1,5 +1,5 @@
 """
-Agentic harness that checks a given diff for issues using Claude Code agents with tools.
+Agentic harness that checks a given diff for issues using coding agents with tools.
 """
 
 import concurrent.futures
@@ -10,13 +10,9 @@ from typing import Any
 from typing import Generator
 
 import jinja2
-from loguru import logger
 
-from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
-from vet.imbue_core.agents.agent_api.data_types import AgentToolName
-from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
@@ -33,7 +29,8 @@ from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.common import generate_response_from_claude_code
+from vet.issue_identifiers.common import generate_response_from_agent
+from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 
@@ -169,9 +166,9 @@ ResponseText = str
 def _generate_issues_worker(
     issue_code: IssueCode,
     prompt: str,
-    options: ClaudeCodeOptions,
+    options: AgentOptions,
 ) -> tuple[IssueCode, ResponseText, list[AgentMessage]] | None:
-    issue_result = generate_response_from_claude_code(prompt, options)
+    issue_result = generate_response_from_agent(prompt, options)
     if issue_result is None:
         return None
     return issue_code, issue_result[0], issue_result[1]
@@ -247,22 +244,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
         assert project_context.repo_path is not None, "Project context must have a valid repo_path, got None"
 
-        config_model_name = config.language_model_generation_config.model_name
-        if config_model_name in [anthropic_model.value for anthropic_model in AnthropicModelName]:
-            model_name = config_model_name
-        else:
-            model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
-            logger.info(
-                "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
-                config_model_name=config_model_name,
-                model_name=model_name,
-            )
-
-        options = ClaudeCodeOptions(
+        options = get_agent_options(
             cwd=project_context.repo_path,
-            permission_mode="bypassPermissions",  # Equivalent to --dangerously-skip-permissions
-            allowed_tools=list(READ_ONLY_TOOLS) + [AgentToolName.BASH],  # Allow read-only tools for analysis
-            model=model_name,
+            agent_harness_type=config.agent_harness_type,
         )
 
         if config.enable_parallel_agentic_issue_identification:
@@ -312,7 +296,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
         else:
             prompt = self._get_prompt(project_context, config, identifier_inputs)
-            claude_response = generate_response_from_claude_code(prompt, options)
+            claude_response = generate_response_from_agent(prompt, options)
             assert claude_response is not None
             response_text, messages = claude_response
 
