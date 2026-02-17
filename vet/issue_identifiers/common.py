@@ -21,6 +21,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.async_monkey_patches import log_exception
@@ -192,13 +193,33 @@ def convert_to_issue_identifier_result(
     return generator_with_capture.return_value
 
 
+_ANTHROPIC_MODEL_NAMES = {m.value for m in AnthropicModelName}
+_DEFAULT_CODEX_MODEL = "gpt-5.2-codex"
+
+
 def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
+    # NOTE: This if/else is intentionally simple. We're unlikely to support many harness types,
+    # but if we do, this should be refactored into a registry or factory pattern.
     if agent_harness_type == AgentHarnessType.CODEX:
+        if model_name in _ANTHROPIC_MODEL_NAMES:
+            logger.info(
+                "Config model_name {config_model_name} is an Anthropic model, using default Codex model ({model_name}).",
+                config_model_name=model_name,
+                model_name=_DEFAULT_CODEX_MODEL,
+            )
+            model_name = _DEFAULT_CODEX_MODEL
         return CodexOptions(
             cwd=cwd,
             model=model_name,
             sandbox_mode="read-only",
         )
+    if model_name not in _ANTHROPIC_MODEL_NAMES:
+        logger.info(
+            "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
+            config_model_name=model_name,
+            model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01,
+        )
+        model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
     return ClaudeCodeOptions(
         cwd=cwd,
         permission_mode="bypassPermissions",  # Equivalent to --dangerously-skip-permissions
