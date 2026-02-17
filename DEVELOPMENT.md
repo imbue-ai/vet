@@ -64,6 +64,7 @@ Current workflows:
 - `test-unit.yml` (`Test / Unit`, job: `unit`) — pytest suite (lint + unit tests)
 - `test-pkgbuild.yml` (`Test / PKGBUILD`, job: `pkgbuild`) — Arch Linux package build + smoke test
 - `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs
+- `vet-agentic.yml` (`Vet (Agentic)`, job: `vet`) — Agentic self-review via vet on PRs
 - `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
 
 ### Continuous Deployment
