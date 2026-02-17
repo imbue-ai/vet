@@ -35,7 +35,7 @@ class VetConfig(SerializableModel):
     )
     max_identifier_spend_dollars: float | None = None
     max_output_tokens: int = 20000
-    enable_parallel_agentic_issue_identification: bool = True
+    enable_parallel_agentic_issue_identification: bool = False
     agent_harness_type: AgentHarnessType = AgentHarnessType.CLAUDE
     max_identify_workers: int | None = None
     temperature: float = 0.5
@@ -60,7 +60,7 @@ class VetConfig(SerializableModel):
         language_model_name: str | None = None,
         language_model_cache_path: Path | None = None,
         enabled_identifiers: tuple[str, ...] | None = None,
-        enable_parallel_agentic_issue_identification: bool = True,
+        enable_parallel_agentic_issue_identification: bool = False,
         max_identify_workers: int | None = None,
         filter_issues: bool = True,
         filter_issues_below_confidence: float | None = DEFAULT_CONFIDENCE_THRESHOLD,
