@@ -20,8 +20,8 @@ from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
 from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.common import generate_response_from_claude_code
-from vet.issue_identifiers.common import get_claude_code_options
+from vet.issue_identifiers.common import generate_response_from_agent
+from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
@@ -145,9 +145,10 @@ def collate_issues_with_agent(
         all_issues.append(issue)
     issue_generator_debug_info = issue_generator_with_capture.return_value
 
-    options = get_claude_code_options(
+    options = get_agent_options(
         cwd=project_context.repo_path,
         model_name=config.language_model_generation_config.model_name,
+        agent_harness_type=config.agent_harness_type,
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
     collation_prompt = _get_collation_prompt(
@@ -157,7 +158,7 @@ def collate_issues_with_agent(
         combined_issues_string,
         guides_by_issue_code,
     )
-    claude_response = generate_response_from_claude_code(collation_prompt, options)
+    claude_response = generate_response_from_agent(collation_prompt, options)
     assert claude_response is not None
     response_text, collation_messages = claude_response
     collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)

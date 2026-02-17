@@ -2,6 +2,7 @@ from pathlib import Path
 
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
@@ -35,6 +36,7 @@ class VetConfig(SerializableModel):
     max_identifier_spend_dollars: float | None = None
     max_output_tokens: int = 20000
     enable_parallel_agentic_issue_identification: bool = False
+    agent_harness_type: AgentHarnessType = AgentHarnessType.CLAUDE
     max_identify_workers: int | None = None
     temperature: float = 0.5
 

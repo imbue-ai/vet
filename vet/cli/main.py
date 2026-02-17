@@ -35,6 +35,7 @@ from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
 from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
 from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
 from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
@@ -239,6 +240,21 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=CLI_DEFAULTS.quiet,
         help="Suppress progress indicator and non-essential output",
+    )
+
+    parser.add_argument(
+        "--agentic",
+        action="store_true",
+        default=False,
+        help=argparse.SUPPRESS,
+    )
+
+    parser.add_argument(
+        "--agent-harness",
+        type=AgentHarnessType,
+        choices=list(AgentHarnessType),
+        default=AgentHarnessType.CLAUDE,
+        help=argparse.SUPPRESS,
     )
 
     return parser
@@ -492,8 +508,10 @@ def main(argv: list[str] | None = None) -> int:
     language_model_config = build_language_model_config(model_id, user_config)
     max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
 
+    disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
+
     config = VetConfig(
-        disabled_identifiers=("agentic_issue_identifier",),
+        disabled_identifiers=disabled_identifiers,
         language_model_generation_config=language_model_config,
         enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
         disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
@@ -503,6 +521,7 @@ def main(argv: list[str] | None = None) -> int:
         max_output_tokens=max_output_tokens or 20000,
         max_identifier_spend_dollars=args.max_spend,
         custom_guides_config=custom_guides_config,
+        agent_harness_type=args.agent_harness,
     )
 
     try:
