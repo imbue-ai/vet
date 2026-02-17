@@ -160,7 +160,6 @@ Do not report duplicate issues with the same or equivalent descriptions.
 """
 
 
-MAX_PARALLEL_CLAUDE_CODE_SESSIONS = 5  # TODO: this was arbitrarily chosen
 ResponseText = str
 
 
@@ -261,7 +260,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 )
                 for guide in self._identification_guides
             ]
-            with ThreadPoolExecutor(max_workers=MAX_PARALLEL_CLAUDE_CODE_SESSIONS) as executor:
+            with ThreadPoolExecutor(max_workers=config.max_identify_workers) as executor:
                 tasks = [
                     executor.submit(_generate_issues_worker, issue_code, prompt, options)
                     for issue_code, prompt in issue_prompts
