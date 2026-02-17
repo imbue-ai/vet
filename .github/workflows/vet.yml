@@ -20,3 +20,4 @@ jobs:
       - uses: ./
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          build-from-source: true

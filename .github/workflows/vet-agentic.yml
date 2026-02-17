@@ -21,3 +21,4 @@ jobs:
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           agentic: true
+          build-from-source: true
