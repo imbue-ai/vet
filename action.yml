@@ -8,7 +8,7 @@ branding:
 
 inputs:
   agentic:
-    description: "Enable agentic mode (requires Claude Code; Node.js will be installed automatically)"
+    description: "Enable agentic mode (Will use Claude Code as the default agent harness)"
     required: false
     default: "false"
   model:
