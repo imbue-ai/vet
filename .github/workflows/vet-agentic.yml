@@ -12,6 +12,8 @@ jobs:
   vet:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,6 +21,5 @@ jobs:
           fetch-depth: 0
       - uses: ./
         with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           agentic: true
           build-from-source: true

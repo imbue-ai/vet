@@ -100,14 +100,14 @@ jobs:
   vet:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - uses: imbue-ai/vet@main
-        with:
-          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.

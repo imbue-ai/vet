@@ -7,9 +7,6 @@ branding:
   color: "blue"
 
 inputs:
-  anthropic-api-key:
-    description: "Anthropic API key"
-    required: true
   agentic:
     description: "Enable agentic mode (requires Claude Code; Node.js will be installed automatically)"
     required: false
@@ -91,7 +88,6 @@ runs:
       if: github.event.pull_request.head.repo.full_name == github.repository
       shell: bash
       env:
-        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
         GH_TOKEN: ${{ github.token }}
         INPUT_AGENTIC: ${{ inputs.agentic }}
         INPUT_MODEL: ${{ inputs.model }}
