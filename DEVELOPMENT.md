@@ -68,17 +68,6 @@ Current workflows:
 - `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
 - `publish-github-release.yml` (`Publish / GitHub Release`, job: `github-release`) — Create a GitHub Release on tag push
 
-### Reusable GitHub Action
-
-The repository includes a reusable composite GitHub Action (`action.yml`) so external users can adopt vet with a single `uses: imbue-ai/vet@main` step instead of writing shell scripting.
-
-**Files:**
-
-- `action.yml` — Composite action definition. Handles Python setup, conditional Node.js + Claude Code setup (for agentic mode), vet installation from PyPI, and invocation of `action/run.sh`. Fork protection is built in (skips the run if the PR comes from a fork).
-- `action/run.sh` — Shell script that computes the merge base, builds vet CLI arguments from `INPUT_*` environment variables, runs vet, injects the commit SHA into the review JSON, posts the review via `gh api` (with fallback to `gh pr comment`), and optionally fails CI when issues are found.
-
-**Dogfooding:** The `vet.yml` and `vet-agentic.yml` workflows use `uses: ./` to run the action from source on every PR. External users use `uses: imbue-ai/vet@main`.
-
 ### Continuous Deployment
 
 Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Deployment is triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).

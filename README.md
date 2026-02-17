@@ -110,23 +110,7 @@ jobs:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. It will not fail CI when issues are found (set `fail-on-issues: true` to change this).
-
-#### Action inputs
-
-| Input | Required | Default | Description |
-|---|---|---|---|
-| `anthropic-api-key` | yes | — | Anthropic API key |
-| `agentic` | no | `false` | Enable agentic mode (installs Node.js + Claude Code automatically) |
-| `model` | no | — | LLM model override |
-| `fail-on-issues` | no | `false` | Fail the workflow when vet finds issues |
-
-See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
-
-#### Requirements
-
-- `ANTHROPIC_API_KEY` must be set as a repository secret.
-- The checkout step must use `fetch-depth: 0` so the merge base can be computed.
+The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
 
 ## How it works
 
