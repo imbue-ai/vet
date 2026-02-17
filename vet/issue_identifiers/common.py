@@ -196,6 +196,7 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
     if agent_harness_type == AgentHarnessType.CODEX:
         return CodexOptions(
             cwd=cwd,
+            model=model_name,
             sandbox_mode="read-only",
         )
     return ClaudeCodeOptions(

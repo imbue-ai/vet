@@ -253,7 +253,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--agent-harness",
         type=AgentHarnessType,
         choices=list(AgentHarnessType),
-        default=CLI_DEFAULTS.agent_harness,
+        default=AgentHarnessType.CLAUDE,
         help=argparse.SUPPRESS,
     )
 
