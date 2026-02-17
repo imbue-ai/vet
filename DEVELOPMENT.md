@@ -66,6 +66,7 @@ Current workflows:
 - `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs
 - `vet-agentic.yml` (`Vet (Agentic)`, job: `vet`) — Agentic self-review via vet on PRs
 - `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
+- `publish-github-release.yml` (`Publish / GitHub Release`, job: `github-release`) — Create a GitHub Release on tag push
 
 ### Continuous Deployment
 
