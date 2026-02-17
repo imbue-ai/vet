@@ -1,6 +1,6 @@
 # Maintainer:
 pkgname=verify-everything
-pkgver=0.1.7
+pkgver=0.1.8
 pkgrel=1
 pkgdesc='LLM-based code review tool that finds issues tests and linters miss'
 arch=('any')
