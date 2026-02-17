@@ -110,7 +110,7 @@ jobs:
       - uses: imbue-ai/vet@main
 ```
 
-The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
+The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. `ANTHROPIC_API_KEY` must be set as a repository secret when using Anthropic models (the default). See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
 
 ## How it works
 
