@@ -81,7 +81,7 @@ The `--history-loader` option executes the specified shell command as the curren
 
 ## GitHub PRs (Actions)
 
-Vet can run on pull requests.
+Vet can run on pull requests using the reusable GitHub Action.
 
 Create `.github/workflows/vet.yml`:
 
@@ -105,45 +105,34 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: imbue-ai/vet@main
         with:
-          python-version: "3.11"
-      - run: pip install verify-everything==0.1.7
-      - name: Run vet
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          VET_GOAL: |
-            ${{ github.event.pull_request.title }}
-
-            Additional context (not necessarily part of the goal):
-            ${{ github.event.pull_request.body }}
-        run: |
-          set +e
-          MERGE_BASE=$(git merge-base "origin/$BASE_REF" "${{ github.event.pull_request.head.sha }}")
-          vet "$VET_GOAL" --quiet --output-format github \
-            --base-commit "$MERGE_BASE" \
-            > "$RUNNER_TEMP/review.json"
-          status=$?
-          if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
-
-          jq --arg sha "${{ github.event.pull_request.head.sha }}" \
-            '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
-
-          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
-            --method POST --input "$RUNNER_TEMP/review-final.json" > /dev/null || \
-            gh pr comment "${{ github.event.pull_request.number }}" \
-              --body "$(jq -r '[.body] + [.comments[] | "**\(.path):\(.line)**\n\n\(.body)"] | join("\n\n---\n\n")' "$RUNNER_TEMP/review-final.json")"
-          exit 0
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-NOTE: This will not fail in CI if Vet finds an issue.
+The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. It will not fail CI when issues are found (set `fail-on-issues: true` to change this).
 
-#### Environment variables
+#### Action inputs
 
-- `ANTHROPIC_API_KEY` is required for the default model configuration.
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `anthropic-api-key` | yes | — | Anthropic API key |
+| `agentic` | no | `false` | Enable agentic mode (installs Node.js + Claude Code automatically) |
+| `model` | no | — | LLM model override |
+| `confidence-threshold` | no | — | Minimum confidence for reported issues (0.0-1.0) |
+| `max-workers` | no | — | Maximum number of parallel workers |
+| `max-spend` | no | — | Maximum API spend in dollars |
+| `temperature` | no | — | Model temperature (0.0-2.0) |
+| `enabled-issue-codes` | no | — | Space-separated list of issue codes to enable |
+| `disabled-issue-codes` | no | — | Space-separated list of issue codes to disable |
+| `config` | no | — | Named config preset from `.vet/configs.toml` |
+| `extra-context` | no | — | Space-separated paths to extra context files |
+| `fail-on-issues` | no | `false` | Fail the workflow when vet finds issues |
+
+#### Requirements
+
+- `ANTHROPIC_API_KEY` must be set as a repository secret.
+- The checkout step must use `fetch-depth: 0` so the merge base can be computed.
 
 ## How it works
 

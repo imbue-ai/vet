@@ -63,10 +63,21 @@ Current workflows:
 
 - `test-unit.yml` (`Test / Unit`, job: `unit`) — pytest suite (lint + unit tests)
 - `test-pkgbuild.yml` (`Test / PKGBUILD`, job: `pkgbuild`) — Arch Linux package build + smoke test
-- `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs
-- `vet-agentic.yml` (`Vet (Agentic)`, job: `vet`) — Agentic self-review via vet on PRs
+- `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs (uses the reusable action via `uses: ./`)
+- `vet-agentic.yml` (`Vet (Agentic)`, job: `vet`) — Agentic self-review via vet on PRs (uses the reusable action via `uses: ./`)
 - `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
 - `publish-github-release.yml` (`Publish / GitHub Release`, job: `github-release`) — Create a GitHub Release on tag push
+
+### Reusable GitHub Action
+
+The repository includes a reusable composite GitHub Action (`action.yml`) so external users can adopt vet with a single `uses: imbue-ai/vet@main` step instead of writing shell scripting.
+
+**Files:**
+
+- `action.yml` — Composite action definition. Handles Python setup, conditional Node.js + Claude Code setup (for agentic mode), vet installation from PyPI, and invocation of `action/run.sh`. Fork protection is built in (skips the run if the PR comes from a fork).
+- `action/run.sh` — Shell script that computes the merge base, builds vet CLI arguments from `INPUT_*` environment variables, runs vet, injects the commit SHA into the review JSON, posts the review via `gh api` (with fallback to `gh pr comment`), and optionally fails CI when issues are found.
+
+**Dogfooding:** The `vet.yml` and `vet-agentic.yml` workflows use `uses: ./` to run the action from source on every PR. External users use `uses: imbue-ai/vet@main`.
 
 ### Continuous Deployment
 
@@ -77,23 +88,15 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 1. Create and checkout a branch to bump the version
 2. Update the version in `pyproject.toml`
 3. Update `pkgver` in `pkg/arch/PKGBUILD`
-4. Update the recommended GitHub action pinned version in the `README.md` 
-   ```yaml
-   - run: pip install verify-everything==0.2.0
-   ```
-5. Commit and push the changes
-6. Tag the commit and push the tag:
+4. Commit and push the changes
+5. Tag the commit and push the tag:
    ```bash
    git tag v0.2.0 -m "v0.2.0: Updated XYZ"
    git push origin v0.2.0
    ```
-7. Create a PR for the new branch
-8. The `Publish / PyPI` workflow will automatically build and publish the package
-9. Merge PR into main.
-
-### Why pin the version in the README?
-
-The README contains a sample GitHub Actions workflow that users copy into their repos. The `pip install verify-everything==X.Y.Z` line in that sample should always reference the latest stable release so that new adopters get a known-good version. Vet is very much experimental. While we give guarantees about it working in a barebones sense, it is not guaranteed that breaking changes won't be made over time so pinning a version for CI makes sense for most use cases.
+6. Create a PR for the new branch
+7. The `Publish / PyPI` workflow will automatically build and publish the package
+8. Merge PR into main.
 
 ## Development Notes
 
