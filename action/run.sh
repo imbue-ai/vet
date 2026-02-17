@@ -17,11 +17,8 @@ ARGS=("${INPUT_GOAL}" --quiet --output-format github --base-commit "${MERGE_BASE
 [[ -n "${INPUT_TEMPERATURE}" ]] && ARGS+=(--temperature "${INPUT_TEMPERATURE}")
 [[ -n "${INPUT_CONFIG}" ]] && ARGS+=(--config "${INPUT_CONFIG}")
 
-# shellcheck disable=SC2086
 [[ -n "${INPUT_ENABLED_ISSUE_CODES}" ]] && ARGS+=(--enabled-issue-codes ${INPUT_ENABLED_ISSUE_CODES})
-# shellcheck disable=SC2086
 [[ -n "${INPUT_DISABLED_ISSUE_CODES}" ]] && ARGS+=(--disabled-issue-codes ${INPUT_DISABLED_ISSUE_CODES})
-# shellcheck disable=SC2086
 [[ -n "${INPUT_EXTRA_CONTEXT}" ]] && ARGS+=(--extra-context ${INPUT_EXTRA_CONTEXT})
 
 vet "${ARGS[@]}" > "${RUNNER_TEMP}/review.json"
