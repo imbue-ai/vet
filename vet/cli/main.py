@@ -246,7 +246,7 @@ def create_parser() -> argparse.ArgumentParser:
         "--agentic",
         action="store_true",
         default=False,
-        help=argparse.SUPPRESS,
+        help="Run vet in agentic mode",
     )
 
     parser.add_argument(
@@ -254,7 +254,7 @@ def create_parser() -> argparse.ArgumentParser:
         type=AgentHarnessType,
         choices=list(AgentHarnessType),
         default=AgentHarnessType.CLAUDE,
-        help=argparse.SUPPRESS,
+        help="Run vet with the specified agent harness (default: claude)",
     )
 
     return parser
