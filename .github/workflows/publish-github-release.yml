@@ -15,15 +15,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Extract tag message
-        id: tag-message
-        run: |
-          TAG_MESSAGE=$(git tag -l --format='%(contents:subject)' "${GITHUB_REF_NAME}")
-          echo "message=${TAG_MESSAGE}" >> "$GITHUB_OUTPUT"
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
-            --notes "${{ steps.tag-message.outputs.message }}"
+            --generate-notes
