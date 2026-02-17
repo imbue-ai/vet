@@ -1,0 +1,111 @@
+name: "Vet: Verify Everything"
+description: "LLM-based code review that finds issues tests and linters miss"
+author: "Imbue"
+
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  agentic:
+    description: "Enable agentic mode (requires Claude Code; Node.js will be installed automatically)"
+    required: false
+    default: "false"
+  model:
+    description: "LLM model to use"
+    required: false
+    default: ""
+  confidence-threshold:
+    description: "Minimum confidence for reported issues (0.0-1.0)"
+    required: false
+    default: ""
+  max-workers:
+    description: "Maximum number of parallel workers"
+    required: false
+    default: ""
+  max-spend:
+    description: "Maximum API spend in dollars"
+    required: false
+    default: ""
+  temperature:
+    description: "Model temperature (0.0-2.0)"
+    required: false
+    default: ""
+  enabled-issue-codes:
+    description: "Space-separated list of issue codes to enable"
+    required: false
+    default: ""
+  disabled-issue-codes:
+    description: "Space-separated list of issue codes to disable"
+    required: false
+    default: ""
+  config:
+    description: "Named config preset from .vet/configs.toml"
+    required: false
+    default: ""
+  extra-context:
+    description: "Space-separated paths to extra context files"
+    required: false
+    default: ""
+  fail-on-issues:
+    description: "Fail the workflow when vet finds issues"
+    required: false
+    default: "false"
+  build-from-source:
+    description: "Build and install vet from the checked-out source tree instead of PyPI"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Setup Node.js
+      if: inputs.agentic == 'true'
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Install Claude Code
+      if: inputs.agentic == 'true'
+      shell: bash
+      run: npm install -g @anthropic-ai/claude-code
+
+    - name: Install vet
+      shell: bash
+      run: |
+        if [[ "${{ inputs.build-from-source }}" == "true" ]]; then
+          pip install .
+        else
+          pip install verify-everything
+        fi
+
+    - name: Run vet
+      if: github.event.pull_request.head.repo.full_name == github.repository
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        INPUT_AGENTIC: ${{ inputs.agentic }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_CONFIDENCE_THRESHOLD: ${{ inputs.confidence-threshold }}
+        INPUT_MAX_WORKERS: ${{ inputs.max-workers }}
+        INPUT_MAX_SPEND: ${{ inputs.max-spend }}
+        INPUT_TEMPERATURE: ${{ inputs.temperature }}
+        INPUT_ENABLED_ISSUE_CODES: ${{ inputs.enabled-issue-codes }}
+        INPUT_DISABLED_ISSUE_CODES: ${{ inputs.disabled-issue-codes }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_EXTRA_CONTEXT: ${{ inputs.extra-context }}
+        INPUT_FAIL_ON_ISSUES: ${{ inputs.fail-on-issues }}
+        INPUT_BASE_REF: ${{ github.event.pull_request.base.ref }}
+        INPUT_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        INPUT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        INPUT_GOAL: |
+          ${{ github.event.pull_request.title }}
+
+          Additional context (not necessarily part of the goal):
+          ${{ github.event.pull_request.body }}
+      run: ${{ github.action_path }}/action/run.sh

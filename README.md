@@ -81,7 +81,7 @@ The `--history-loader` option executes the specified shell command as the curren
 
 ## GitHub PRs (Actions)
 
-Vet can run on pull requests.
+Vet can run on pull requests using the reusable GitHub Action.
 
 Create `.github/workflows/vet.yml`:
 
@@ -100,50 +100,17 @@ jobs:
   vet:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install verify-everything==0.1.7
-      - name: Run vet
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          VET_GOAL: |
-            ${{ github.event.pull_request.title }}
-
-            Additional context (not necessarily part of the goal):
-            ${{ github.event.pull_request.body }}
-        run: |
-          set +e
-          MERGE_BASE=$(git merge-base "origin/$BASE_REF" "${{ github.event.pull_request.head.sha }}")
-          vet "$VET_GOAL" --quiet --output-format github \
-            --base-commit "$MERGE_BASE" \
-            > "$RUNNER_TEMP/review.json"
-          status=$?
-          if [ "$status" -ne 0 ] && [ "$status" -ne 10 ]; then exit "$status"; fi
-
-          jq --arg sha "${{ github.event.pull_request.head.sha }}" \
-            '. + {commit_id: $sha}' "$RUNNER_TEMP/review.json" > "$RUNNER_TEMP/review-final.json"
-
-          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/reviews" \
-            --method POST --input "$RUNNER_TEMP/review-final.json" > /dev/null || \
-            gh pr comment "${{ github.event.pull_request.number }}" \
-              --body "$(jq -r '[.body] + [.comments[] | "**\(.path):\(.line)**\n\n\(.body)"] | join("\n\n---\n\n")' "$RUNNER_TEMP/review-final.json")"
-          exit 0
+      - uses: imbue-ai/vet@main
 ```
 
-NOTE: This will not fail in CI if Vet finds an issue.
-
-#### Environment variables
-
-- `ANTHROPIC_API_KEY` is required for the default model configuration.
+The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. `ANTHROPIC_API_KEY` must be set as a repository secret when using Anthropic models (the default). See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
 
 ## How it works
 
