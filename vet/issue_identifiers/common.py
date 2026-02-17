@@ -24,6 +24,7 @@ from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
+from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import ConfidenceScore
@@ -194,7 +195,9 @@ def convert_to_issue_identifier_result(
 
 
 _ANTHROPIC_MODEL_NAMES = {m.value for m in AnthropicModelName}
+_OPENAI_MODEL_NAMES = {m.value for m in OpenAIModelName}
 _DEFAULT_CODEX_MODEL = "gpt-5.2-codex"
+_DEFAULT_CLAUDE_MODEL = AnthropicModelName.CLAUDE_4_6_OPUS
 
 
 def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
@@ -213,13 +216,20 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
             model=model_name,
             sandbox_mode="read-only",
         )
-    if model_name not in _ANTHROPIC_MODEL_NAMES:
+    if model_name in _OPENAI_MODEL_NAMES:
+        logger.info(
+            "Config model_name {config_model_name} is an OpenAI model, using default Claude model ({model_name}).",
+            config_model_name=model_name,
+            model_name=_DEFAULT_CLAUDE_MODEL,
+        )
+        model_name = _DEFAULT_CLAUDE_MODEL
+    elif model_name not in _ANTHROPIC_MODEL_NAMES:
         logger.info(
             "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
             config_model_name=model_name,
-            model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01,
+            model_name=_DEFAULT_CLAUDE_MODEL,
         )
-        model_name = AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01
+        model_name = _DEFAULT_CLAUDE_MODEL
     return ClaudeCodeOptions(
         cwd=cwd,
         permission_mode="bypassPermissions",  # Equivalent to --dangerously-skip-permissions
