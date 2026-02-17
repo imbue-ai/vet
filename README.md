@@ -119,15 +119,9 @@ The action handles Python setup, vet installation, merge base computation, and p
 | `anthropic-api-key` | yes | — | Anthropic API key |
 | `agentic` | no | `false` | Enable agentic mode (installs Node.js + Claude Code automatically) |
 | `model` | no | — | LLM model override |
-| `confidence-threshold` | no | — | Minimum confidence for reported issues (0.0-1.0) |
-| `max-workers` | no | — | Maximum number of parallel workers |
-| `max-spend` | no | — | Maximum API spend in dollars |
-| `temperature` | no | — | Model temperature (0.0-2.0) |
-| `enabled-issue-codes` | no | — | Space-separated list of issue codes to enable |
-| `disabled-issue-codes` | no | — | Space-separated list of issue codes to disable |
-| `config` | no | — | Named config preset from `.vet/configs.toml` |
-| `extra-context` | no | — | Space-separated paths to extra context files |
 | `fail-on-issues` | no | `false` | Fail the workflow when vet finds issues |
+
+See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
 
 #### Requirements
 
