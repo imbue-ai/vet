@@ -1,10 +1,3 @@
-"""Lightweight model name enums for all supported LLM providers.
-
-This module contains ONLY the model name enums (pure stdlib StrEnums with string
-values) and no SDK dependencies, so it can be imported without pulling in the
-heavy LLM provider packages (anthropic, openai, google-genai, groq).
-"""
-
 import enum
 
 

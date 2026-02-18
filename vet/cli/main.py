@@ -11,7 +11,6 @@ from pathlib import Path
 
 from loguru import logger
 
-# --- Lightweight imports (fast, no LLM SDK dependencies) ---
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.loader import ConfigLoadError
@@ -457,9 +456,6 @@ def main(argv: list[str] | None = None) -> int:
 
     configure_logging(args.verbose, args.quiet)
 
-    # --- Deferred heavy imports (LLM SDKs, full pipeline) ---
-    # These are imported here (after early-exit checks) to avoid pulling in heavy
-    # LLM provider SDKs for fast commands like --version, --list-*, etc.
     from vet.api import find_issues
     from vet.cli.config.loader import build_language_model_config
     from vet.cli.config.loader import get_max_output_tokens_for_model

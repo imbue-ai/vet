@@ -38,8 +38,6 @@ from vet.imbue_core.agents.llm_apis.errors import SafelyRetriableTransientLangua
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
-
-# Re-export from the lightweight model_names module for backward compatibility.
 from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName as AnthropicModelName
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent

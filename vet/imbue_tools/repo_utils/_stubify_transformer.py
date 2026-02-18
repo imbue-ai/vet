@@ -1,9 +1,3 @@
-"""libcst-based transformer for stubifying Python files.
-
-Separated from stubify_file.py so that the heavy libcst import only happens
-when stubification is actually invoked.
-"""
-
 from typing import Any
 from typing import Callable
 

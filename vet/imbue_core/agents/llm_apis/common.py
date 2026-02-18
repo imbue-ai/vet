@@ -8,7 +8,6 @@ ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | Gemi
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:
-    # Defer heavy SDK imports to avoid pulling them in at module load time.
     from vet.imbue_core.agents.llm_apis.anthropic_api import ANTHROPIC_MODEL_INFO_BY_NAME
     from vet.imbue_core.agents.llm_apis.gemini_api import GEMINI_MODEL_INFO_BY_NAME
     from vet.imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model_info

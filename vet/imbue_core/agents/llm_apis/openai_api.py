@@ -59,7 +59,6 @@ FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX = "ft:gpt-4o-mini-2024-07-18"
 FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"
 
 
-# Re-export from the lightweight model_names module for backward compatibility.
 from vet.imbue_core.agents.llm_apis.model_names import OpenAIModelName as OpenAIModelName
 
 # Using Tier 5 rate limits

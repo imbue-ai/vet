@@ -11,8 +11,6 @@ def stubify_code_file(
     keep_constant: bool = True,
     keep_indent: bool = False,
 ) -> str:
-    # Defer libcst import to avoid pulling in the heavy library at module load time.
-    # libcst costs ~165ms to import and is only needed when stubification is actually invoked.
     import libcst as cst
     import libcst.matchers as m
 
