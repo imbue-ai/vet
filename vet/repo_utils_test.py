@@ -3,7 +3,7 @@ from pathlib import Path
 
 from syrupy.assertion import SnapshotAssertion
 
-from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.nested_evolver import assign
 from vet.imbue_core.nested_evolver import chill
 from vet.imbue_core.nested_evolver import evolver
