@@ -144,7 +144,8 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         default=CLI_DEFAULTS.model,
         metavar="MODEL",
-        help="LLM to use for analysis. ",
+        # Hardcoded to avoid importing cli.models at module level (~1s of SDK imports).
+        help="LLM to use for analysis (default: claude-opus-4-6). ",
     )
     model_group.add_argument(
         "--list-models",
