@@ -223,12 +223,18 @@ class AgentResultMessage(SerializableModel):
     original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
-AgentMessage = AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage
+class AgentUnknownMessage(SerializableModel):
+    raw: dict[str, Any]
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
+
+
+AgentMessage = AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage | AgentUnknownMessage
 AgentMessageUnion = Annotated[
     Annotated[AgentUserMessage, Tag("AgentUserMessage")]
     | Annotated[AgentAssistantMessage, Tag("AgentAssistantMessage")]
     | Annotated[AgentSystemMessage, Tag("AgentSystemMessage")]
-    | Annotated[AgentResultMessage, Tag("AgentResultMessage")],
+    | Annotated[AgentResultMessage, Tag("AgentResultMessage")]
+    | Annotated[AgentUnknownMessage, Tag("AgentUnknownMessage")],
     build_discriminator(),
 ]
 

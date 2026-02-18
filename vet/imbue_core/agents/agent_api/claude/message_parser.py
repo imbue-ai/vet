@@ -11,11 +11,12 @@ from vet.imbue_core.agents.agent_api.data_types import AgentThinkingBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolResultBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolUseBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentUnknownBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentUnknownMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentUsage
 from vet.imbue_core.agents.agent_api.data_types import AgentUserMessage
 
 
-def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
+def parse_claude_message(data: dict[str, Any]) -> AgentMessage:
     """Parse message from CLI output using unified types.
 
     Reference:
@@ -69,7 +70,7 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
             )
 
         case _:
-            return None
+            return AgentUnknownMessage(raw=data, original_message=data)
 
 
 def parse_claude_system_event_type(subtype: str) -> AgentSystemEventType:
