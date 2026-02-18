@@ -38,9 +38,7 @@ from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    parse_conversation_history,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
 from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
@@ -326,18 +324,12 @@ def configure_logging(verbose: bool, quiet: bool) -> None:
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     logger.info("Running history loader command: {}", command)
-    result = subprocess.run(
-        command, shell=True, capture_output=True, text=True, cwd=cwd
-    )
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
-        logger.warning(
-            f"History loader command failed with exit code {result.returncode}: {result.stderr}"
-        )
+        logger.warning(f"History loader command failed with exit code {result.returncode}: {result.stderr}")
         return ()
     if not result.stdout.strip():
-        logger.info(
-            "History loader command returned empty output, no conversation history loaded"
-        )
+        logger.info("History loader command returned empty output, no conversation history loaded")
         return ()
     messages = parse_conversation_history(result.stdout)
     logger.info(
@@ -347,9 +339,7 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     return messages
 
 
-def apply_config_preset(
-    args: argparse.Namespace, preset: CliConfigPreset
-) -> argparse.Namespace:
+def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> argparse.Namespace:
     preset_dict = preset.model_dump(exclude_none=True)
 
     for field, preset_value in preset_dict.items():
@@ -439,9 +429,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if not repo_path.is_dir():
-        print(
-            f"Error: Repository path is not a directory: {repo_path}", file=sys.stderr
-        )
+        print(f"Error: Repository path is not a directory: {repo_path}", file=sys.stderr)
         return 2
 
     if args.extra_context:
@@ -485,9 +473,7 @@ def main(argv: list[str] | None = None) -> int:
 
     conversation_history = None
     if args.history_loader is not None:
-        conversation_history = load_conversation_from_command(
-            args.history_loader, repo_path
-        )
+        conversation_history = load_conversation_from_command(args.history_loader, repo_path)
     else:
         logger.info("No history loader provided, skipping conversation history loading")
     extra_context = None
@@ -529,12 +515,8 @@ def main(argv: list[str] | None = None) -> int:
         enabled_identifiers=enabled_identifiers,
         disabled_identifiers=disabled_identifiers,
         language_model_generation_config=language_model_config,
-        enabled_issue_codes=(
-            tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
-        ),
-        disabled_issue_codes=(
-            tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
-        ),
+        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
+        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
         temperature=args.temperature,
         filter_issues_below_confidence=args.confidence_threshold,
         max_identify_workers=args.max_workers,

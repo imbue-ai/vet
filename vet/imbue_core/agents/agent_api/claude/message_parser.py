@@ -25,14 +25,10 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
 
     match data["type"]:
         case "user":
-            return AgentUserMessage(
-                content=parse_claude_content_blocks(data), original_message=data
-            )
+            return AgentUserMessage(content=parse_claude_content_blocks(data), original_message=data)
 
         case "assistant":
-            return AgentAssistantMessage(
-                content=parse_claude_content_blocks(data), original_message=data
-            )
+            return AgentAssistantMessage(content=parse_claude_content_blocks(data), original_message=data)
 
         case "system":
             # Normalize system event types
@@ -52,14 +48,9 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
                 usage = AgentUsage(
                     input_tokens=raw_usage.get("input_tokens") if raw_usage else None,
                     output_tokens=raw_usage.get("output_tokens") if raw_usage else None,
-                    cached_tokens=(
-                        raw_usage.get("cache_read_input_tokens") if raw_usage else None
-                    ),
+                    cached_tokens=(raw_usage.get("cache_read_input_tokens") if raw_usage else None),
                     total_tokens=(
-                        raw_usage.get("input_tokens", 0)
-                        + raw_usage.get("output_tokens", 0)
-                        if raw_usage
-                        else None
+                        raw_usage.get("input_tokens", 0) + raw_usage.get("output_tokens", 0) if raw_usage else None
                     ),
                     total_cost_usd=data.get("total_cost_usd"),
                 )
@@ -94,11 +85,7 @@ def parse_claude_system_event_type(subtype: str) -> AgentSystemEventType:
 
 
 def parse_claude_content_blocks(data: dict[str, Any]) -> list[AgentContentBlock]:
-    return [
-        block
-        for raw in data["message"]["content"]
-        if (block := parse_claude_content_block(raw)) is not None
-    ]
+    return [block for raw in data["message"]["content"] if (block := parse_claude_content_block(raw)) is not None]
 
 
 def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock | None:
@@ -116,9 +103,7 @@ def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock | Non
             )
 
         case "tool_use":
-            return AgentToolUseBlock(
-                id=block["id"], name=block["name"], input=block["input"]
-            )
+            return AgentToolUseBlock(id=block["id"], name=block["name"], input=block["input"])
 
         case "tool_result":
             return AgentToolResultBlock(
