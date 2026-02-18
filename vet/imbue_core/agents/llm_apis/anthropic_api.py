@@ -362,7 +362,7 @@ def get_anthropic_tokenizer() -> tiktoken.Encoding:
 
 
 def count_anthropic_tokens(text: str) -> int:
-    return int(len(get_anthropic_tokenizer().encode(text)) * 1.1)
+    return int(len(get_anthropic_tokenizer().encode(text, disallowed_special=())) * 1.1)
 
 
 SystemMessageParam = TextBlockParam
