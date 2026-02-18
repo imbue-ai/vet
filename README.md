@@ -52,8 +52,8 @@ curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/install-skill.sh 
 
 You will be prompted to choose between:
 
-- **Project level** — installs into `.agents/skills/vet/` and `.claude/skills/vet/` at the repo root (run from your repo directory)
-- **User level** — installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
+- **Project level**: installs into `.agents/skills/vet/` and `.claude/skills/vet/` at the repo root (run from your repo directory)
+- **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
 
 <details>
 <summary>Manual installation</summary>
