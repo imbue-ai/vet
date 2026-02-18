@@ -30,8 +30,8 @@ class VetConfig(SerializableModel):
     custom_guides_config: CustomGuidesConfig | None = None
 
     # Todo: Different models for different issue identifiers
-    language_model_generation_config: LanguageModelGenerationConfig = (
-        LanguageModelGenerationConfig(model_name=AnthropicModelName.CLAUDE_4_6_OPUS)
+    language_model_generation_config: LanguageModelGenerationConfig = LanguageModelGenerationConfig(
+        model_name=AnthropicModelName.CLAUDE_4_6_OPUS
     )
     max_identifier_spend_dollars: float | None = None
     max_output_tokens: int = 20000
@@ -105,10 +105,6 @@ def get_enabled_issue_codes(config: VetConfig) -> set[IssueCode]:
     for code in explicitly_enabled + explicitly_disabled:
         if code not in all_issue_code_values:
             raise ValueError(f"Bad config: unknown issue code: {code}")
-    possibly_enabled_values = (
-        set(explicitly_enabled)
-        if len(explicitly_enabled) > 0
-        else set(v for v in IssueCode)
-    )
+    possibly_enabled_values = set(explicitly_enabled) if len(explicitly_enabled) > 0 else set(v for v in IssueCode)
     disabled_values = set(explicitly_disabled)
     return possibly_enabled_values - disabled_values
