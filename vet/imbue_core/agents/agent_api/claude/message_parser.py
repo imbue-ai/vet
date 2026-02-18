@@ -1,5 +1,4 @@
 from typing import Any
-from typing import assert_never
 
 from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentContentBlock
@@ -26,10 +25,14 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
 
     match data["type"]:
         case "user":
-            return AgentUserMessage(content=parse_claude_content_blocks(data), original_message=data)
+            return AgentUserMessage(
+                content=parse_claude_content_blocks(data), original_message=data
+            )
 
         case "assistant":
-            return AgentAssistantMessage(content=parse_claude_content_blocks(data), original_message=data)
+            return AgentAssistantMessage(
+                content=parse_claude_content_blocks(data), original_message=data
+            )
 
         case "system":
             # Normalize system event types
@@ -49,9 +52,14 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
                 usage = AgentUsage(
                     input_tokens=raw_usage.get("input_tokens") if raw_usage else None,
                     output_tokens=raw_usage.get("output_tokens") if raw_usage else None,
-                    cached_tokens=(raw_usage.get("cache_read_input_tokens") if raw_usage else None),
+                    cached_tokens=(
+                        raw_usage.get("cache_read_input_tokens") if raw_usage else None
+                    ),
                     total_tokens=(
-                        raw_usage.get("input_tokens", 0) + raw_usage.get("output_tokens", 0) if raw_usage else None
+                        raw_usage.get("input_tokens", 0)
+                        + raw_usage.get("output_tokens", 0)
+                        if raw_usage
+                        else None
                     ),
                     total_cost_usd=data.get("total_cost_usd"),
                 )
@@ -68,8 +76,8 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
                 original_message=data,
             )
 
-        case _ as unreachable:
-            assert_never(unreachable)
+        case _:
+            return None
 
 
 def parse_claude_system_event_type(subtype: str) -> AgentSystemEventType:
@@ -86,10 +94,14 @@ def parse_claude_system_event_type(subtype: str) -> AgentSystemEventType:
 
 
 def parse_claude_content_blocks(data: dict[str, Any]) -> list[AgentContentBlock]:
-    return [parse_claude_content_block(block) for block in data["message"]["content"]]
+    return [
+        block
+        for raw in data["message"]["content"]
+        if (block := parse_claude_content_block(raw)) is not None
+    ]
 
 
-def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock:
+def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock | None:
     """Parse content block from CLI output using unified types."""
 
     match block["type"]:
@@ -104,7 +116,9 @@ def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock:
             )
 
         case "tool_use":
-            return AgentToolUseBlock(id=block["id"], name=block["name"], input=block["input"])
+            return AgentToolUseBlock(
+                id=block["id"], name=block["name"], input=block["input"]
+            )
 
         case "tool_result":
             return AgentToolResultBlock(
@@ -113,5 +127,5 @@ def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock:
                 is_error=block.get("is_error"),
             )
 
-        case _ as unreachable:
-            assert_never(unreachable)
+        case _:
+            return None
