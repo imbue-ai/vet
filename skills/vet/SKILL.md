@@ -74,4 +74,5 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress progress output
+- `--agentic`: Fallback mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. Slower (~3 min) so not recommended as the default.
 - `--help`: Show comprehensive list of options
