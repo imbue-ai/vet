@@ -30,6 +30,9 @@ from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
 from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
+
+# Re-export from the lightweight model_names module for backward compatibility.
+from vet.imbue_core.agents.llm_apis.model_names import GroqSupportedModelName as GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent
@@ -45,19 +48,6 @@ from vet.imbue_core.secrets_utils import get_secret
 # also, there's no need to troll yourself by wondering why results have improved (or gotten worse) when you dont realized that the version has shifted under you
 # if you want to use an upgraded model, just upgrade the model to the key displayed on the website
 # please do NOT set these back to the generic model names!
-
-
-# TODO: there are likely more models to add
-class GroqSupportedModelName(enum.StrEnum):
-    GROQ_GEMMA2_9B_IT = "groq/gemma2-9b-it"
-    GROQ_LLAMA3_70B_8192 = "groq/llama3-70b-8192"
-    GROQ_LLAMA3_8B_8192 = "groq/llama3-8b-8192"
-    GROQ_LLAMA_3_3_70B_SPECDEC = "groq/llama-3.3-70b-specdec"
-    GROQ_MIXTRAL_8X7B_32768 = "groq/mixtral-8x7b-32768"
-    GROQ_LLAMA_3_3_70B_VERSATILE = "groq/llama-3.3-70b-versatile"
-    GROQ_LLAMA_3_1_8B_INSTANT = "groq/llama-3.1-8b-instant"
-    GROQ_LLAMA_3_2_1B_PREVIEW = "groq/llama-3.2-1b-preview"
-    GROQ_LLAMA_3_2_3B_PREVIEW = "groq/llama-3.2-3b-preview"
 
 
 # Rate limits for Groq models based on custom rate limits for our organization.

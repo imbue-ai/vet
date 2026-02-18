@@ -42,6 +42,9 @@ from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
+
+# Re-export from the lightweight model_names module for backward compatibility.
+from vet.imbue_core.agents.llm_apis.model_names import GeminiModelName as GeminiModelName
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEvent
 from vet.imbue_core.async_monkey_patches import log_exception
@@ -50,18 +53,6 @@ from vet.imbue_core.frozen_utils import FrozenDict
 from vet.imbue_core.frozen_utils import FrozenMapping
 from vet.imbue_core.itertools import only
 from vet.imbue_core.secrets_utils import get_secret
-
-
-class GeminiModelName(enum.StrEnum):
-    GEMINI_1_0_PRO = "models/gemini-1.0-pro-001"
-    GEMINI_1_5_FLASH = "models/gemini-1.5-flash-001"
-    GEMINI_1_5_PRO = "models/gemini-1.5-pro-001"
-    GEMINI_1_5_PRO_2 = "models/gemini-1.5-pro-002"
-    GEMINI_1_5_FLASH_2 = "models/gemini-1.5-flash-002"
-    GEMINI_2_0_FLASH = "models/gemini-2.0-flash-001"
-    GEMINI_2_5_FLASH = "models/gemini-2.5-flash"
-    GEMINI_2_5_FLASH_LITE_PREVIEW = "models/gemini-2.5-flash-lite-preview-06-17"
-
 
 # Rate limits for Google Gemini models based on published API documentation
 # Reference: https://ai.google.dev/gemini-api/docs/rate-limits#tier-3

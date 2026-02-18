@@ -21,10 +21,10 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
-from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
+from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.model_names import OpenAIModelName
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import ConfidenceScore

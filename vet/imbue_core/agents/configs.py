@@ -2,14 +2,10 @@ from pathlib import Path
 from typing import Any
 from typing import assert_never
 
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
-from vet.imbue_core.agents.llm_apis.anthropic_api import count_anthropic_tokens
-from vet.imbue_core.agents.llm_apis.common import get_model_max_context_length
 from vet.imbue_core.agents.llm_apis.constants import approximate_token_count
 from vet.imbue_core.agents.llm_apis.data_types import ModelStr
-from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
-from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.openai_api import count_openai_tokens
+from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.model_names import OpenAIModelName
 from vet.imbue_core.language_model_mode import LanguageModelMode
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
@@ -42,13 +38,19 @@ class LanguageModelGenerationConfig(SerializableModel):
     def count_tokens(self, text: str) -> int:
         """Count tokens in the given text using the model's tokenizer."""
         if self.model_name in (v for v in OpenAIModelName):
+            from vet.imbue_core.agents.llm_apis.openai_api import count_openai_tokens
+
             return count_openai_tokens(text, self.model_name)
         if self.model_name in (v for v in AnthropicModelName):
+            from vet.imbue_core.agents.llm_apis.anthropic_api import count_anthropic_tokens
+
             return count_anthropic_tokens(text)
         return approximate_token_count(text)
 
     def get_max_context_length(self) -> int:
         """Get the maximum context length for this model."""
+        from vet.imbue_core.agents.llm_apis.common import get_model_max_context_length
+
         return get_model_max_context_length(self.model_name)
 
     def is_custom_model(self) -> bool:
@@ -87,7 +89,7 @@ class OpenAICompatibleModelConfig(LanguageModelGenerationConfig):
 
 
 class MockedLanguageModelGenerationConfig(LanguageModelGenerationConfig):
-    model_name: ModelStr = MY_MOCK_MODEL_INFO.model_name
+    model_name: ModelStr = "my-mock-model"
     is_running_offline: bool = True
     mock_responses_path: Path
 

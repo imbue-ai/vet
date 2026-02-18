@@ -3,17 +3,18 @@ from __future__ import annotations
 import os
 import tomllib
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
+
+if TYPE_CHECKING:
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
 from vet.cli.config.cli_config_schema import parse_cli_config_from_dict
 from vet.cli.config.schema import ModelsConfig
 from vet.cli.config.schema import ProviderConfig
-from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
-from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
-from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
 from vet.imbue_core.data_types import CustomGuideConfig
 from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import get_valid_issue_code_values
@@ -140,12 +141,17 @@ def get_max_output_tokens_for_model(model_id: str, config: ModelsConfig) -> int 
         return provider.models[model_id].max_output_tokens
 
     try:
+        from vet.imbue_core.agents.llm_apis.common import get_model_max_output_tokens
+
         return get_model_max_output_tokens(model_id)
     except Exception:
         return None
 
 
 def build_language_model_config(model_id: str, user_config: ModelsConfig) -> LanguageModelGenerationConfig:
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+    from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+
     provider = get_provider_for_model(model_id, user_config)
     if provider is None:
         return LanguageModelGenerationConfig(model_name=model_id)

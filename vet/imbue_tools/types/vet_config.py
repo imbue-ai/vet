@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import CustomGuidesConfig
 from vet.imbue_core.data_types import IssueCode

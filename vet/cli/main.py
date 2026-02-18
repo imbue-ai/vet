@@ -11,14 +11,12 @@ from pathlib import Path
 
 from loguru import logger
 
-from vet.api import find_issues
+# --- Lightweight imports (fast, no LLM SDK dependencies) ---
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.loader import ConfigLoadError
-from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
-from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
@@ -29,17 +27,10 @@ from vet.cli.models import get_models_by_provider
 from vet.cli.models import validate_model_id
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
-from vet.formatters import format_github_review
-from vet.formatters import format_issue_text
-from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
-from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
-from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
-from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
 
@@ -323,6 +314,8 @@ def configure_logging(verbose: bool, quiet: bool) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
+    from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+
     logger.info("Running history loader command: {}", command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
@@ -365,13 +358,6 @@ _CONTEXT_OVERFLOW_PATTERNS = [
     "too many tokens",
     "reduce the length of the messages",
 ]
-
-
-def _is_context_overflow(e: PromptTooLongError | BadAPIRequestError) -> bool:
-    if isinstance(e, PromptTooLongError):
-        return True
-    error_msg = e.error_message.lower()
-    return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -471,6 +457,19 @@ def main(argv: list[str] | None = None) -> int:
 
     configure_logging(args.verbose, args.quiet)
 
+    # --- Deferred heavy imports (LLM SDKs, full pipeline) ---
+    # These are imported here (after early-exit checks) to avoid pulling in heavy
+    # LLM provider SDKs for fast commands like --version, --list-*, etc.
+    from vet.api import find_issues
+    from vet.cli.config.loader import build_language_model_config
+    from vet.cli.config.loader import get_max_output_tokens_for_model
+    from vet.formatters import format_github_review
+    from vet.formatters import format_issue_text
+    from vet.formatters import issue_to_dict
+    from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+    from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+    from vet.imbue_tools.types.vet_config import VetConfig
+
     conversation_history = None
     if args.history_loader is not None:
         conversation_history = load_conversation_from_command(args.history_loader, repo_path)
@@ -528,6 +527,12 @@ def main(argv: list[str] | None = None) -> int:
         filter_issues_through_llm_evaluator=not args.agentic,
         enable_deduplication=not args.agentic,
     )
+
+    def _is_context_overflow(e: PromptTooLongError | BadAPIRequestError) -> bool:
+        if isinstance(e, PromptTooLongError):
+            return True
+        error_msg = e.error_message.lower()
+        return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
 
     try:
         issues = find_issues(

@@ -1,18 +1,20 @@
-from vet.imbue_core.agents.llm_apis.anthropic_api import ANTHROPIC_MODEL_INFO_BY_NAME
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
-from vet.imbue_core.agents.llm_apis.gemini_api import GEMINI_MODEL_INFO_BY_NAME
-from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
-from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
-from vet.imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model_info
-from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
+from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName
+from vet.imbue_core.agents.llm_apis.model_names import GeminiModelName
+from vet.imbue_core.agents.llm_apis.model_names import GroqSupportedModelName
+from vet.imbue_core.agents.llm_apis.model_names import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
-from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
 
 ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:
+    # Defer heavy SDK imports to avoid pulling them in at module load time.
+    from vet.imbue_core.agents.llm_apis.anthropic_api import ANTHROPIC_MODEL_INFO_BY_NAME
+    from vet.imbue_core.agents.llm_apis.gemini_api import GEMINI_MODEL_INFO_BY_NAME
+    from vet.imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model_info
+    from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
+    from vet.imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
+
     if model_name == MY_MOCK_MODEL_INFO.model_name:
         return MY_MOCK_MODEL_INFO
     if model_name in (v for v in AnthropicModelName):
