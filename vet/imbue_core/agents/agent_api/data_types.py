@@ -104,9 +104,7 @@ class AgentThinkingBlock(SerializableModel):
     """
 
     content: str
-    thinking_tokens: int | None = Field(
-        default=None, description="Number of tokens used for thinking"
-    )
+    thinking_tokens: int | None = Field(default=None, description="Number of tokens used for thinking")
 
 
 class AgentToolUseBlock(SerializableModel):
@@ -129,9 +127,7 @@ class AgentToolResultBlock(SerializableModel):
     tool_use_id: str
     content: str | list[dict[str, Any]] | None = None
     is_error: bool | None = None
-    exit_code: int | None = Field(
-        default=None, description="Exit code for command executions"
-    )
+    exit_code: int | None = Field(default=None, description="Exit code for command executions")
 
 
 class AgentUnknownBlock(SerializableModel):
@@ -144,13 +140,7 @@ class AgentUnknownBlock(SerializableModel):
     raw: dict[str, Any]
 
 
-AgentContentBlock = (
-    AgentTextBlock
-    | AgentThinkingBlock
-    | AgentToolUseBlock
-    | AgentToolResultBlock
-    | AgentUnknownBlock
-)
+AgentContentBlock = AgentTextBlock | AgentThinkingBlock | AgentToolUseBlock | AgentToolResultBlock | AgentUnknownBlock
 
 
 class AgentSystemEventType(enum.StrEnum):
@@ -177,9 +167,7 @@ class AgentUserMessage(SerializableModel):
 
     object_type: Literal["AgentUserMessage"] = "AgentUserMessage"
     content: str | list[AgentContentBlock]
-    original_message: dict[str, Any] | None = Field(
-        default=None, description="Original agent-specific message data"
-    )
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
 class AgentAssistantMessage(SerializableModel):
@@ -191,9 +179,7 @@ class AgentAssistantMessage(SerializableModel):
 
     object_type: Literal["AgentAssistantMessage"] = "AgentAssistantMessage"
     content: list[AgentContentBlock]
-    original_message: dict[str, Any] | None = Field(
-        default=None, description="Original agent-specific message data"
-    )
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
 class AgentSystemMessage(SerializableModel):
@@ -205,15 +191,9 @@ class AgentSystemMessage(SerializableModel):
 
     object_type: Literal["AgentSystemMessage"] = "AgentSystemMessage"
     event_type: AgentSystemEventType
-    session_id: str | None = Field(
-        default=None, description="Session/thread identifier"
-    )
-    error: str | None = Field(
-        default=None, description="Error message for failed events"
-    )
-    original_message: dict[str, Any] | None = Field(
-        default=None, description="Original agent-specific message data"
-    )
+    session_id: str | None = Field(default=None, description="Session/thread identifier")
+    error: str | None = Field(default=None, description="Error message for failed events")
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
 class AgentUsage(SerializableModel):
@@ -222,24 +202,12 @@ class AgentUsage(SerializableModel):
     Tracks token usage and costs in a unified format.
     """
 
-    input_tokens: int | None = Field(
-        default=None, description="Input/prompt tokens consumed"
-    )
-    output_tokens: int | None = Field(
-        default=None, description="Output/completion tokens generated"
-    )
-    cached_tokens: int | None = Field(
-        default=None, description="Cached input tokens reused"
-    )
-    total_tokens: int | None = Field(
-        default=None, description="Total tokens (input + output)"
-    )
-    thinking_tokens: int | None = Field(
-        default=None, description="Tokens used for extended thinking"
-    )
-    total_cost_usd: float | None = Field(
-        default=None, description="Estimated cost in USD"
-    )
+    input_tokens: int | None = Field(default=None, description="Input/prompt tokens consumed")
+    output_tokens: int | None = Field(default=None, description="Output/completion tokens generated")
+    cached_tokens: int | None = Field(default=None, description="Cached input tokens reused")
+    total_tokens: int | None = Field(default=None, description="Total tokens (input + output)")
+    thinking_tokens: int | None = Field(default=None, description="Tokens used for extended thinking")
+    total_cost_usd: float | None = Field(default=None, description="Estimated cost in USD")
 
 
 class AgentResultMessage(SerializableModel):
@@ -252,32 +220,16 @@ class AgentResultMessage(SerializableModel):
     object_type: Literal["AgentResultMessage"] = "AgentResultMessage"
     session_id: str
     is_error: bool
-    duration_ms: int | None = Field(
-        default=None, description="Total duration in milliseconds"
-    )
-    api_duration_ms: int | None = Field(
-        default=None, description="API call duration in milliseconds"
-    )
-    num_turns: int | None = Field(
-        default=None, description="Number of conversation turns"
-    )
-    usage: AgentUsage | None = Field(
-        default=None, description="Token usage and cost information"
-    )
-    result: str | None = Field(
-        default=None, description="Final result or output from the agent"
-    )
-    error: str | None = Field(
-        default=None, description="Error message if is_error=True"
-    )
-    original_message: dict[str, Any] | None = Field(
-        default=None, description="Original agent-specific message data"
-    )
+    duration_ms: int | None = Field(default=None, description="Total duration in milliseconds")
+    api_duration_ms: int | None = Field(default=None, description="API call duration in milliseconds")
+    num_turns: int | None = Field(default=None, description="Number of conversation turns")
+    usage: AgentUsage | None = Field(default=None, description="Token usage and cost information")
+    result: str | None = Field(default=None, description="Final result or output from the agent")
+    error: str | None = Field(default=None, description="Error message if is_error=True")
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
-AgentMessage = (
-    AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage
-)
+AgentMessage = AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage
 AgentMessageUnion = Annotated[
     Annotated[AgentUserMessage, Tag("AgentUserMessage")]
     | Annotated[AgentAssistantMessage, Tag("AgentAssistantMessage")]

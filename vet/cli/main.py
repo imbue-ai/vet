@@ -38,9 +38,7 @@ from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    parse_conversation_history,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
 from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
