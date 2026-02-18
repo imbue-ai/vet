@@ -11,23 +11,15 @@ from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import LLMResponse
 from vet.imbue_core.itertools import only
 from vet.imbue_core.pydantic_serialization import SerializableModel
-from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-    format_conversation_history_for_prompt,
-)
+from vet.imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
-    ResponseParsingError,
-)
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
-    parse_model_json_response,
-)
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
 from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import DEFAULT_CONFIDENCE_THRESHOLD
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.conversation_prefix import (
-    CONVERSATION_PREFIX_TEMPLATE,
-)
+from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
