@@ -38,7 +38,6 @@ from vet.imbue_core.agents.llm_apis.errors import SafelyRetriableTransientLangua
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
-from vet.imbue_core.agents.llm_apis.model_names import AnthropicModelName as AnthropicModelName
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent
@@ -53,6 +52,34 @@ from vet.imbue_core.nested_evolver import assign
 from vet.imbue_core.nested_evolver import chill
 from vet.imbue_core.nested_evolver import evolver
 from vet.imbue_core.secrets_utils import get_secret
+
+
+class AnthropicModelName(enum.StrEnum):
+    CLAUDE_3_HAIKU_2024_03_07 = "claude-3-haiku-20240307"
+    CLAUDE_3_OPUS_2024_02_29 = "claude-3-opus-20240229"
+    CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
+    CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
+    CLAUDE_3_5_HAIKU_2024_10_22 = "claude-3-5-haiku-20241022"
+    CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
+    CLAUDE_4_OPUS_2025_05_14 = "claude-opus-4-20250514"
+    CLAUDE_4_1_OPUS_2025_08_05 = "claude-opus-4-1-20250805"
+    CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
+    CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
+    CLAUDE_4_5_HAIKU_2025_10_01 = "claude-haiku-4-5-20251001"
+    CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
+    CLAUDE_4_6_OPUS = "claude-opus-4-6"
+    # the same as above but with the token limit and cost per token for the 1M token limit
+    # TODO: combine these and add ability for token costs to be nonlinear
+    # FIXME: this is an exception where the model name is not the same as the model name in the API
+    CLAUDE_4_SONNET_2025_05_14_LONG = "claude-sonnet-4-20250514-long"
+    CLAUDE_4_5_SONNET_2025_09_29_LONG = "claude-sonnet-4-5-20250929-long"
+    CLAUDE_4_6_OPUS_LONG = "claude-opus-4-6-long"
+
+    # the following are 'retired' and are no longer available: https://docs.claude.com/en/docs/about-claude/model-deprecations
+    # CLAUDE_2_1 = "claude-2.1"
+    # CLAUDE_2 = "claude-2"
+    # CLAUDE_3_SONNET_2024_02_29 = "claude-3-sonnet-20240229"
+
 
 # Basic info is available at https://docs.anthropic.com/claude/reference/models
 # Rate limits for Anthropic models are available on our dashboard: https://console.anthropic.com/settings/limits

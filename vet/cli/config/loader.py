@@ -3,12 +3,8 @@ from __future__ import annotations
 import os
 import tomllib
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
-
-if TYPE_CHECKING:
-    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.cli_config_schema import merge_presets
@@ -148,7 +144,7 @@ def get_max_output_tokens_for_model(model_id: str, config: ModelsConfig) -> int 
         return None
 
 
-def build_language_model_config(model_id: str, user_config: ModelsConfig) -> LanguageModelGenerationConfig:
+def build_language_model_config(model_id: str, user_config: ModelsConfig):
     from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
     from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
 
