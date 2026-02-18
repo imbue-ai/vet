@@ -11,18 +11,29 @@ from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import LLMResponse
 from vet.imbue_core.itertools import only
 from vet.imbue_core.pydantic_serialization import SerializableModel
-from vet.imbue_tools.get_conversation_history.get_conversation_history import format_conversation_history_for_prompt
+from vet.imbue_tools.get_conversation_history.get_conversation_history import (
+    format_conversation_history_for_prompt,
+)
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
-from vet.imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
+    ResponseParsingError,
+)
+from vet.imbue_tools.llm_output_parsing.parse_model_json_response import (
+    parse_model_json_response,
+)
 from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import DEFAULT_CONFIDENCE_THRESHOLD
 from vet.imbue_tools.types.vet_config import VetConfig
-from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
+from vet.imbue_tools.util_prompts.conversation_prefix import (
+    CONVERSATION_PREFIX_TEMPLATE,
+)
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
+from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
+from vet.issue_identifiers.common import generate_response_from_agent
+from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.harnesses.single_prompt import USER_REQUEST_PREFIX_TEMPLATE
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -36,7 +47,9 @@ CODE_BASED_CRITERIA = (
     "6. The issue flags a piece of code that is already being removed by the diff (line in diff starts with a `-`). (true/false)",
 )
 
-CONVERSATION_BASED_CRITERIA = ("1. The issue matches the issue type definition given below. (true/false)",)
+CONVERSATION_BASED_CRITERIA = (
+    "1. The issue matches the issue type definition given below. (true/false)",
+)
 
 PROMPT_TEMPLATE = """Somebody has reviewed the {% if is_code_based_issue %}diff{% else %}conversation history{% endif %} and flagged an issue with it, which you can see here:
 
@@ -78,7 +91,11 @@ IMPORTANT: Do not include any additional commentary outside the JSON response, y
 
 def _get_full_prompt_template(is_code_based_issue: bool) -> str:
     """Get the full prompt template with the appropriate prefix."""
-    prefix = USER_REQUEST_PREFIX_TEMPLATE if is_code_based_issue else CONVERSATION_PREFIX_TEMPLATE
+    prefix = (
+        USER_REQUEST_PREFIX_TEMPLATE
+        if is_code_based_issue
+        else CONVERSATION_PREFIX_TEMPLATE
+    )
     return prefix + PROMPT_TEMPLATE
 
 
@@ -114,8 +131,14 @@ def _format_prompt(
     jinja_template = env.from_string(prompt_template)
     issue_code = IssueCode(issue.issue_code)
 
-    criteria = CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
-    response_class = CodeBasedEvaluationResponse if is_code_based_issue else ConversationBasedEvaluationResponse
+    criteria = (
+        CODE_BASED_CRITERIA if is_code_based_issue else CONVERSATION_BASED_CRITERIA
+    )
+    response_class = (
+        CodeBasedEvaluationResponse
+        if is_code_based_issue
+        else ConversationBasedEvaluationResponse
+    )
 
     template_vars = {
         "cached_prompt_prefix": project_context.cached_prompt_prefix,
@@ -133,7 +156,9 @@ def _format_prompt(
         template_vars["commit_message"] = escape_prompt_markers(inputs.maybe_goal or "")
         template_vars["unified_diff"] = escape_prompt_markers(inputs.maybe_diff or "")
         template_vars["extra_context"] = (
-            escape_prompt_markers(inputs.maybe_extra_context) if inputs.maybe_extra_context else None
+            escape_prompt_markers(inputs.maybe_extra_context)
+            if inputs.maybe_extra_context
+            else None
         )
     else:
         template_vars["conversation_history"] = format_conversation_history_for_prompt(
@@ -148,7 +173,9 @@ def _parse_response(
 ) -> CodeBasedEvaluationResponse | ConversationBasedEvaluationResponse:
     # Fallback value of True for now, since we assume that most issues will pass the evaluation.
     if is_code_based_issue:
-        FALLBACK_VALUE = CodeBasedEvaluationResponse(q1=True, q2=True, q3=True, q4=True, q5=True, q6=False)
+        FALLBACK_VALUE = CodeBasedEvaluationResponse(
+            q1=True, q2=True, q3=True, q4=True, q5=True, q6=False
+        )
         response_class = CodeBasedEvaluationResponse
     else:
         FALLBACK_VALUE = ConversationBasedEvaluationResponse(q1=True)
@@ -191,12 +218,32 @@ def evaluate_code_issue_through_llm(
         if inputs.maybe_conversation_history is None:
             return True, ()
 
-    language_model = build_language_model_from_config(config.language_model_generation_config)
+    prompt = _format_prompt(
+        issue, project_context, config, inputs, is_code_based_issue, formatted_guide
+    )
 
-    prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue, formatted_guide)
+    if config.use_agent_harness_for_evaluation:
+        return _evaluate_through_agent(
+            prompt, project_context, config, is_code_based_issue
+        )
+    else:
+        return _evaluate_through_api(prompt, config, is_code_based_issue)
+
+
+def _evaluate_through_api(
+    prompt: str,
+    config: VetConfig,
+    is_code_based_issue: bool,
+) -> tuple[bool, tuple[LLMResponse, ...]]:
+    """Evaluate an issue using direct API calls."""
+    language_model = build_language_model_from_config(
+        config.language_model_generation_config
+    )
     costed_response = language_model.complete_with_usage_sync(
         prompt,
-        params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
+        params=LanguageModelGenerationParams(
+            temperature=0.0, max_tokens=config.max_output_tokens
+        ),
         is_caching_enabled=language_model.cache_path is not None,
     )
 
@@ -211,6 +258,42 @@ def evaluate_code_issue_through_llm(
                 issue_type=None,
             ),
             raw_response=(response.text,),
+            invocation_info=invocation_info,
+        ),
+    )
+
+    return results.is_passing_result(), llm_responses
+
+
+def _evaluate_through_agent(
+    prompt: str,
+    project_context: ProjectContext,
+    config: VetConfig,
+    is_code_based_issue: bool,
+) -> tuple[bool, tuple[LLMResponse, ...]]:
+    """Evaluate an issue using the agent harness (e.g. Claude Code CLI, Codex CLI)."""
+    options = get_agent_options(
+        cwd=project_context.repo_path,
+        model_name=config.language_model_generation_config.model_name,
+        agent_harness_type=config.agent_harness_type,
+    )
+    agent_response = generate_response_from_agent(prompt, options)
+
+    if agent_response is None:
+        # Agent call failed; pass the issue through (same as missing-data behavior)
+        return True, ()
+
+    response_text, messages = agent_response
+    invocation_info = extract_invocation_info_from_messages(messages)
+    results = _parse_response(response_text, is_code_based_issue)
+
+    llm_responses = (
+        LLMResponse(
+            metadata=IssueIdentificationLLMResponseMetadata(
+                agentic_phase=AgenticPhase.FILTRATION,
+                issue_type=None,
+            ),
+            raw_response=(response_text,),
             invocation_info=invocation_info,
         ),
     )
@@ -235,13 +318,17 @@ def get_vet_confidence_threshold(config: VetConfig) -> float:
     return DEFAULT_CONFIDENCE_THRESHOLD
 
 
-def evaluate_issue_through_confidence(issue: GeneratedIssueSchema, config: VetConfig) -> bool:
+def evaluate_issue_through_confidence(
+    issue: GeneratedIssueSchema, config: VetConfig
+) -> bool:
     threshold = get_vet_confidence_threshold(config)
     return issue.confidence >= threshold
 
 
 def filter_issues(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     inputs: IdentifierInputs,
     project_context: ProjectContext,
     config: VetConfig,
@@ -272,7 +359,9 @@ def filter_issues(
         passes_filtration = evaluate_issue_through_confidence(issue, config)
         if passes_filtration:
             issue_code = IssueCode(issue.issue_code)
-            formatted_guide = format_issue_identification_guide_for_llm(guides_by_issue_code[issue_code])
+            formatted_guide = format_issue_identification_guide_for_llm(
+                guides_by_issue_code[issue_code]
+            )
             passes_filtration, llm_responses = evaluate_code_issue_through_llm(
                 issue,
                 inputs,
@@ -287,7 +376,8 @@ def filter_issues(
     issue_generator_debug_info = issue_generator_with_capture.return_value
 
     augmented_debug_info = IssueIdentificationDebugInfo(
-        llm_responses=issue_generator_debug_info.llm_responses + tuple(filter_llm_responses)
+        llm_responses=issue_generator_debug_info.llm_responses
+        + tuple(filter_llm_responses)
     )
 
     return augmented_debug_info
