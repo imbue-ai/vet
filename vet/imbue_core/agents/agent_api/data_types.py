@@ -131,12 +131,6 @@ class AgentToolResultBlock(SerializableModel):
 
 
 class AgentUnknownBlock(SerializableModel):
-    """Unknown content block type.
-
-    Represents a content block type not yet handled by the parser.
-    Preserves the raw data for debugging without requiring None handling.
-    """
-
     raw: dict[str, Any]
 
 

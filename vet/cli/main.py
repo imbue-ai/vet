@@ -524,12 +524,7 @@ def main(argv: list[str] | None = None) -> int:
         max_identifier_spend_dollars=args.max_spend,
         custom_guides_config=custom_guides_config,
         agent_harness_type=args.agent_harness,
-        # In agentic mode, disable post-processing stages that use direct API calls,
-        # since the agentic identifier uses the Claude Code CLI (no API key needed).
-        # The agentic identifier is also more thorough than the single-prompt identifiers
-        # (it has full repo context and tools), so the filtration second-opinion and
-        # deduplication add less value. These could be routed through the Claude Code CLI
-        # in the future if needed.
+        # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
         filter_issues_through_llm_evaluator=not args.agentic,
         enable_deduplication=not args.agentic,
     )
