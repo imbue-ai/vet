@@ -22,10 +22,7 @@ from vet.imbue_tools.types.vet_config import VetConfig
 from vet.imbue_tools.util_prompts.conversation_prefix import CONVERSATION_PREFIX_TEMPLATE
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
-from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
-from vet.issue_identifiers.common import generate_response_from_agent
-from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.harnesses.single_prompt import USER_REQUEST_PREFIX_TEMPLATE
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -194,21 +191,9 @@ def evaluate_code_issue_through_llm(
         if inputs.maybe_conversation_history is None:
             return True, ()
 
-    prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue, formatted_guide)
-
-    if config.use_agent_harness_for_evaluation:
-        return _evaluate_through_agent(prompt, project_context, config, is_code_based_issue)
-    else:
-        return _evaluate_through_api(prompt, config, is_code_based_issue)
-
-
-def _evaluate_through_api(
-    prompt: str,
-    config: VetConfig,
-    is_code_based_issue: bool,
-) -> tuple[bool, tuple[LLMResponse, ...]]:
-    """Evaluate an issue using direct API calls."""
     language_model = build_language_model_from_config(config.language_model_generation_config)
+
+    prompt = _format_prompt(issue, project_context, config, inputs, is_code_based_issue, formatted_guide)
     costed_response = language_model.complete_with_usage_sync(
         prompt,
         params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
@@ -226,42 +211,6 @@ def _evaluate_through_api(
                 issue_type=None,
             ),
             raw_response=(response.text,),
-            invocation_info=invocation_info,
-        ),
-    )
-
-    return results.is_passing_result(), llm_responses
-
-
-def _evaluate_through_agent(
-    prompt: str,
-    project_context: ProjectContext,
-    config: VetConfig,
-    is_code_based_issue: bool,
-) -> tuple[bool, tuple[LLMResponse, ...]]:
-    """Evaluate an issue using the agent harness (e.g. Claude Code CLI, Codex CLI)."""
-    options = get_agent_options(
-        cwd=project_context.repo_path,
-        model_name=config.language_model_generation_config.model_name,
-        agent_harness_type=config.agent_harness_type,
-    )
-    agent_response = generate_response_from_agent(prompt, options)
-
-    if agent_response is None:
-        # Agent call failed; pass the issue through (same as missing-data behavior)
-        return True, ()
-
-    response_text, messages = agent_response
-    invocation_info = extract_invocation_info_from_messages(messages)
-    results = _parse_response(response_text, is_code_based_issue)
-
-    llm_responses = (
-        LLMResponse(
-            metadata=IssueIdentificationLLMResponseMetadata(
-                agentic_phase=AgenticPhase.FILTRATION,
-                issue_type=None,
-            ),
-            raw_response=(response_text,),
             invocation_info=invocation_info,
         ),
     )

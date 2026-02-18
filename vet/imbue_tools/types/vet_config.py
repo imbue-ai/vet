@@ -46,11 +46,6 @@ class VetConfig(SerializableModel):
     filter_issues_through_llm_evaluator: bool = True
     filter_issues_below_confidence: float | None = DEFAULT_CONFIDENCE_THRESHOLD
 
-    # If True, route post-identification evaluation (filtration) through the agent harness
-    # (e.g. Claude Code CLI or Codex CLI) instead of making direct API calls.
-    # This allows filtration to work without an API key in agentic mode.
-    use_agent_harness_for_evaluation: bool = False
-
     enable_deduplication: bool = True
     enable_collation: bool = True
 
