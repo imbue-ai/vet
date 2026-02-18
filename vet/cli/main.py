@@ -360,6 +360,15 @@ _CONTEXT_OVERFLOW_PATTERNS = [
 ]
 
 
+def _is_context_overflow(e) -> bool:
+    from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+
+    if isinstance(e, PromptTooLongError):
+        return True
+    error_msg = e.error_message.lower()
+    return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
@@ -526,12 +535,6 @@ def main(argv: list[str] | None = None) -> int:
         filter_issues_through_llm_evaluator=not args.agentic,
         enable_deduplication=not args.agentic,
     )
-
-    def _is_context_overflow(e: PromptTooLongError | BadAPIRequestError) -> bool:
-        if isinstance(e, PromptTooLongError):
-            return True
-        error_msg = e.error_message.lower()
-        return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
 
     try:
         issues = find_issues(
