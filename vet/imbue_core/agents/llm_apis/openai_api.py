@@ -333,7 +333,7 @@ def get_openai_tokenizer(model_name: str) -> tiktoken.Encoding:
 
 
 def count_openai_tokens(text: str, model_name: str) -> int:
-    return len(get_openai_tokenizer(model_name).encode(text))
+    return len(get_openai_tokenizer(model_name).encode(text, disallowed_special=()))
 
 
 @contextmanager
