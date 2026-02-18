@@ -1,5 +1,4 @@
 from typing import Any
-from typing import assert_never
 
 from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentContentBlock
@@ -11,11 +10,13 @@ from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentThinkingBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolResultBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolUseBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentUnknownBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentUnknownMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentUsage
 from vet.imbue_core.agents.agent_api.data_types import AgentUserMessage
 
 
-def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
+def parse_claude_message(data: dict[str, Any]) -> AgentMessage:
     """Parse message from CLI output using unified types.
 
     Reference:
@@ -68,8 +69,8 @@ def parse_claude_message(data: dict[str, Any]) -> AgentMessage | None:
                 original_message=data,
             )
 
-        case _ as unreachable:
-            assert_never(unreachable)
+        case _:
+            return AgentUnknownMessage(raw=data, original_message=data)
 
 
 def parse_claude_system_event_type(subtype: str) -> AgentSystemEventType:
@@ -113,5 +114,5 @@ def parse_claude_content_block(block: dict[str, Any]) -> AgentContentBlock:
                 is_error=block.get("is_error"),
             )
 
-        case _ as unreachable:
-            assert_never(unreachable)
+        case _:
+            return AgentUnknownBlock(raw=block)

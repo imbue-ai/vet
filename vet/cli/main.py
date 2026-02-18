@@ -508,9 +508,11 @@ def main(argv: list[str] | None = None) -> int:
     language_model_config = build_language_model_config(model_id, user_config)
     max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
 
+    enabled_identifiers = ("agentic_issue_identifier",) if args.agentic else None
     disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
 
     config = VetConfig(
+        enabled_identifiers=enabled_identifiers,
         disabled_identifiers=disabled_identifiers,
         language_model_generation_config=language_model_config,
         enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
@@ -522,6 +524,9 @@ def main(argv: list[str] | None = None) -> int:
         max_identifier_spend_dollars=args.max_spend,
         custom_guides_config=custom_guides_config,
         agent_harness_type=args.agent_harness,
+        # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
+        filter_issues_through_llm_evaluator=not args.agentic,
+        enable_deduplication=not args.agentic,
     )
 
     try:

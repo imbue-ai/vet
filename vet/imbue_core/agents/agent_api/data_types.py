@@ -130,7 +130,11 @@ class AgentToolResultBlock(SerializableModel):
     exit_code: int | None = Field(default=None, description="Exit code for command executions")
 
 
-AgentContentBlock = AgentTextBlock | AgentThinkingBlock | AgentToolUseBlock | AgentToolResultBlock
+class AgentUnknownBlock(SerializableModel):
+    raw: dict[str, Any]
+
+
+AgentContentBlock = AgentTextBlock | AgentThinkingBlock | AgentToolUseBlock | AgentToolResultBlock | AgentUnknownBlock
 
 
 class AgentSystemEventType(enum.StrEnum):
@@ -219,12 +223,18 @@ class AgentResultMessage(SerializableModel):
     original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
 
 
-AgentMessage = AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage
+class AgentUnknownMessage(SerializableModel):
+    raw: dict[str, Any]
+    original_message: dict[str, Any] | None = Field(default=None, description="Original agent-specific message data")
+
+
+AgentMessage = AgentUserMessage | AgentAssistantMessage | AgentSystemMessage | AgentResultMessage | AgentUnknownMessage
 AgentMessageUnion = Annotated[
     Annotated[AgentUserMessage, Tag("AgentUserMessage")]
     | Annotated[AgentAssistantMessage, Tag("AgentAssistantMessage")]
     | Annotated[AgentSystemMessage, Tag("AgentSystemMessage")]
-    | Annotated[AgentResultMessage, Tag("AgentResultMessage")],
+    | Annotated[AgentResultMessage, Tag("AgentResultMessage")]
+    | Annotated[AgentUnknownMessage, Tag("AgentUnknownMessage")],
     build_discriminator(),
 ]
 

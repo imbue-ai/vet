@@ -79,8 +79,7 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
             )
 
             message = parse_claude_message(data)
-            if message:
-                yield message
+            yield message
 
             if isinstance(message, AgentResultMessage):
                 break
