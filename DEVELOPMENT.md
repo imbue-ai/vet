@@ -4,27 +4,67 @@ For general usage, installation, and configuration, see the [README](README.md).
 
 ## Dev Setup
 
-### Host Machine
+### On your host machine
+
+Ensure you have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed, and that you have the correct env variables set to run Vet (Vet defaults to Anthropic models so this means you should have your ANTHROPIC_API_KEY set).
+
+Then run:
 
 ```bash
-uv sync
+uv run vet
 ```
 
 ### Containerized
 
-You can use the `Dockerfile` in `dev/` at the repo root to create a container that is suffices to run vet for development purposes. From the repo root run 
+You can use the `Dockerfile` in `dev/` at the repo root to create a container that suffices to run Vet for development purposes.
+
+#### Setup
+
+##### Basic Setup
+
+Create a `.env` file at the repo that contains your API keys you'd like to use with Vet. The recommended API keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
+
+NOTE: Claude Code is **not** installed into the image by default. See the agentic verifier section for an explanation.
+
+Run the following command to build the image:
 
 ```bash
 ./dev/build.sh
 ```
 
-to build the image. Then, run
+Run the following command to start a container based on the image:
 
 ```bash
 ./dev/run.sh
 ```
 
-to start the image.
+You can then run Vet with:
+
+```bash
+uv run vet
+```
+
+This will be slower the first time you run it because `uv` has to set up your virtual environment, but since since the Vet repo is bind mounted into the container, subsequent runs should be fast.
+
+##### Agentic Verifier
+
+The agentic verifier calls out to Claude Code or Codex. Codex is part of the image by default, and if you have your `CODEX_API_KEY` set in your `.env` it will be used. As such, no further actions are required to run the agentic verifier with Codex unless you would like to use another auth approach which requires signing into Codex interactively (oauth and such).
+
+Since Claude Code is proprietary, it is not installed by default. If you wish to have it installed as part of your image, run
+
+```bash
+./dev/build.sh claude
+```
+
+Then, to start a container based on this image run:
+
+```bash
+./dev/run.sh claude
+```
+
+NOTE: Without passing `claude` into `build.sh` it will default to the image without Claude Code installed.
+
+Within the container, you can run `claude` to begin interactive authentication to get it setup.
 
 ## Running Tests
 

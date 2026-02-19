@@ -1,6 +1,15 @@
-FROM alpine:latest
+FROM debian:bookworm-slim
 
-RUN apk add npm
-RUN npm install -g opencode-ai
+ARG INSTALL_CLAUDE=false
 
-RUN apk add git uv
+RUN apt-get update \
+ && apt-get install -y npm git curl \
+ && npm install -g opencode-ai @openai/codex \
+ && curl -LsSf https://astral.sh/uv/install.sh | sh
+
+WORKDIR /app
+RUN git config --global --add safe.directory /app
+
+RUN if [ "$INSTALL_CLAUDE" = "true" ]; then \
+      npm install -g @anthropic-ai/claude-code; \
+fi
