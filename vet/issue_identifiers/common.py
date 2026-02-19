@@ -232,7 +232,7 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
         model_name = _DEFAULT_CLAUDE_MODEL
     return ClaudeCodeOptions(
         cwd=cwd,
-        permission_mode="bypassPermissions",
+        permission_mode="dontAsk",
         allowed_tools=list(READ_ONLY_TOOLS) + [AgentToolName.BASH],
         model=model_name,
     )

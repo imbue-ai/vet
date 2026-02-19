@@ -10,7 +10,7 @@ from pydantic import Tag
 from vet.imbue_core.pydantic_serialization import SerializableModel
 from vet.imbue_core.pydantic_serialization import build_discriminator
 
-AgentPermissionMode = Literal["default", "acceptEdits", "bypassPermissions"]
+AgentPermissionMode = Literal["default", "acceptEdits", "bypassPermissions", "dontAsk"]
 
 
 class AgentToolName(enum.StrEnum):

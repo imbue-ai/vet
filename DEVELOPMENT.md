@@ -44,7 +44,7 @@ You can then run Vet with:
 uv run vet
 ```
 
-This will be slower the first time you run it because `uv` has to set up your virtual environment, but since since the Vet repo is bind mounted into the container, subsequent runs should be fast.
+This will be slower the first time you run it because `uv` has to set up your virtual environment, but since the Vet repo is bind mounted into the container, subsequent runs should be fast.
 
 ##### Agentic Verifier
 
