@@ -11,35 +11,22 @@ from pathlib import Path
 
 from loguru import logger
 
-from vet.api import find_issues
 from vet.cli.config.cli_config_schema import CLI_DEFAULTS
 from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.loader import ConfigLoadError
-from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
-from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
-from vet.cli.models import DEFAULT_MODEL_ID
-from vet.cli.models import get_models_by_provider
-from vet.cli.models import validate_model_id
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
-from vet.formatters import format_github_review
-from vet.formatters import format_issue_text
-from vet.formatters import issue_to_dict
 from vet.formatters import validate_output_fields
-from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
-from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
-from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
-from vet.imbue_tools.types.vet_config import VetConfig
 
 VERSION = version("verify-everything")
 
@@ -157,7 +144,8 @@ def create_parser() -> argparse.ArgumentParser:
         type=str,
         default=CLI_DEFAULTS.model,
         metavar="MODEL",
-        help=f"LLM to use for analysis (default: {DEFAULT_MODEL_ID}). ",
+        # Hardcoded to avoid importing cli.models at module level (~1s of SDK imports).
+        help="LLM to use for analysis (default: claude-opus-4-6). ",
     )
     model_group.add_argument(
         "--list-models",
@@ -270,6 +258,9 @@ def list_issue_codes() -> None:
 
 
 def list_models(user_config: ModelsConfig | None = None) -> None:
+    from vet.cli.models import DEFAULT_MODEL_ID
+    from vet.cli.models import get_models_by_provider
+
     print("Available models:")
     print()
     models_by_provider = get_models_by_provider(user_config)
@@ -323,6 +314,8 @@ def configure_logging(verbose: bool, quiet: bool) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
+    from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+
     logger.info("Running history loader command: {}", command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
@@ -367,7 +360,9 @@ _CONTEXT_OVERFLOW_PATTERNS = [
 ]
 
 
-def _is_context_overflow(e: PromptTooLongError | BadAPIRequestError) -> bool:
+def _is_context_overflow(e) -> bool:
+    from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+
     if isinstance(e, PromptTooLongError):
         return True
     error_msg = e.error_message.lower()
@@ -470,6 +465,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     configure_logging(args.verbose, args.quiet)
+
+    from vet.api import find_issues
+    from vet.cli.config.loader import build_language_model_config
+    from vet.cli.config.loader import get_max_output_tokens_for_model
+    from vet.cli.models import DEFAULT_MODEL_ID
+    from vet.cli.models import validate_model_id
+    from vet.formatters import format_github_review
+    from vet.formatters import format_issue_text
+    from vet.formatters import issue_to_dict
+    from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+    from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
+    from vet.imbue_tools.types.vet_config import VetConfig
 
     conversation_history = None
     if args.history_loader is not None:
