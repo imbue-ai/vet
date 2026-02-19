@@ -26,6 +26,17 @@ Or install from source:
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
+<details>
+<summary>Arch Linux (AUR)</summary>
+
+Install the [`verify-everything`](https://aur.archlinux.org/packages/verify-everything) package from the AUR:
+
+```bash
+yay -S verify-everything
+```
+
+</details>
+
 ## Quickstart
 
 Run Vet in the current repo:
