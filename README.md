@@ -20,14 +20,16 @@ It reviews git diffs, and optionally an agent's conversation history, to find is
 pip install verify-everything
 ```
 
-Or install from source:
+<details>
+<summary>Other installation methods</summary>
+
+#### Install from source
 
 ```bash
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
-<details>
-<summary>Arch Linux (AUR)</summary>
+#### Arch Linux (AUR)
 
 Install the [`verify-everything`](https://aur.archlinux.org/packages/verify-everything) package from the AUR:
 
