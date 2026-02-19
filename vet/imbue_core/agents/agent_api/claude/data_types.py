@@ -7,7 +7,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
-ClaudePermissionMode = Literal["plan", "default", "acceptEdits", "bypassPermissions"]
+ClaudePermissionMode = Literal["plan", "default", "acceptEdits", "bypassPermissions", "dontAsk"]
 
 
 class ClaudeMcpStdioServerConfig(SerializableModel):

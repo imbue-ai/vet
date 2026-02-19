@@ -159,15 +159,15 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
         except subprocess.SubprocessError:
             pass
 
+        stderr_read_thread.join(timeout=5.0)
         process.wait()
         if process.returncode is not None and process.returncode != 0:
             stderr_output = "\n".join(stderr_lines)
-            if stderr_output and "error" in stderr_output.lower():
-                raise AgentProcessError(
-                    "CLI process failed",
-                    exit_code=process.returncode,
-                    stderr=stderr_output,
-                )
+            raise AgentProcessError(
+                "CLI process failed",
+                exit_code=process.returncode,
+                stderr=stderr_output,
+            )
 
     def is_connected(self) -> bool:
         process = self._process
