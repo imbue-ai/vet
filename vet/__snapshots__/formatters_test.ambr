@@ -6,14 +6,14 @@
       
       ---
       
-      **[incorrect_function_implementation]** (severity 2/5) (confidence 0.75)
+      🔴 **Vet Issue** `incorrect_function_implementation` *severity: 2/5*, *confidence: 0.75*
       
       General architecture concern
     ''',
     'comments': list([
       dict({
         'body': '''
-          **[incorrect_function_implementation]** (severity 2/5) (confidence 0.75)
+          🔴 **Vet Issue** `incorrect_function_implementation` *severity: 2/5*, *confidence: 0.75*
           
           This function has a bug
         ''',

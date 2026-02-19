@@ -61,26 +61,38 @@ def format_location(issue: IdentifiedVerifyIssue) -> str:
     return location_str
 
 
+def _build_issue_header(
+    issue: IdentifiedVerifyIssue,
+    fields: list[str],
+    *,
+    bold_label: bool = False,
+    severity_format: str = "g",
+) -> str:
+    label = "**Vet Issue**" if bold_label else "Vet Issue"
+    parts: list[str] = [f"\U0001f534 {label}"]
+    if "issue_code" in fields:
+        parts.append(f"`{issue.code}`")
+    meta: list[str] = []
+    if "severity" in fields and issue.severity_score:
+        meta.append(f"*severity: {issue.severity_score.raw:{severity_format}}/5*")
+    if "confidence" in fields and issue.confidence_score:
+        meta.append(f"*confidence: {issue.confidence_score.normalized:.2f}*")
+    if meta:
+        parts.append(", ".join(meta))
+    return " ".join(parts)
+
+
 def format_issue_text(issue: IdentifiedVerifyIssue, fields: list[str]) -> str:
     lines = []
 
     location_str = format_location(issue)
+    lines.append(_build_issue_header(issue, fields))
 
-    header_parts = []
-    if "issue_code" in fields:
-        header_parts.append(f"[{issue.code}]")
     if "file_path" in fields or "line_number" in fields:
         if location_str:
-            header_parts.append(location_str)
-    if header_parts:
-        lines.append(" ".join(header_parts))
-
+            lines.append(f"  {location_str}")
     if "description" in fields:
-        lines.append(f"  Description: {issue.description}")
-    if "confidence" in fields and issue.confidence_score:
-        lines.append(f"  Confidence: {issue.confidence_score.normalized:.2f}")
-    if "severity" in fields and issue.severity_score:
-        lines.append(f"  Severity: {issue.severity_score.raw}/5")
+        lines.append(f"  {issue.description}")
 
     return "\n".join(lines)
 
@@ -94,16 +106,9 @@ def issue_to_dict(issue: IdentifiedVerifyIssue, fields: list[str]) -> dict:
 
 
 def _format_review_comment_body(issue: IdentifiedVerifyIssue, fields: list[str]) -> str:
-    parts: list[str] = []
-    header = []
-    if "issue_code" in fields:
-        header.append(f"**[{issue.code}]**")
-    if "severity" in fields and issue.severity_score:
-        header.append(f"(severity {issue.severity_score.raw:.0f}/5)")
-    if "confidence" in fields and issue.confidence_score:
-        header.append(f"(confidence {issue.confidence_score.normalized:.2f})")
-    if header:
-        parts.append(" ".join(header))
+    parts: list[str] = [
+        _build_issue_header(issue, fields, bold_label=True, severity_format=".0f"),
+    ]
     if "description" in fields:
         parts.append(issue.description)
     return "\n\n".join(parts)
