@@ -2,13 +2,15 @@ FROM debian:bookworm-slim
 
 ARG INSTALL_CLAUDE=false
 
+# opencode is only installed right now because
+# I like using it in containers for development,
+# but I don't want it installed on my host.
+# TODO: Add support for opencode invocations
+# in agentic mode.
+
 RUN apt-get update \
  && apt-get install -y npm git curl \
- && npm install -g opencode-ai @openai/codex \  # opencode is only installed right now because
-                                                # I like using it in containers for development,
-                                                # but I don't want it installed on my host.
-                                                # TODO: Add support for opencode invocations
-                                                # in agentic mode.
+ && npm install -g opencode-ai @openai/codex \
  && curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /app
