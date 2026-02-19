@@ -4,9 +4,27 @@ For general usage, installation, and configuration, see the [README](README.md).
 
 ## Dev Setup
 
+### Host Machine
+
 ```bash
 uv sync
 ```
+
+### Containerized
+
+You can use the `Dockerfile` in `dev/` at the repo root to create a container that is suffices to run vet for development purposes. From the repo root run 
+
+```bash
+./dev/build.sh
+```
+
+to build the image. Then, run
+
+```bash
+./dev/run.sh
+```
+
+to start the image.
 
 ## Running Tests
 
