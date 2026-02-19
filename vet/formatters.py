@@ -68,16 +68,6 @@ def _build_issue_header(
     bold_label: bool = False,
     severity_format: str = "g",
 ) -> str:
-    """Build the common ``🔴 Vet Issue `code` severity: …, confidence: …`` header.
-
-    Parameters
-    ----------
-    bold_label:
-        Wrap the "Vet Issue" label in ``**…**`` for markdown contexts.
-    severity_format:
-        Format spec applied to the raw severity float (e.g. ``".0f"`` to
-        truncate to an integer, ``"g"`` to let Python pick).
-    """
     label = "**Vet Issue**" if bold_label else "Vet Issue"
     parts: list[str] = [f"\U0001f534 {label}"]
     if "issue_code" in fields:
