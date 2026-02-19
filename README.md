@@ -3,7 +3,7 @@
 [![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg)
-[![Discord](https://img.shields.io/discord/1391837726583820409?logo=discord&label=Discord)](https://discord.gg/sBAVvHPUTE)
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/sBAVvHPUTE)
 
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
