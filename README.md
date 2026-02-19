@@ -3,6 +3,7 @@
 [![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 ![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg)
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/sBAVvHPUTE)
 
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
@@ -224,6 +225,10 @@ replace = """
 ```
 
 Section keys must be valid issue codes (`vet --list-issue-codes`). Each section supports three optional fields: `prefix` (prepends to built-in guide), `suffix` (appends to built-in guide), and `replace` (fully replaces the built-in guide). `prefix` and `suffix` can be used together, but `replace` is mutually exclusive with the other two. Guide text should be formatted as a list.
+
+## Community
+
+Join the [Imbue Discord](https://discord.gg/sBAVvHPUTE) for discussion, questions, and support. For bug reports and feature requests, please use [GitHub Issues](https://github.com/imbue-ai/vet/issues).
 
 ## License
 
