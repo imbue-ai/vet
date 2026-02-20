@@ -187,12 +187,14 @@ class GlobTool(Tool):
         if not base_path.is_dir():
             return f"Error: Not a directory: {base_path}"
 
-        if "{" in pattern and "}" in pattern:
-            prefix, rest = pattern.split("{", 1)
-            options_str, suffix = rest.split("}", 1)
+        patterns = [pattern]
+        brace_open = pattern.find("{")
+        brace_close = pattern.find("}", brace_open + 1) if brace_open != -1 else -1
+        if brace_open != -1 and brace_close != -1:
+            prefix = pattern[:brace_open]
+            options_str = pattern[brace_open + 1 : brace_close]
+            suffix = pattern[brace_close + 1 :]
             patterns = [f"{prefix}{opt}{suffix}" for opt in options_str.split(",")]
-        else:
-            patterns = [pattern]
 
         try:
             all_matches: set[str] = set()
