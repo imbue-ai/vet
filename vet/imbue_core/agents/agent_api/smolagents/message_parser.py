@@ -61,19 +61,28 @@ def _parse_action_step(step: ActionStep) -> list[AgentMessage]:
             )
         messages.append(AgentAssistantMessage(content=result_blocks))
     elif observations:
-        messages.append(AgentAssistantMessage(content=[AgentTextBlock(text=observations)]))
+        messages.append(
+            AgentAssistantMessage(content=[AgentTextBlock(text=observations)])
+        )
 
     error = getattr(step, "error", None)
     if error is not None:
         error_text = str(error)
-        messages.append(AgentAssistantMessage(content=[AgentTextBlock(text=f"[Error: {error_text}]")]))
+        messages.append(
+            AgentAssistantMessage(
+                content=[AgentTextBlock(text=f"[Error: {error_text}]")]
+            )
+        )
 
     return messages
 
 
 def get_step_usage(step: ActionStep) -> AgentUsage | None:
-    input_tokens = getattr(step, "input_token_count", None)
-    output_tokens = getattr(step, "output_token_count", None)
+    token_usage = getattr(step, "token_usage", None)
+    if token_usage is None:
+        return None
+    input_tokens = getattr(token_usage, "input_tokens", None)
+    output_tokens = getattr(token_usage, "output_tokens", None)
     if input_tokens is None and output_tokens is None:
         return None
     total = (input_tokens or 0) + (output_tokens or 0)

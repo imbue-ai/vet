@@ -9,7 +9,6 @@ from pydantic import Field
 from pydantic import Tag
 
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
-from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.pydantic_serialization import SerializableModel
 from vet.imbue_core.pydantic_serialization import build_discriminator
 
@@ -212,30 +211,3 @@ CodexThreadEvent = Annotated[
     ),
     build_discriminator("type"),
 ]
-
-# TODO: some of these might not actually be valid for codex!
-CODEX_TOOLS = (
-    AgentToolName.AGENT,
-    AgentToolName.BASH,
-    AgentToolName.EDIT,
-    AgentToolName.GLOB,
-    AgentToolName.GREP,
-    AgentToolName.LS,
-    AgentToolName.MULTI_EDIT,
-    AgentToolName.NOTEBOOK_EDIT,
-    AgentToolName.NOTEBOOK_READ,
-    AgentToolName.READ,
-    AgentToolName.TODO_READ,
-    AgentToolName.TODO_WRITE,
-    AgentToolName.WEB_FETCH,
-    AgentToolName.WEB_SEARCH,
-    AgentToolName.WRITE,
-    AgentToolName.COMPUTER,
-    AgentToolName.MEMORY,
-    AgentToolName.OTHER,
-    AgentToolName.CODE_EXECUTION,
-    AgentToolName.BASH_CODE_EXECUTION,
-    AgentToolName.TEXT_EDITOR_CODE_EXECUTION,
-    AgentToolName.COMMAND_EXECUTION,
-    AgentToolName.FILE_CHANGE,
-)
