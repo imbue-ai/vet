@@ -248,19 +248,19 @@ def _gemini_exception_manager() -> Iterator[None]:
     try:
         yield
     except AssertionError as e:
-        logger.info("The Gemini prompt is invalid.")
+        logger.debug("The Gemini prompt is invalid.")
         raise BadAPIRequestError(str(e)) from e
     except APIError as e:
-        logger.info("Gemini failed to generate content.")
+        logger.debug("Gemini failed to generate content.")
         raise BadAPIRequestError(str(e)) from e
     except ValueError as e:
-        logger.info("Gemini did not return a simple text response.")
+        logger.debug("Gemini did not return a simple text response.")
         raise BadAPIRequestError(str(e)) from e
     except AttributeError as e:
-        logger.info("There is an error with the Gemini prompt or processing code: {}.", str(e))
+        logger.debug("There is an error with the Gemini prompt or processing code: {}.", str(e))
         raise BadAPIRequestError(str(e)) from e
     except httpx.RemoteProtocolError as e:
-        logger.info(str(e))
+        logger.debug(str(e))
         raise TransientLanguageModelError("httpx.RemoteProtocolError") from e
     except (BadAPIRequestError, TransientLanguageModelError, MissingAPIKeyError):
         # we already raised this error ourselves earlier, so we don't need to mark it as unknown
@@ -345,7 +345,7 @@ class GeminiAPI(LanguageModelAPI):
                 and api_result.prompt_feedback.block_reason is not None
                 and api_result.prompt_feedback.block_reason != BlockedReason.BLOCKED_REASON_UNSPECIFIED
             ):
-                logger.info(
+                logger.warning(
                     f"Gemini blocked output: {messages=}, {api_result.prompt_feedback.block_reason=}, {api_result.prompt_feedback.safety_ratings=}"
                 )
                 return create_costed_language_model_response_for_single_result(
@@ -362,7 +362,7 @@ class GeminiAPI(LanguageModelAPI):
                 safety_ratings = (
                     api_result.prompt_feedback.safety_ratings if api_result.prompt_feedback is not None else None
                 )
-                logger.info(
+                logger.warning(
                     "Gemini flagged output: block_reason={block_reason}, safety_ratings={safety_ratings}",
                     block_reason=block_reason,
                     safety_ratings=safety_ratings,
@@ -387,7 +387,7 @@ class GeminiAPI(LanguageModelAPI):
             if finish_reason not in [FinishReason.MAX_TOKENS, FinishReason.STOP]:
                 block_reason = fmap(lambda x: x.block_reason, api_result.prompt_feedback)
                 safety_ratings = fmap(lambda x: x.safety_ratings, api_result.prompt_feedback)
-                logger.info(
+                logger.warning(
                     f"Gemini did not return a simple text response, {block_reason=}, {safety_ratings=}, {finish_reason=}, {candidate.safety_ratings=}"
                 )
                 return create_costed_language_model_response_for_single_result(
@@ -418,7 +418,7 @@ class GeminiAPI(LanguageModelAPI):
                     raise BadAPIRequestError(
                         "Gemini ran out of tokens while thinking and did not return a text response"
                     )
-                logger.info("Non-simple-text response: {}", api_result)
+                logger.warning("Non-simple-text response: {}", api_result)
                 raise BadAPIRequestError("Gemini did not return a simple text response (text is None)")
 
             prompt_tokens = (

@@ -178,7 +178,7 @@ class FrozenSerializer(Serializer):
     ) -> list[object]:
         if isinstance(obj, list):
             if self._allow_unsafe_list_serialization:
-                logger.info("Converting list to tuple for serialization: {}", obj)
+                logger.debug("Converting list to tuple for serialization: {}", obj)
                 obj = tuple(obj)
             else:
                 raise Exception(f"Lists are not allowed for serialization. Use tuples instead. Current iterable: {obj}")
