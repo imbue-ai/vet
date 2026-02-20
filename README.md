@@ -170,8 +170,8 @@ Vet supports custom model definitions using OpenAI-compatible endpoints via JSON
         },
         "kimi-k2": {
           "model_id": "moonshotai/kimi-k2",
-          "context_window": 262144,
-          "max_output_tokens": 16384
+          "context_window": 131072,
+          "max_output_tokens": 32768
         }
       }
     }
