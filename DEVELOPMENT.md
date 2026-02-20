@@ -153,13 +153,11 @@ When creating a new entry point into vet, you must call `configure_logging()` fr
 
 Log level heuristics:
 
-- **TRACE** — Raw API payloads, token counts, dollar costs, agent subprocess messages.
-- **DEBUG** — Everything internal: API exceptions before re-raise, retries, fallbacks, identifier selection, history loading, context assembly. All LLM provider exception handlers must log at DEBUG before raising (see `_openai_exception_manager` for the pattern).
-- **INFO** — Top-level run lifecycle only (at most 1-2 per invocation). Do not add new INFO messages without team discussion.
-- **WARNING** — Degraded conditions: LLM content blocked/flagged, unrecognized config values, malformed user data, spend limit warnings.
-- **ERROR** — Failures that prevent producing results. Use `log_exception()` from `vet.imbue_core.async_monkey_patches` for tracebacks.
-
-Prefer loguru `{}` placeholders over f-strings to defer formatting.
+- **TRACE** - API payloads, token counts, dollar costs, agent subprocess messages.
+- **DEBUG** - Everything internal: API exceptions before re-raise, retries, fallbacks, identifier selection, history loading, context assembly. All LLM provider exception handlers must log at DEBUG before raising (see `_openai_exception_manager` for the pattern).
+- **INFO** - Top-level run lifecycle only. Do not add new INFO messages without team discussion.
+- **WARNING** - Degraded conditions: LLM content blocked/flagged, unrecognized config values, malformed user data, spend limit warnings.
+- **ERROR** - Failures that prevent producing results. Use `log_exception()` from `vet.imbue_core.async_monkey_patches` for tracebacks.
 
 ### README links
 
