@@ -113,7 +113,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
