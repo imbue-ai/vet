@@ -105,7 +105,7 @@ def find_issues(
     extra_context: str | None = None,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
     logger.info(
-        "Finding issues in {repo_path} relative to commit hash {relative_to}",
+        "Finding issues in {repo_path} relative to {relative_to}",
         repo_path=repo_path,
         relative_to=relative_to,
     )
