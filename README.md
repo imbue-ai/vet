@@ -177,13 +177,23 @@ Vet supports custom model definitions using OpenAI-compatible endpoints via JSON
         "o1": {
           "model_id": "o1-2024-12-17",
           "context_window": 200000,
-          "max_output_tokens": 100000
+          "max_output_tokens": 100000,
+          "supports_temperature": false
         }
       }
     }
   }
 }
 ```
+
+#### Model fields
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `model_id` | string | no | key name | The model identifier sent to the API |
+| `context_window` | int | yes | | Maximum input tokens |
+| `max_output_tokens` | int | yes | | Maximum output tokens |
+| `supports_temperature` | bool | no | `true` | Set to `false` for reasoning models (e.g. o1, o3, GPT-5, kimi-k2-thinking) that reject the `temperature` parameter |
 
 Then:
 

@@ -1,5 +1,24 @@
 {
   "providers": {
+    "zen": {
+      "name": "Zen",
+      "api_type": "openai_compatible",
+      "base_url": "https://opencode.ai/zen/v1",
+      "api_key_env": "ZEN_API_KEY",
+      "models": {
+        "big-pickle": {
+          "model_id": "big-pickle",
+          "context_window": 200000,
+          "max_output_tokens": 128000
+        },
+        "gpt-5.2-codex": {
+          "model_id": "gpt-5.2-codex",
+          "context_window": 272000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        }
+      }
+    },
     "anthropic": {
       "name": "Anthropic",
       "api_type": "openai_compatible",
@@ -32,7 +51,8 @@
         "gpt-5.2": {
           "model_id": "gpt-5.2-2025-12-11",
           "context_window": 128000,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": false
         }
       }
     },

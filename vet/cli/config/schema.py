@@ -13,6 +13,7 @@ class ModelConfig(BaseModel):
     model_id: str | None = None
     context_window: int
     max_output_tokens: int
+    supports_temperature: bool = True
 
 
 class ProviderConfig(BaseModel):
