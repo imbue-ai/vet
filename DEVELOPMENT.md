@@ -147,15 +147,32 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 
 ## Development Notes
 
-### Logging Configuration
+### Logging
 
-When creating a new entrypoint into vet, you must call `ensure_core_log_levels_configured()` to register the custom log levels used throughout the codebase.
+Vet uses [loguru](https://github.com/Delgan/loguru). Logs go to stderr; stdout is reserved for issue output.
 
-```python
-from vet.imbue_core.log_utils import ensure_core_log_levels_configured
+| Flag | Level | Purpose |
+|------|-------|---------|
+| `--quiet` | WARNING | CI/CD, agents |
+| *(default)* | INFO | CLI users |
+| `--verbose` | DEBUG | Debugging |
 
-ensure_core_log_levels_configured()
-```
+TRACE exists but is not reachable from CLI flags (raw LLM responses, dollar costs).
+
+#### Log level heuristics
+
+- **TRACE** — Raw API payloads, token counts, dollar costs, agent subprocess messages.
+- **DEBUG** — Everything internal: API exceptions before re-raise, retries, fallback decisions, identifier selection, history loading, goal inference, context assembly, cache/timing data. All LLM provider exception handlers must log at DEBUG before raising.
+- **INFO** — Top-level run lifecycle only (at most 1-2 per invocation). Currently just "Finding issues in ..." and "No code changes detected ...". Do not add new INFO messages without team discussion.
+- **WARNING** — Degraded conditions: LLM content blocked/flagged, unrecognized config values falling back to defaults, malformed user data, spend limit warnings.
+- **ERROR** — Failures that prevent producing results. Use `log_exception()` from `vet.imbue_core.async_monkey_patches` for tracebacks.
+
+#### Rules
+
+1. All LLM provider exception handlers use DEBUG, matching the pattern in `_openai_exception_manager`.
+2. Content safety/filtering uses WARNING.
+3. Prefer loguru `{}` placeholders over f-strings to defer formatting.
+4. New entry points must call `configure_logging()` from `vet.cli.main`.
 
 ### README links
 

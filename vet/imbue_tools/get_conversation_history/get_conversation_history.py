@@ -64,7 +64,7 @@ def parse_conversation_history(
             # deserialize the message with pydantic
             message: ConversationMessageUnion = TypeAdapter(ConversationMessageUnion).validate_json(line)
         except ValidationError:
-            logger.info("Skipping malformed history line {}", line)
+            logger.warning("Skipping malformed history line {}", line)
             continue
         messages.append(message)
     return tuple(messages)

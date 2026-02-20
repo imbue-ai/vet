@@ -181,16 +181,16 @@ def _groq_exception_manager() -> Iterator[None]:
     try:
         yield
     except BadRequestError as e:
-        logger.info("BadAPIRequestError {}", e)
+        logger.debug("BadAPIRequestError {}", e)
         raise BadAPIRequestError(str(e)) from e
     except APIConnectionError as e:
-        logger.info("Rate limited? Received APIConnectionError {}", e)
+        logger.debug("Rate limited? Received APIConnectionError {}", e)
         raise TransientLanguageModelError("APIConnectionError") from e
     except RateLimitError as e:
-        logger.info("Rate limited? {}", e)
+        logger.debug("Rate limited? {}", e)
         raise TransientLanguageModelError("RateLimitError") from e
     except httpx.RemoteProtocolError as e:
-        logger.info("{}", e)
+        logger.debug("{}", e)
         raise TransientLanguageModelError("httpx.RemoteProtocolError") from e
     except APIError as e:
         if e.body["code"] == "context_length_exceeded":  # type: ignore
@@ -315,7 +315,7 @@ class GroqChatAPI(LanguageModelAPI):
                     presence_penalty=self.presence_penalty,
                 )
             assert isinstance(api_result, AsyncStream)
-            logger.info("API response status code: {}", api_result.response.status_code)
+            logger.debug("API response status code: {}", api_result.response.status_code)
 
             yield LanguageModelStreamStartEvent()
 

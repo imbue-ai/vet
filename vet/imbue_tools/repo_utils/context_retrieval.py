@@ -115,7 +115,7 @@ class RepoContextManager:
 
             elif entry.type == ObjectType.COMMIT:
                 # A COMMIT object indicates a submodule, which we do not traverse for the time being.
-                logger.info("Skipping submodule in repo context: {}", entry.name)
+                logger.debug("Skipping submodule in repo context: {}", entry.name)
 
             else:
                 raise ValueError(f"Unexpected entry type in git tree: {entry.type}")

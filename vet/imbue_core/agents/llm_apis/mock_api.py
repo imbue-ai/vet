@@ -132,7 +132,7 @@ class FileBasedLanguageModelMock(LanguageModelMock):
         # TODO: currently the identifier is the last user message, because the entire prompt is really long
         #  if we need to support the same user message with different responses, expand this, maybe chat history?
         identifier = self._get_user_message_from_prompt(prompt)
-        logger.info("Getting response for identifier: {} from {}", identifier, toml_dict)
+        logger.debug("Getting response for identifier: {} from {}", identifier, toml_dict)
         toml_item = toml_dict.get(identifier, None)
         if toml_item is None:
             for toml_key, response in toml_dict.items():

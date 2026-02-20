@@ -422,10 +422,10 @@ def _anthropic_exception_manager() -> Iterator[None]:
         # this can be caused by either malformed requests or transient errors, so play it safe and retry
         raise TransientLanguageModelError(str(e)) from e
     except anthropic.BadRequestError as e:
-        logger.info("BadAPIRequestError {e}", e=e)
+        logger.debug("BadAPIRequestError {e}", e=e)
         raise BadAPIRequestError(str(e)) from e
     except TypeError as e:
-        logger.info("Type error calling Anthropic API: {e}", e=e)
+        logger.debug("Type error calling Anthropic API: {e}", e=e)
         raise BadAPIRequestError(str(e)) from e
     except anthropic.APIConnectionError as e:
         raise TransientLanguageModelError(str(e)) from e
@@ -443,12 +443,12 @@ def _anthropic_exception_manager() -> Iterator[None]:
         # anthropic.APIStatusError: {'type': 'error', 'error': {'details': None, 'type': 'invalid_request_error', 'message': 'Output blocked by content filtering policy'}}
         if e.message == "Output blocked by content filtering policy":
             raise NewSeedRetriableLanguageModelError(e)
-        logger.info(str(e))
+        logger.debug(str(e))
         if e.status_code == 409 or e.status_code >= 500:
             raise TransientLanguageModelError(str(e)) from e
         raise
     except httpx.RemoteProtocolError as e:
-        logger.info(str(e))
+        logger.debug(str(e))
         raise TransientLanguageModelError("httpx.RemoteProtocolError") from e
     except (BadAPIRequestError, TransientLanguageModelError, MissingAPIKeyError):
         # we already raised this error ourselves earlier, so we don't need to mark it as unknown
@@ -809,7 +809,7 @@ class AnthropicAPI(LanguageModelAPI):
             return input_cost + output_cost
 
         except MissingCachingInfoError as e:
-            logger.info("{}; using basic cost model", e)
+            logger.debug("{}; using basic cost model", e)
             return self.basic_calculate_cost(prompt_tokens, completion_tokens)
 
 
