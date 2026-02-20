@@ -9,7 +9,8 @@
         "big-pickle": {
           "model_id": "big-pickle",
           "context_window": 200000,
-          "max_output_tokens": 128000
+          "max_output_tokens": 128000,
+          "supports_temperature": true
         },
         "gpt-5.2-codex": {
           "model_id": "gpt-5.2-codex",
@@ -28,17 +29,20 @@
         "sonnet": {
           "model_id": "claude-sonnet-4-5-20250929",
           "context_window": 200000,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         },
         "haiku": {
           "model_id": "claude-haiku-4-5-20251001",
           "context_window": 200000,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         },
         "opus": {
           "model_id": "claude-opus-4-6",
           "context_window": 200000,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         }
       }
     },
@@ -51,7 +55,8 @@
         "gpt-5.2": {
           "model_id": "gpt-5.2-2025-12-11",
           "context_window": 128000,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         }
       }
     },
@@ -64,12 +69,14 @@
         "gpt-oss-120b": {
           "model_id": "openai/gpt-oss-120b",
           "context_window": 131072,
-          "max_output_tokens": 65536
+          "max_output_tokens": 65536,
+          "supports_temperature": true
         },
         "kimi-k2": {
           "model_id": "moonshotai/kimi-k2-instruct-0905",
           "context_window": 262144,
-          "max_output_tokens": 16384
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         }
       }
     }

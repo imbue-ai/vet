@@ -99,14 +99,18 @@ class TestSupportsTemperatureConfig:
     def test_supports_temperature_in_model_config(self) -> None:
         from vet.cli.config.schema import ModelConfig
 
-        config = ModelConfig(context_window=128000, max_output_tokens=16384, supports_temperature=False)
+        config = ModelConfig(
+            context_window=128000, max_output_tokens=16384, supports_temperature=False
+        )
         assert config.supports_temperature is False
 
-    def test_supports_temperature_defaults_true(self) -> None:
+    def test_supports_temperature_is_required(self) -> None:
+        from pydantic import ValidationError
+
         from vet.cli.config.schema import ModelConfig
 
-        config = ModelConfig(context_window=128000, max_output_tokens=16384)
-        assert config.supports_temperature is True
+        with pytest.raises(ValidationError):
+            ModelConfig(context_window=128000, max_output_tokens=16384)
 
     def test_build_language_model_config_passes_supports_temperature(self) -> None:
         from vet.cli.config.loader import build_language_model_config
@@ -129,6 +133,7 @@ class TestSupportsTemperatureConfig:
                         "normal-model": ModelConfig(
                             context_window=128000,
                             max_output_tokens=16384,
+                            supports_temperature=True,
                         ),
                     },
                 )
