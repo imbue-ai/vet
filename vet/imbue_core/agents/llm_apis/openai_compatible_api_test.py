@@ -99,9 +99,7 @@ class TestSupportsTemperatureConfig:
     def test_supports_temperature_in_model_config(self) -> None:
         from vet.cli.config.schema import ModelConfig
 
-        config = ModelConfig(
-            context_window=128000, max_output_tokens=16384, supports_temperature=False
-        )
+        config = ModelConfig(context_window=128000, max_output_tokens=16384, supports_temperature=False)
         assert config.supports_temperature is False
 
     def test_supports_temperature_is_required(self) -> None:
