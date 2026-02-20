@@ -51,8 +51,7 @@
         "gpt-5.2": {
           "model_id": "gpt-5.2-2025-12-11",
           "context_window": 128000,
-          "max_output_tokens": 16384,
-          "supports_temperature": false
+          "max_output_tokens": 16384
         }
       }
     },
