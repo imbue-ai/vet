@@ -68,6 +68,7 @@ class AnthropicModelName(enum.StrEnum):
     CLAUDE_4_5_HAIKU_2025_10_01 = "claude-haiku-4-5-20251001"
     CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
     CLAUDE_4_6_OPUS = "claude-opus-4-6"
+    CLAUDE_4_6_SONNET = "claude-sonnet-4-6"
     # the same as above but with the token limit and cost per token for the 1M token limit
     # TODO: combine these and add ability for token costs to be nonlinear
     # FIXME: this is an exception where the model name is not the same as the model name in the API
@@ -250,6 +251,21 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
         ),
         AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29: ModelInfo(
             model_name=AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29,
+            cost_per_input_token=3.00 / 1_000_000,
+            cost_per_output_token=15.00 / 1_000_000,
+            max_input_tokens=200_000,
+            max_output_tokens=64_000,
+            rate_limit_req=None,  # Currently no limit set in our dashboard
+            rate_limit_tok=2_000_000 / 60,
+            rate_limit_output_tok=400_000 / 60,
+            provider_specific_info=AnthropicModelInfo(
+                cost_per_5m_cache_write_token=3.75 / 1_000_000,
+                cost_per_1h_cache_write_token=6 / 1_000_000,
+                cost_per_cache_read_token=0.3 / 1_000_000,
+            ),
+        ),
+        AnthropicModelName.CLAUDE_4_6_SONNET: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_6_SONNET,
             cost_per_input_token=3.00 / 1_000_000,
             cost_per_output_token=15.00 / 1_000_000,
             max_input_tokens=200_000,
