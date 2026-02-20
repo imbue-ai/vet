@@ -8,6 +8,7 @@ from loguru import logger
 from openai import AsyncOpenAI
 from openai import AsyncStream
 from openai import InternalServerError
+from openai import NOT_GIVEN
 from openai import NotGiven
 from openai._exceptions import APIConnectionError
 from openai._exceptions import BadRequestError
@@ -58,6 +59,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
     max_output_tokens: int | None = None
     is_conversational: bool = True
     presence_penalty: float = 0.0
+    supports_temperature: bool = True
     # this shouldn't really ever even be used, but just in case
     stop_token_log_probability: float = math.log(0.9999)
 
@@ -127,7 +129,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
         with self._exception_handler(prompt):
             client = self._get_client()
 
-            temperature: NotGiven | float = params.temperature
+            temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
 
             api_result = await client.chat.completions.create(
                 model=self.model_name,
@@ -190,7 +192,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
         with self._exception_handler(prompt):
             client = self._get_client()
 
-            temperature: NotGiven | float = params.temperature
+            temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
 
             api_result = await client.chat.completions.create(
                 model=self.model_name,

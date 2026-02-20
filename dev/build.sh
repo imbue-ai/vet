@@ -8,7 +8,7 @@ if [ "$1" = "claude" ]; then
     IMAGE_NAME="vet-claude"
 fi
 
-sudo docker build \
+docker build \
     --build-arg INSTALL_CLAUDE=$INSTALL_CLAUDE \
     -t $IMAGE_NAME \
     dev/.

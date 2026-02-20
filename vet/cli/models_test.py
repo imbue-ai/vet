@@ -20,8 +20,16 @@ SAMPLE_USER_CONFIG = ModelsConfig(
             base_url="http://localhost:8080/v1",
             api_key_env="CUSTOM_KEY",
             models={
-                "my-custom-model": ModelConfig(context_window=128000, max_output_tokens=16384),
-                "another-model": ModelConfig(context_window=128000, max_output_tokens=16384),
+                "my-custom-model": ModelConfig(
+                    context_window=128000,
+                    max_output_tokens=16384,
+                    supports_temperature=True,
+                ),
+                "another-model": ModelConfig(
+                    context_window=128000,
+                    max_output_tokens=16384,
+                    supports_temperature=True,
+                ),
             },
         )
     }
@@ -94,7 +102,13 @@ def test_validate_model_id_validates_user_defined_model() -> None:
             "custom": ProviderConfig(
                 base_url="http://localhost:8080/v1",
                 api_key_env="CUSTOM_KEY",
-                models={"my-custom-model": ModelConfig(context_window=128000, max_output_tokens=16384)},
+                models={
+                    "my-custom-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
             )
         }
     )
@@ -135,8 +149,16 @@ def test_get_models_by_provider_includes_user_defined_providers() -> None:
                 base_url="http://localhost:11434/v1",
                 api_key_env="OLLAMA_KEY",
                 models={
-                    "llama3.2:latest": ModelConfig(context_window=128000, max_output_tokens=16384),
-                    "qwen:7b": ModelConfig(context_window=32768, max_output_tokens=8192),
+                    "llama3.2:latest": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    ),
+                    "qwen:7b": ModelConfig(
+                        context_window=32768,
+                        max_output_tokens=8192,
+                        supports_temperature=True,
+                    ),
                 },
             )
         }
@@ -157,7 +179,13 @@ def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name()
                 name="anthropic",
                 base_url="http://localhost:8080/v1",
                 api_key_env="CUSTOM_KEY",
-                models={"custom-model": ModelConfig(context_window=128000, max_output_tokens=16384)},
+                models={
+                    "custom-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
             )
         }
     )

@@ -8,7 +8,7 @@ fi
 
 [ -f .env ] || { echo '.env file not found, please create one before proceeding'; exit 1; }
 
-sudo docker run -it \
+docker run -it \
     --mount type=bind,source="$(pwd)",target=/app \
     --env-file .env \
     "$IMAGE_NAME" bash
