@@ -132,7 +132,7 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 
 ### Releasing a new version
 
-1. Create and checkout a branch to bump the version
+1. Create and checkout a branch to bump the version, using the naming convention `{name}/v{version}` (e.g. `john/v0.2.0`)
 2. Update the version in `pyproject.toml`
 3. Update `pkgver` in `pkg/arch/PKGBUILD`
 4. Commit and push the changes
