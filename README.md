@@ -113,7 +113,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -158,26 +158,21 @@ Vet supports custom model definitions using OpenAI-compatible endpoints via JSON
 ```json
 {
   "providers": {
-    "openai": {
-      "name": "OpenAI",
+    "openrouter": {
+      "name": "OpenRouter",
       "api_type": "openai_compatible",
-      "base_url": "https://api.openai.com/v1",
-      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://openrouter.ai/api/v1",
+      "api_key_env": "OPENROUTER_API_KEY",
       "models": {
-        "gpt-4o": {
-          "model_id": "gpt-4o-2024-08-06",
-          "context_window": 128000,
-          "max_output_tokens": 16384
+        "gpt-5.2": {
+          "model_id": "openai/gpt-5.2",
+          "context_window": 400000,
+          "max_output_tokens": 128000
         },
-        "gpt-4o-mini": {
-          "model_id": "gpt-4o-mini-2024-07-18",
-          "context_window": 128000,
-          "max_output_tokens": 16384
-        },
-        "o1": {
-          "model_id": "o1-2024-12-17",
-          "context_window": 200000,
-          "max_output_tokens": 100000
+        "kimi-k2": {
+          "model_id": "moonshotai/kimi-k2",
+          "context_window": 131072,
+          "max_output_tokens": 32768
         }
       }
     }
@@ -188,7 +183,7 @@ Vet supports custom model definitions using OpenAI-compatible endpoints via JSON
 Then:
 
 ```bash
-vet "Harden error handling" --model gpt-4o-mini
+vet "Harden error handling" --model gpt-5.2
 ```
 
 ### Configuration profiles (TOML)
