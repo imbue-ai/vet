@@ -61,18 +61,12 @@ def _parse_action_step(step: ActionStep) -> list[AgentMessage]:
             )
         messages.append(AgentAssistantMessage(content=result_blocks))
     elif observations:
-        messages.append(
-            AgentAssistantMessage(content=[AgentTextBlock(text=observations)])
-        )
+        messages.append(AgentAssistantMessage(content=[AgentTextBlock(text=observations)]))
 
     error = getattr(step, "error", None)
     if error is not None:
         error_text = str(error)
-        messages.append(
-            AgentAssistantMessage(
-                content=[AgentTextBlock(text=f"[Error: {error_text}]")]
-            )
-        )
+        messages.append(AgentAssistantMessage(content=[AgentTextBlock(text=f"[Error: {error_text}]")]))
 
     return messages
 

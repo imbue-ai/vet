@@ -62,6 +62,7 @@ class SmolagentsClient(AgentClient[SmolagentsOptions]):
         try:
             result = agent.run(prompt)
 
+            _log_step_summaries(agent, options.max_steps)
             yield from parse_smolagents_memory(agent.memory)
             usage = _aggregate_usage(agent)
 
@@ -79,6 +80,7 @@ class SmolagentsClient(AgentClient[SmolagentsOptions]):
                 error=str(e),
             )
             if hasattr(agent, "memory"):
+                _log_step_summaries(agent, options.max_steps)
                 yield from parse_smolagents_memory(agent.memory)
             yield AgentResultMessage(
                 session_id=session_id,
@@ -90,6 +92,91 @@ class SmolagentsClient(AgentClient[SmolagentsOptions]):
             "{client_name}: finished calling agent with prompt={prompt}",
             client_name=type(self).__name__,
             prompt=prompt,
+        )
+
+
+def _format_tool_calls(step: ActionStep) -> str:
+    tool_calls = step.tool_calls or []
+    if not tool_calls:
+        return "(no tool calls)"
+    parts = []
+    for tc in tool_calls:
+        args = tc.arguments if isinstance(tc.arguments, dict) else {}
+        arg_summary_parts = []
+        for key, val in args.items():
+            val_str = str(val)
+            if len(val_str) > 60:
+                val_str = val_str[:57] + "..."
+            arg_summary_parts.append(f"{key}={val_str}")
+        arg_summary = ", ".join(arg_summary_parts)
+        parts.append(f"{tc.name}({arg_summary})")
+    return ", ".join(parts)
+
+
+def _format_tokens(usage: AgentUsage | None) -> str:
+    if usage is None:
+        return ""
+    input_k = f"{usage.input_tokens / 1000:.1f}k" if usage.input_tokens else "?"
+    output_k = f"{usage.output_tokens / 1000:.1f}k" if usage.output_tokens else "?"
+    return f", {input_k} in / {output_k} out tokens"
+
+
+def _log_step_summaries(agent: ToolCallingAgent | CodeAgent, max_steps: int) -> None:
+    action_steps = [s for s in agent.memory.steps if isinstance(s, ActionStep)]
+    if not action_steps:
+        return
+
+    total_duration = 0.0
+    total_input = 0
+    total_output = 0
+    has_usage = False
+
+    for step in action_steps:
+        duration = step.timing.duration if step.timing else None
+        duration_str = f"{duration:.1f}s" if duration is not None else "?s"
+        if duration is not None:
+            total_duration += duration
+
+        usage = get_step_usage(step)
+        tokens_str = _format_tokens(usage)
+        if usage:
+            has_usage = True
+            total_input += usage.input_tokens or 0
+            total_output += usage.output_tokens or 0
+
+        tool_desc = _format_tool_calls(step)
+
+        error = getattr(step, "error", None)
+        error_suffix = ""
+        if error is not None:
+            error_suffix = f" [ERROR: {str(error)[:80]}]"
+
+        logger.debug(
+            "smolagents step {step}/{max}: {tools} [{duration}{tokens}]{error}",
+            step=step.step_number,
+            max=max_steps,
+            tools=tool_desc,
+            duration=duration_str,
+            tokens=tokens_str,
+            error=error_suffix,
+        )
+
+    total_steps = len(action_steps)
+    usage_str = ""
+    if has_usage:
+        usage_str = f", {total_input / 1000:.1f}k input / {total_output / 1000:.1f}k output tokens"
+    logger.debug(
+        "smolagents completed: {steps} steps, {duration:.1f}s total{usage}",
+        steps=total_steps,
+        duration=total_duration,
+        usage=usage_str,
+    )
+
+    if total_steps >= max_steps:
+        logger.warning(
+            "smolagents reached max_steps ({max_steps}) without producing a final answer; "
+            "results may be incomplete. Consider increasing max_steps.",
+            max_steps=max_steps,
         )
 
 

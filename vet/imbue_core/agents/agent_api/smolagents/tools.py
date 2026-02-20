@@ -42,9 +42,7 @@ class ReadFileTool(Tool):
         super().__init__()
         self._cwd = cwd or "."
 
-    def forward(
-        self, file_path: str, offset: int | None = None, limit: int | None = None
-    ) -> str:
+    def forward(self, file_path: str, offset: int | None = None, limit: int | None = None) -> str:
         path = Path(file_path)
         if not path.is_absolute():
             path = Path(self._cwd) / path
@@ -55,9 +53,7 @@ class ReadFileTool(Tool):
         if not path.is_file():
             return f"Error: Not a file: {path}"
 
-        effective_limit = (
-            min(int(limit), _MAX_LINES) if limit is not None else _MAX_LINES
-        )
+        effective_limit = min(int(limit), _MAX_LINES) if limit is not None else _MAX_LINES
         effective_offset = max(0, int(offset) - 1) if offset is not None else 0
 
         encodings = ["utf-8", "latin-1", "cp1252"]
@@ -123,18 +119,14 @@ class GrepTool(Tool):
         super().__init__()
         self._cwd = cwd or "."
 
-    def forward(
-        self, pattern: str, path: str | None = None, include: str | None = None
-    ) -> str:
+    def forward(self, pattern: str, path: str | None = None, include: str | None = None) -> str:
         search_path = path or self._cwd
         cmd: list[str] = ["rg", "--no-heading", "-n", "-C", "3", "--max-count", "200"]
         if include:
             cmd.extend(["--glob", include])
         cmd.extend([pattern, search_path])
         try:
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30, cwd=self._cwd
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=self._cwd)
             output = result.stdout.strip()
             if not output:
                 return f"No matches found for pattern: {pattern}"
@@ -262,9 +254,7 @@ class ListDirectoryTool(Tool):
             return f"Error: Not a directory: {dir_path}"
 
         try:
-            entries = sorted(
-                dir_path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())
-            )
+            entries = sorted(dir_path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
             result = []
             for entry in entries:
                 if entry.name.startswith(".") or entry.name in self._SKIP_NAMES:
