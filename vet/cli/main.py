@@ -314,8 +314,8 @@ _DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local"
 
 
 def configure_logging(verbose: int, log_file: Path | None) -> None:
-    log_file = log_file or Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else log_file
-    log_file = log_file or _DEFAULT_LOG_FILE
+    if log_file is None:
+        log_file = Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else _DEFAULT_LOG_FILE
     logger.remove()
     if verbose == 1:
         logger.add(sys.stderr, level="DEBUG", format="{level}: {message}")
