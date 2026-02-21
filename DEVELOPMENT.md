@@ -165,14 +165,15 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 
 ### Logging
 
-When creating a new entry point into vet, you must call `configure_logging()` from `vet.cli.main`.
+When creating a new entry point into vet, you must call `configure_logging(verbose: int, log_file: Path | None)` from `vet.cli.main`.
+
+User-facing status messages (top-level lifecycle, warnings visible to the user) use `print(..., file=sys.stderr)` directly — not loguru. Loguru is for internal diagnostics only.
 
 Log level heuristics:
 
 - **TRACE** - API payloads, token counts, dollar costs, agent subprocess messages.
 - **DEBUG** - Everything internal: API exceptions before re-raise, retries, fallbacks, identifier selection, history loading, context assembly. All LLM provider exception handlers must log at DEBUG before raising (see `_openai_exception_manager` for the pattern).
-- **INFO** - Top-level run lifecycle only. Do not add new INFO messages without team discussion.
-- **WARNING** - Degraded conditions: LLM content blocked/flagged, unrecognized config values, malformed user data, spend limit warnings.
+- **WARNING** - Degraded conditions: LLM content blocked/flagged, unrecognized config values, malformed user data. Note: spend limit warnings also `print()` directly to stderr so they are always visible to the user.
 - **ERROR** - Failures that prevent producing results. Use `log_exception()` from `vet.imbue_core.async_monkey_patches` for tracebacks.
 
 ### README links
