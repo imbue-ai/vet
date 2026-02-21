@@ -96,9 +96,7 @@ def _parse_tool_use_part(part: dict[str, Any]) -> list[AgentContentBlock]:
     return content_blocks
 
 
-def _parse_step_finish(
-    data: dict[str, Any], part: dict[str, Any], session_id: str
-) -> AgentMessage:
+def _parse_step_finish(data: dict[str, Any], part: dict[str, Any], session_id: str) -> AgentMessage:
     """Parse step_finish event.
 
     A step_finish with reason="stop" is the final result message.

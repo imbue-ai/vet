@@ -127,9 +127,7 @@ class LineRange(SerializableModel):
         return self.end < other.end
 
     @classmethod
-    def build_from_substring(
-        cls, file_contents: str, substring: str
-    ) -> tuple["LineRange", ...]:
+    def build_from_substring(cls, file_contents: str, substring: str) -> tuple["LineRange", ...]:
         """
         Convert a substring in a file to a tuple of LineRange instances.
 
@@ -207,9 +205,7 @@ class IssueCode(StrEnum):
     COMMIT_MESSAGE_MISMATCH = "commit_message_mismatch"
 
     # Batched commit checks
-    INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE = (
-        "incomplete_integration_with_existing_code"
-    )
+    INCOMPLETE_INTEGRATION_WITH_EXISTING_CODE = "incomplete_integration_with_existing_code"
     DOCUMENTATION_IMPLEMENTATION_MISMATCH = "documentation_implementation_mismatch"
     USER_REQUEST_ARTIFACTS_LEFT_IN_CODE = "user_request_artifacts_left_in_code"
     POOR_NAMING = "poor_naming"
@@ -266,13 +262,9 @@ class CustomGuideConfig(BaseModel):
         has_prefix_or_suffix = self.prefix is not None or self.suffix is not None
         has_replace = self.replace is not None
         if has_replace and has_prefix_or_suffix:
-            raise ValueError(
-                "'replace' cannot be used together with 'prefix' or 'suffix'"
-            )
+            raise ValueError("'replace' cannot be used together with 'prefix' or 'suffix'")
         if not has_replace and not has_prefix_or_suffix:
-            raise ValueError(
-                "At least one of 'prefix', 'suffix', or 'replace' must be set"
-            )
+            raise ValueError("At least one of 'prefix', 'suffix', or 'replace' must be set")
         return self
 
 
@@ -333,9 +325,9 @@ class InvocationInfo(SerializableModel):
 class IssueIdentificationLLMResponseMetadata(SerializableModel):
     """Configuration metadata for LLM responses."""
 
-    type: Literal[
-        "IssueIdentificationLLMResponseMetadata", "IssueIdentificationLLMResponseConfig"
-    ] = "IssueIdentificationLLMResponseMetadata"
+    type: Literal["IssueIdentificationLLMResponseMetadata", "IssueIdentificationLLMResponseConfig"] = (
+        "IssueIdentificationLLMResponseMetadata"
+    )
     agentic_phase: AgenticPhase | None = None
     issue_type: IssueCode | None = None
     identifier_name: str | None = None
@@ -348,9 +340,7 @@ class LLMResponse(SerializableModel):
     invocation_info: InvocationInfo | None = None
 
     # Deprecated fields
-    config: IssueIdentificationLLMResponseMetadata | None = Field(
-        default=None, deprecated=True
-    )
+    config: IssueIdentificationLLMResponseMetadata | None = Field(default=None, deprecated=True)
 
 
 class IssueIdentificationDebugInfo(SerializableModel):

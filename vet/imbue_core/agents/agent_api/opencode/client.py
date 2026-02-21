@@ -48,10 +48,7 @@ class OpenCodeClient(RealAgentClient[OpenCodeOptions]):
         # NOTE: Like Codex, OpenCode CLI does not support streaming inputs.
         # Each call is a new process. Session continuity is managed via --session <id>.
         options = self._options
-        if (
-            self._session_id is not None
-            and self._session_id != self._options.session_id
-        ):
+        if self._session_id is not None and self._session_id != self._options.session_id:
             # Inject the current session id into the options before building the command
             options = self._options.model_copy(update={"session_id": self._session_id})
 
@@ -129,9 +126,7 @@ class OpenCodeClient(RealAgentClient[OpenCodeOptions]):
             # in this case, the cmd should never be used
             cmd = ["CACHED_OPENCODE_EXEC_PLACEHOLDER"]
             return cmd
-        cli_path = (
-            str(options.cli_path) if options.cli_path is not None else cls._find_cli()
-        )
+        cli_path = str(options.cli_path) if options.cli_path is not None else cls._find_cli()
         cmd = [cli_path, "run", "--format", "json"]
         cmd.extend(cls._build_cli_args(options))
         return cmd
