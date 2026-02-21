@@ -4,6 +4,7 @@ from __future__ import annotations
 # Given this, we want to have the most standardized outputs possible.
 import argparse
 import json
+import os
 import subprocess
 import sys
 from importlib.metadata import version
@@ -145,7 +146,7 @@ def create_parser() -> argparse.ArgumentParser:
         default=CLI_DEFAULTS.model,
         metavar="MODEL",
         # Hardcoded to avoid importing cli.models at module level (~1s of SDK imports).
-        help="LLM to use for analysis (default: claude-opus-4-6). ",
+        help="LLM to use for analysis (default: claude-opus-4-6).",
     )
     model_group.add_argument(
         "--list-models",
@@ -218,16 +219,23 @@ def create_parser() -> argparse.ArgumentParser:
     output_group.add_argument(
         "--verbose",
         "-v",
-        action="store_true",
+        action="count",
         default=CLI_DEFAULTS.verbose,
-        help="Show verbose logger messages",
+        help="Increase verbosity. Use -v for debug output, -vv for full trace (raw LLM responses, API details).",
     )
     output_group.add_argument(
         "--quiet",
         "-q",
         action="store_true",
         default=CLI_DEFAULTS.quiet,
-        help="Suppress progress indicator and non-essential output",
+        help="Suppress status messages and 'No issues found.'",
+    )
+    output_group.add_argument(
+        "--log-file",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="Write full trace log to FILE (default: ~/.local/state/vet/vet.log). Also accepts VET_LOG_FILE environment variable.",
     )
 
     parser.add_argument(
@@ -302,15 +310,20 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         print()
 
 
-def configure_logging(verbose: bool, quiet: bool) -> None:
+_DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "vet" / "vet.log"
+
+
+def configure_logging(verbose: int, log_file: Path | None) -> None:
+    log_file = log_file or Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else log_file
+    log_file = log_file or _DEFAULT_LOG_FILE
     logger.remove()
-    if quiet:
-        level = "WARNING"
-    elif verbose:
-        level = "DEBUG"
-    else:
-        level = "INFO"
-    logger.add(sys.stderr, level=level)
+    if verbose == 1:
+        logger.add(sys.stderr, level="DEBUG", format="{level}: {message}")
+    elif verbose >= 2:
+        logger.add(sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}")
+
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    logger.add(log_file, level="TRACE", rotation="10 MB", retention=3)
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
@@ -319,7 +332,10 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     logger.debug("Running history loader command: {}", command)
     result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
-        logger.warning(f"History loader command failed with exit code {result.returncode}: {result.stderr}")
+        print(
+            f"vet: warning: history loader command failed (exit {result.returncode}): {result.stderr.strip()}",
+            file=sys.stderr,
+        )
         return ()
     if not result.stdout.strip():
         logger.debug("History loader command returned empty output, no conversation history loaded")
@@ -380,13 +396,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         user_config = load_models_config(repo_path)
     except ConfigLoadError as e:
-        print(f"Error loading model configuration: {e}", file=sys.stderr)
+        print(f"vet: error loading model configuration: {e}", file=sys.stderr)
         return 2
 
     try:
         custom_guides_config = load_custom_guides_config(repo_path)
     except ConfigLoadError as e:
-        print(f"Error loading custom guides: {e}", file=sys.stderr)
+        print(f"vet: error loading custom guides: {e}", file=sys.stderr)
         return 2
 
     if args.list_issue_codes:
@@ -404,7 +420,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         cli_configs = load_cli_config(repo_path)
     except ConfigLoadError as e:
-        print(f"Error loading CLI configuration: {e}", file=sys.stderr)
+        print(f"vet: error loading CLI configuration: {e}", file=sys.stderr)
         return 2
 
     if args.list_configs:
@@ -416,55 +432,55 @@ def main(argv: list[str] | None = None) -> int:
             preset = get_config_preset(args.config, cli_configs, repo_path)
             args = apply_config_preset(args, preset)
         except ConfigLoadError as e:
-            print(f"Error: {e}", file=sys.stderr)
+            print(f"vet: {e}", file=sys.stderr)
             return 2
 
     if not repo_path.exists():
-        print(f"Error: Repository path does not exist: {repo_path}", file=sys.stderr)
+        print(f"vet: repository path does not exist: {repo_path}", file=sys.stderr)
         return 2
 
     if not repo_path.is_dir():
-        print(f"Error: Repository path is not a directory: {repo_path}", file=sys.stderr)
+        print(f"vet: repository path is not a directory: {repo_path}", file=sys.stderr)
         return 2
 
     if args.extra_context:
         for extra_context_file in args.extra_context:
             if not extra_context_file.exists():
                 print(
-                    f"Error: Extra context file does not exist: {extra_context_file}",
+                    f"vet: extra context file does not exist: {extra_context_file}",
                     file=sys.stderr,
                 )
                 return 2
 
     if args.verbose and args.quiet:
         print(
-            "Error: --verbose and --quiet are mutually exclusive",
+            "vet: --verbose and --quiet are mutually exclusive",
             file=sys.stderr,
         )
         return 2
 
     if not 0.0 <= args.confidence_threshold <= 1.0:
         print(
-            f"Error: Confidence threshold must be between 0.0 and 1.0, got: {args.confidence_threshold}",
+            f"vet: confidence threshold must be between 0.0 and 1.0, got: {args.confidence_threshold}",
             file=sys.stderr,
         )
         return 2
 
     if not 0.0 <= args.temperature <= 2.0:
         print(
-            f"Error: Temperature must be between 0.0 and 2.0, got: {args.temperature}",
+            f"vet: temperature must be between 0.0 and 2.0, got: {args.temperature}",
             file=sys.stderr,
         )
         return 2
 
     if args.max_spend is not None and args.max_spend <= 0:
         print(
-            f"Error: Max spend must be a positive number, got: {args.max_spend}",
+            f"vet: max spend must be a positive number, got: {args.max_spend}",
             file=sys.stderr,
         )
         return 2
 
-    configure_logging(args.verbose, args.quiet)
+    configure_logging(args.verbose, args.log_file)
 
     from vet.api import find_issues
     from vet.cli.config.loader import build_language_model_config
@@ -494,7 +510,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             validate_output_fields(args.output_fields)
         except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
+            print(f"vet: {e}", file=sys.stderr)
             return 2
 
     model_id = args.model or DEFAULT_MODEL_ID
@@ -502,13 +518,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         model_id = validate_model_id(model_id, user_config)
     except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
+        print(f"vet: {e}", file=sys.stderr)
         return 2
 
     try:
         validate_api_key_for_model(model_id, user_config)
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        print(f"vet: {e}", file=sys.stderr)
         return 2
 
     # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
@@ -536,6 +552,12 @@ def main(argv: list[str] | None = None) -> int:
         enable_deduplication=not args.agentic,
     )
 
+    if not args.quiet:
+        print(
+            f"analyzing {repo_path} (relative to {args.base_commit})",
+            file=sys.stderr,
+        )
+
     try:
         issues = find_issues(
             repo_path=repo_path,
@@ -549,13 +571,13 @@ def main(argv: list[str] | None = None) -> int:
     except (PromptTooLongError, BadAPIRequestError) as e:
         if _is_context_overflow(e):
             print(
-                "Error: The review failed because too much context was provided to the model. "
+                "vet: review failed because too much context was provided to the model. "
                 "Consider using a model with a larger context window.",
                 file=sys.stderr,
             )
             return 2
         if isinstance(e, BadAPIRequestError):
-            print(f"Error: {e.error_message}", file=sys.stderr)
+            print(f"vet: {e.error_message}", file=sys.stderr)
             return 1
         raise
 

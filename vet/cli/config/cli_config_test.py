@@ -93,7 +93,7 @@ def test_parse_cli_config_from_dict_handles_all_fields() -> None:
     assert preset.output == "results.json"
     assert preset.output_format == "json"
     assert preset.output_fields == ["file", "line", "message"]
-    assert preset.verbose is True
+    assert preset.verbose == 1
     assert preset.quiet is False
 
 
@@ -113,7 +113,7 @@ def test_merge_presets_preserves_base_when_override_is_none() -> None:
         confidence_threshold=0.8,
         max_workers=4,
         model="base-model",
-        verbose=True,
+        verbose=1,
     )
     override = CliConfigPreset()
 
@@ -122,7 +122,7 @@ def test_merge_presets_preserves_base_when_override_is_none() -> None:
     assert result.confidence_threshold == 0.8
     assert result.max_workers == 4
     assert result.model == "base-model"
-    assert result.verbose is True
+    assert result.verbose == 1
 
 
 def test_cli_defaults_and_cli_config_preset_have_same_fields() -> None:
@@ -381,7 +381,7 @@ def test_apply_config_preset_applies_all_values() -> None:
         max_workers=4,
         output_format="json",
         output_fields=["file", "line"],
-        verbose=True,
+        verbose=1,
         quiet=False,
     )
 
@@ -393,7 +393,7 @@ def test_apply_config_preset_applies_all_values() -> None:
     assert result.max_workers == 4
     assert result.output_format == "json"
     assert result.output_fields == ["file", "line"]
-    assert result.verbose is True
+    assert result.verbose == 1
 
 
 def test_apply_config_preset_cli_args_take_precedence() -> None:
@@ -405,7 +405,7 @@ def test_apply_config_preset_cli_args_take_precedence() -> None:
         max_spend=None,
         output_format="text",
         output_fields=None,
-        verbose=False,
+        verbose=0,
         quiet=False,
         enabled_issue_codes=None,
         disabled_issue_codes=None,
