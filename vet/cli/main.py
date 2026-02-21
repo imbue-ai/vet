@@ -32,7 +32,7 @@ from vet.imbue_core.data_types import get_valid_issue_code_values
 VERSION = version("verify-everything")
 
 _ISSUE_CODE_FIELDS = frozenset({"enabled_issue_codes", "disabled_issue_codes"})
-_PATH_FIELDS = frozenset({"repo", "output"})
+_PATH_FIELDS = frozenset({"repo", "output", "log_file"})
 _PATH_LIST_FIELDS = frozenset({"extra_context"})
 
 
