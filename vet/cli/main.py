@@ -402,13 +402,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         user_config = load_models_config(repo_path)
     except ConfigLoadError as e:
-        print(f"vet: error loading model configuration: {e}", file=sys.stderr)
+        print(f"vet: could not load model configuration: {e}", file=sys.stderr)
         return 2
 
     try:
         custom_guides_config = load_custom_guides_config(repo_path)
     except ConfigLoadError as e:
-        print(f"vet: error loading custom guides: {e}", file=sys.stderr)
+        print(f"vet: could not load custom guides: {e}", file=sys.stderr)
         return 2
 
     if args.list_issue_codes:
@@ -426,7 +426,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         cli_configs = load_cli_config(repo_path)
     except ConfigLoadError as e:
-        print(f"vet: error loading CLI configuration: {e}", file=sys.stderr)
+        print(f"vet: could not load CLI configuration: {e}", file=sys.stderr)
         return 2
 
     if args.list_configs:
