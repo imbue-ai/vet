@@ -34,20 +34,20 @@ def get_issues_with_raw_responses(
     extra_context: str | None = None,
 ) -> tuple[tuple[IdentifiedVerifyIssue, ...], IssueIdentificationDebugInfo, ProjectContext]:
     if not goal or not goal.strip():
-        logger.info("No goal was provided, generating one from conversation history")
+        logger.debug("No goal was provided, generating one from conversation history")
         # should be not None and not empty
         if conversation_history:
             try:
                 # TODO: we use the config here, but we may want to configure this separately
                 goal = get_goal_from_conversation(conversation_history, config.language_model_generation_config)
-                logger.info("Generated goal from conversation history: {}", goal)
+                logger.debug("Generated goal from conversation history: {}", goal)
             except Exception as e:
                 raise ConversationLoadingError(
                     f"No goal was provided and generating one from conversation history failed: {e}"
                 )
         else:
             # TODO: Consider which CLI options we should show this for (quiet, normal, verbose).
-            logger.info("No goal or conversation history provided, only goal-independent identifiers will run")
+            logger.debug("No goal or conversation history provided, only goal-independent identifiers will run")
             goal = ""
 
     lm_config = config.language_model_generation_config
@@ -68,7 +68,7 @@ def get_issues_with_raw_responses(
     )
 
     if conversation_history:
-        logger.info(
+        logger.debug(
             "Passing {} conversation history messages to identifier inputs",
             len(conversation_history),
         )
@@ -105,7 +105,7 @@ def find_issues(
     extra_context: str | None = None,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
     logger.info(
-        "Finding issues in {repo_path} relative to commit hash {relative_to}",
+        "Finding issues in {repo_path} relative to {relative_to}",
         repo_path=repo_path,
         relative_to=relative_to,
     )

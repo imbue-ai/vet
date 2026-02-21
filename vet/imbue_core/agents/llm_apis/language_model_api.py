@@ -517,7 +517,7 @@ class LanguageModelAPI(abc.ABC, MutableModel):
         caching_info: CachingInfo | None = None,
     ) -> float:
         """Overridden by subclasses which have more complex cost calculations, such as if caching is used."""
-        logger.info(
+        logger.debug(
             f"no calculate_cost implemented for {self.model_name}; using basic_calculate_cost",
             model_name=self.model_name,
         )

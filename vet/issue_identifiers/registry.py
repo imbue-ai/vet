@@ -232,7 +232,7 @@ def run(
 
         issue_generators.append(_generate_with_name_in_debug_info(identifier_name, filtered_results_generator))
 
-    logger.info(
+    logger.debug(
         "Using the following issue identifiers compatible with the input: {}",
         ", ".join([n for n in compatible_enabled_identifier_names]),
     )

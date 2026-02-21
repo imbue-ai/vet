@@ -563,11 +563,11 @@ def get_repo_context(
                 tokens_to_reserve=tokens_to_reserve,
                 template=template,
             )
-            logger.info("Selected subrepo context strategy: {}", subrepo_context_strategy.label)
+            logger.debug("Selected subrepo context strategy: {}", subrepo_context_strategy.label)
 
             if subrepo_context_strategy.label == SubrepoContextStrategyType.NOTHING:
                 # log a message if we have to use the NOTHING strategy, but still proceed with the call
-                logger.info("Selected NOTHING subrepo context strategy; hopefully this doesn't happen too often!")
+                logger.debug("Selected NOTHING subrepo context strategy; hopefully this doesn't happen too often!")
 
             return SubrepoContextWithFormattedContext(
                 formatted_repo_context=repo_context_str,

@@ -205,7 +205,7 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
     # but if we do, this should be refactored into a registry or factory pattern.
     if agent_harness_type == AgentHarnessType.CODEX:
         if model_name in _ANTHROPIC_MODEL_NAMES:
-            logger.info(
+            logger.debug(
                 "Config model_name {config_model_name} is an Anthropic model, using default Codex model ({model_name}).",
                 config_model_name=model_name,
                 model_name=_DEFAULT_CODEX_MODEL,
@@ -217,14 +217,14 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
             sandbox_mode="read-only",
         )
     if model_name in _OPENAI_MODEL_NAMES:
-        logger.info(
+        logger.debug(
             "Config model_name {config_model_name} is an OpenAI model, using default Claude model ({model_name}).",
             config_model_name=model_name,
             model_name=_DEFAULT_CLAUDE_MODEL,
         )
         model_name = _DEFAULT_CLAUDE_MODEL
     elif model_name not in _ANTHROPIC_MODEL_NAMES:
-        logger.info(
+        logger.warning(
             "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
             config_model_name=model_name,
             model_name=_DEFAULT_CLAUDE_MODEL,
@@ -287,7 +287,7 @@ def extract_invocation_info_from_costed_response(
                     caching_info.provider_specific_data.written_5m + caching_info.provider_specific_data.written_1h
                 )
             else:
-                logger.info(
+                logger.debug(
                     "Not recording caching info for provider specific data type {}",
                     type(caching_info.provider_specific_data),
                 )

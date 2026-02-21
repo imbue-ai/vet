@@ -148,7 +148,7 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 
 ### Releasing a new version
 
-1. Create and checkout a branch to bump the version
+1. Create and checkout a branch to bump the version, using the naming convention `{name}/v{version}` (e.g. `john/v0.2.0`)
 2. Update the version in `pyproject.toml`
 3. Update `pkgver` in `pkg/arch/PKGBUILD`
 4. Commit and push the changes
@@ -163,15 +163,17 @@ Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Dep
 
 ## Development Notes
 
-### Logging Configuration
+### Logging
 
-When creating a new entrypoint into vet, you must call `ensure_core_log_levels_configured()` to register the custom log levels used throughout the codebase.
+When creating a new entry point into vet, you must call `configure_logging()` from `vet.cli.main`.
 
-```python
-from vet.imbue_core.log_utils import ensure_core_log_levels_configured
+Log level heuristics:
 
-ensure_core_log_levels_configured()
-```
+- **TRACE** - API payloads, token counts, dollar costs, agent subprocess messages.
+- **DEBUG** - Everything internal: API exceptions before re-raise, retries, fallbacks, identifier selection, history loading, context assembly. All LLM provider exception handlers must log at DEBUG before raising (see `_openai_exception_manager` for the pattern).
+- **INFO** - Top-level run lifecycle only. Do not add new INFO messages without team discussion.
+- **WARNING** - Degraded conditions: LLM content blocked/flagged, unrecognized config values, malformed user data, spend limit warnings.
+- **ERROR** - Failures that prevent producing results. Use `log_exception()` from `vet.imbue_core.async_monkey_patches` for tracebacks.
 
 ### README links
 

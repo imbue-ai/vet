@@ -67,6 +67,7 @@ class OpenAICompatibleModelConfig(LanguageModelGenerationConfig):
     custom_api_key_env: str
     custom_context_window: int
     custom_max_output_tokens: int
+    custom_supports_temperature: bool = True
 
     def count_tokens(self, text: str) -> int:
         """Count tokens using approximation since we don't have access to the model's tokenizer."""
