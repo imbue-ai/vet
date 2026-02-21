@@ -38,8 +38,9 @@ class CliConfigPreset(BaseModel):
     output: str | None = None
     output_format: str | None = None
     output_fields: list[str] | None = None
-    verbose: bool | None = None
+    verbose: int | None = Field(default=None, ge=0, le=2)
     quiet: bool | None = None
+    log_file: str | None = None
 
 
 class CliDefaults(BaseModel):
@@ -62,8 +63,9 @@ class CliDefaults(BaseModel):
     output: str | None = None
     output_format: str = "text"
     output_fields: list[str] | None = None
-    verbose: bool = False
+    verbose: int = 0
     quiet: bool = False
+    log_file: str | None = None
 
 
 CLI_DEFAULTS = CliDefaults()

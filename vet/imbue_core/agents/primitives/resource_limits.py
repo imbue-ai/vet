@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import os
+import sys
 from asyncio import CancelledError
 from asyncio import Task
 from asyncio import TaskGroup
@@ -296,6 +297,7 @@ class ResourceLimits:
 
     # TODO: make a more configurable warning system, right now just logs
     async def _warn(self, message: str) -> None:
+        print(f"vet: warning: {message}", file=sys.stderr)
         logger.warning(message)
 
     async def _clear_old_authorizations(self, _is_already_locked: bool = False) -> None:
