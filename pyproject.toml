@@ -53,6 +53,9 @@ dependencies = [
     # From imbue_tools
     "async_lru",
     "libcst",
+
+    # smolagents agent backend
+    "smolagents>=1.0.0",
 ]
 
 [project.urls]

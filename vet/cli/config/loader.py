@@ -104,6 +104,26 @@ def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfi
     return None
 
 
+def get_provider_and_alias_for_model_id(model_id: str, config: ModelsConfig) -> tuple[ProviderConfig, str] | None:
+    """Look up a provider by the model_id *value* inside ModelConfig, not the dict key (alias).
+
+    Returns (provider, alias) or None.  Falls back to key-based lookup so callers
+    don't need to know which kind of identifier they have.
+    """
+    # First try an exact key match (model_id *is* the alias).
+    for provider in config.providers.values():
+        if model_id in provider.models:
+            return provider, model_id
+
+    # Then search by ModelConfig.model_id value.
+    for provider in config.providers.values():
+        for alias, model_config in provider.models.items():
+            if model_config.model_id == model_id:
+                return provider, alias
+
+    return None
+
+
 def validate_api_key_for_model(model_id: str, config: ModelsConfig) -> None:
     provider = get_provider_for_model(model_id, config)
     if provider is None:

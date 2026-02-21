@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from vet.cli.config.schema import ModelsConfig
 from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.data_types import AgentHarnessType
@@ -37,6 +38,8 @@ class VetConfig(SerializableModel):
     max_output_tokens: int = 20000
     enable_parallel_agentic_issue_identification: bool = False
     agent_harness_type: AgentHarnessType = AgentHarnessType.CLAUDE
+    # Required when agent_harness_type is SMOLAGENTS; ignored for other harnesses.
+    models_config: ModelsConfig | None = None
     max_identify_workers: int | None = None
     temperature: float = 0.5
 

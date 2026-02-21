@@ -170,6 +170,7 @@ class AgenticPhase(StrEnum):
 class AgentHarnessType(StrEnum):
     CLAUDE = "claude"
     CODEX = "codex"
+    SMOLAGENTS = "smolagents"
 
 
 class IssueIdentifierType(StrEnum):

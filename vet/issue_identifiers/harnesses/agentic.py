@@ -248,6 +248,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             cwd=project_context.repo_path,
             model_name=config.language_model_generation_config.model_name,
             agent_harness_type=config.agent_harness_type,
+            models_config=config.models_config,
         )
 
         if config.enable_parallel_agentic_issue_identification:
