@@ -4,7 +4,6 @@ from typing import Literal
 from pydantic import Field
 
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
-from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
 ClaudePermissionMode = Literal["plan", "default", "acceptEdits", "bypassPermissions", "dontAsk"]
@@ -51,29 +50,3 @@ class ClaudeCodeOptions(AgentOptions):
     # Optional override for the Claude CLI path
     cli_path: Path | None = None
     is_cached: bool = False
-
-
-CLAUDE_TOOLS = (
-    AgentToolName.READ,
-    AgentToolName.WRITE,
-    AgentToolName.EDIT,
-    AgentToolName.MULTI_EDIT,
-    AgentToolName.GLOB,
-    AgentToolName.NOTEBOOK_READ,
-    AgentToolName.NOTEBOOK_EDIT,
-    AgentToolName.LS,
-    AgentToolName.GREP,
-    AgentToolName.BASH,
-    AgentToolName.BASH_OUTPUT,
-    AgentToolName.KILL_SHELL,
-    AgentToolName.WEB_SEARCH,
-    AgentToolName.WEB_FETCH,
-    AgentToolName.TASK,
-    AgentToolName.TODO_READ,
-    AgentToolName.TODO_WRITE,
-    AgentToolName.SLASH_COMMAND,
-    AgentToolName.EXIT_PLAN_MODE,
-    AgentToolName.MCP_TOOL,
-    AgentToolName.LIST_MCP_RESOURCES,
-    AgentToolName.READ_MCP_RESOURCE,
-)
