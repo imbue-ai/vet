@@ -80,7 +80,7 @@ Run formatting hooks manually across the repo:
 uvx pre-commit run --all-files
 ```
 
-After installation, `black` runs automatically on staged Python files before each commit.
+After installation, `isort` and `black` run automatically on staged Python files before each commit.
 
 ## Running Tests
 

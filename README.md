@@ -113,7 +113,7 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     env:
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -167,12 +167,14 @@ Vet supports custom model definitions using OpenAI-compatible endpoints via JSON
         "gpt-5.2": {
           "model_id": "openai/gpt-5.2",
           "context_window": 400000,
-          "max_output_tokens": 128000
+          "max_output_tokens": 128000,
+          "supports_temperature": true
         },
         "kimi-k2": {
           "model_id": "moonshotai/kimi-k2",
           "context_window": 131072,
-          "max_output_tokens": 32768
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
