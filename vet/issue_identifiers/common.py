@@ -21,7 +21,6 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.agent_api.smolagents.data_types import SmolagentsOptions
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -201,20 +200,9 @@ _DEFAULT_CODEX_MODEL = "gpt-5.2-codex"
 _DEFAULT_CLAUDE_MODEL = AnthropicModelName.CLAUDE_4_6_OPUS
 
 
-def _to_litellm_model_id(model_name: str) -> str:
-    if model_name in _ANTHROPIC_MODEL_NAMES:
-        return f"anthropic/{model_name}"
-    if model_name in _OPENAI_MODEL_NAMES:
-        return f"openai/{model_name}"
-    return model_name
-
-
 def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
-    if agent_harness_type == AgentHarnessType.SMOLAGENTS:
-        return SmolagentsOptions(
-            cwd=cwd,
-            model=_to_litellm_model_id(model_name),
-        )
+    # NOTE: This if/else is intentionally simple. We're unlikely to support many harness types,
+    # but if we do, this should be refactored into a registry or factory pattern.
     if agent_harness_type == AgentHarnessType.CODEX:
         if model_name in _ANTHROPIC_MODEL_NAMES:
             logger.debug(

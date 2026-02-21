@@ -87,4 +87,3 @@ v*.tar.gz
 # Project-specific
 .imbue/
 vet-output.txt
-reference.patch

@@ -15,8 +15,6 @@ from vet.imbue_core.agents.agent_api.client import CachedAgentClient
 from vet.imbue_core.agents.agent_api.codex.client import CodexClient
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
-from vet.imbue_core.agents.agent_api.smolagents.client import SmolagentsClient
-from vet.imbue_core.agents.agent_api.smolagents.data_types import SmolagentsOptions
 
 
 @singledispatch
@@ -35,11 +33,6 @@ def _(options: ClaudeCodeOptions) -> ContextManager[AgentClient[ClaudeCodeOption
 @_build_client_from_options.register
 def _(options: CodexOptions) -> ContextManager[AgentClient[CodexOptions]]:
     return CodexClient.build(options)
-
-
-@_build_client_from_options.register
-def _(options: SmolagentsOptions) -> ContextManager[AgentClient[SmolagentsOptions]]:
-    return SmolagentsClient.build(options)
 
 
 @contextmanager

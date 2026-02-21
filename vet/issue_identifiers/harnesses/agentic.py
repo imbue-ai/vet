@@ -15,7 +15,6 @@ from loguru import logger
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.async_monkey_patches import log_exception
-from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
@@ -189,7 +188,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     def _get_prompt(
         self,
         project_context: ProjectContext,
-        config: VetConfig,
+        config: VetConfig,  # unused
         identifier_inputs: CommitInputs,
     ) -> str:
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -212,22 +211,6 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 "additional_guidance": additional_guidance_by_issue_code,
             }
         )
-
-        if config.agent_harness_type == AgentHarnessType.SMOLAGENTS:
-            prompt = prompt.replace(
-                "You should use a Task tool to create a parallel task for each issue type in the rubric.\n"
-                "You should pass along the exact issue type definition with all details to the task.\n"
-                "Once all the Tasks have completed you can collate their results.\n"
-                "You should pass along any relevant information from the guidance below to the task.\n"
-                "Here is a non-exhaustive list of things that you can do using your tools within the task"
-                " to find issues:",
-                "For each issue type in the rubric, investigate it systematically using your available tools:\n"
-                "read_file (read file contents), grep (search for patterns), glob (find files by name), "
-                "list_directory (explore directory structure).\n"
-                "Work through each issue type one at a time. "
-                "Here is a non-exhaustive list of things you can do to find issues:",
-            )
-
         return prompt
 
     def _get_prompt_for_issue_type(
