@@ -123,12 +123,18 @@ Current workflows:
 - `test-pkgbuild.yml` (`Test / PKGBUILD`, job: `pkgbuild`) — Arch Linux package build + smoke test
 - `vet.yml` (`Vet`, job: `vet`) — Self-review via vet on PRs (uses the reusable action via `uses: ./`)
 - `vet-agentic.yml` (`Vet (Agentic)`, job: `vet`) — Agentic self-review via vet on PRs (uses the reusable action via `uses: ./`)
+- `test-brew.yml` (`Test / Brew`, job: `brew`) — Homebrew formula build + smoke test (macOS)
 - `publish-pypi.yml` (`Publish / PyPI`, job: `pypi`) — Build and publish to PyPI on tag push
 - `publish-github-release.yml` (`Publish / GitHub Release`, job: `github-release`) — Create a GitHub Release on tag push
+- `publish-brew.yml` (`Publish / Brew`, job: `brew`) — Submit Homebrew formula update to homebrew-core on tag push
 
 ### Continuous Deployment
 
-Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow. Deployment is triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).
+Vet is published to PyPI via the `publish-pypi.yml` GitHub Actions workflow and to Homebrew core via the `publish-brew.yml` workflow. Both are triggered by pushing a git tag that starts with `v` (e.g. `v0.2.0`).
+
+The Homebrew workflow waits for the PyPI sdist to become available, then uses `brew bump-formula-pr` to open a PR against `homebrew/homebrew-core`. This requires a `HOMEBREW_GITHUB_API_TOKEN` secret with permission to create PRs on `homebrew/homebrew-core`.
+
+> **Note:** The initial formula submission to homebrew-core must be done manually via a PR to `homebrew/homebrew-core`. The `publish-brew.yml` workflow handles subsequent version bumps. See `pkg/brew/verify-everything.rb` for the formula source.
 
 ### Releasing a new version
 

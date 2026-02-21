@@ -1,0 +1,53 @@
+name: Publish / Brew
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  brew:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Compute source tarball sha256
+        id: sha
+        run: |
+          URL="https://files.pythonhosted.org/packages/source/v/verify-everything/verify_everything-${{ steps.version.outputs.version }}.tar.gz"
+          # retry up to 5 times to allow PyPI to propagate (publish-pypi runs in parallel)
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -sL -o /tmp/sdist.tar.gz -w '%{http_code}' "$URL") && [ "$HTTP_CODE" = "200" ] && break
+            echo "attempt $i: HTTP $HTTP_CODE — waiting 60s"
+            sleep 60
+          done
+          SHA=$(shasum -a 256 /tmp/sdist.tar.gz | awk '{print $1}')
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Update local formula
+        run: |
+          sed -i '' \
+            -e 's|^  url ".*"|  url "${{ steps.sha.outputs.url }}"|' \
+            -e 's|^  sha256 ".*"|  sha256 "${{ steps.sha.outputs.sha256 }}"|' \
+            pkg/brew/verify-everything.rb
+
+      - name: Update resource blocks
+        run: brew update-python-resources pkg/brew/verify-everything.rb
+
+      - name: Submit to Homebrew core
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+        run: |
+          brew bump-formula-pr \
+            --no-browse \
+            --url="${{ steps.sha.outputs.url }}" \
+            --sha256="${{ steps.sha.outputs.sha256 }}" \
+            --version="${{ steps.version.outputs.version }}" \
+            verify-everything
