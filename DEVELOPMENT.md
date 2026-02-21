@@ -48,7 +48,9 @@ This will be slower the first time you run it because `uv` has to set up your vi
 
 ##### Agentic Verifier
 
-The agentic verifier calls out to Claude Code or Codex. Codex is part of the image by default, and if you have your `CODEX_API_KEY` set in your `.env` it will be used. As such, no further actions are required to run the agentic verifier with Codex unless you would like to use another auth approach which requires signing into Codex interactively (oauth and such).
+The agentic verifier calls out to Claude Code, Codex, or OpenCode. Codex is part of the image by default, and if you have your `CODEX_API_KEY` set in your `.env` it will be used. As such, no further actions are required to run the agentic verifier with Codex unless you would like to use another auth approach which requires signing into Codex interactively (oauth and such).
+
+OpenCode can be installed via `curl -fsSL https://opencode.ai/install | bash` and used with `--agent-harness opencode`.
 
 Since Claude Code is proprietary, it is not installed by default. If you wish to have it installed as part of your image, run
 
