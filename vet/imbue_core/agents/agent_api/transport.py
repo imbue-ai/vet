@@ -118,6 +118,16 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
             stdin_stream.write(json.dumps(message) + "\n")
             stdin_stream.flush()
 
+    def close_stdin(self) -> None:
+        """Close the stdin stream to signal no more input will be sent.
+
+        This is useful for agents that receive their prompt via CLI arguments
+        rather than stdin, where the process may block waiting for stdin to close.
+        """
+        if self._stdin_stream:
+            self._stdin_stream.close()
+            self._stdin_stream = None
+
     def _read_stderr(self, output_buffer: list[str]) -> None:
         """Read stderr in background."""
         stderr_stream = self._stderr_stream

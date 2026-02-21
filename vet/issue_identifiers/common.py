@@ -21,6 +21,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.agent_api.opencode.data_types import OpenCodeOptions
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -215,6 +216,23 @@ def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: Age
             cwd=cwd,
             model=model_name,
             sandbox_mode="read-only",
+        )
+    if agent_harness_type == AgentHarnessType.OPENCODE:
+        # OpenCode uses provider/model format (e.g. "anthropic/claude-opus-4-6").
+        # Translate known vet model names to OpenCode format, or let OpenCode
+        # use its configured default if the model name isn't recognized.
+        opencode_model: str | None = None
+        if model_name in _ANTHROPIC_MODEL_NAMES:
+            opencode_model = f"anthropic/{model_name}"
+        elif model_name in _OPENAI_MODEL_NAMES:
+            opencode_model = f"openai/{model_name}"
+        else:
+            # Unknown model — pass through as-is and let OpenCode resolve it.
+            # If it's already in provider/model format, it will work directly.
+            opencode_model = model_name
+        return OpenCodeOptions(
+            cwd=cwd,
+            model=opencode_model,
         )
     if model_name in _OPENAI_MODEL_NAMES:
         logger.debug(
