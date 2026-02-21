@@ -322,8 +322,14 @@ def configure_logging(verbose: int, log_file: Path | None) -> None:
     elif verbose >= 2:
         logger.add(sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}")
 
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    logger.add(log_file, level="TRACE", rotation="10 MB", retention=3)
+    try:
+        log_file.parent.mkdir(parents=True, exist_ok=True)
+        logger.add(log_file, level="TRACE", rotation="10 MB", retention=3)
+    except OSError as e:
+        print(
+            f"vet: warning: could not write to log file {log_file}: {e.strerror}",
+            file=sys.stderr,
+        )
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
