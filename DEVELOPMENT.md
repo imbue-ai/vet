@@ -66,6 +66,22 @@ NOTE: Without passing `claude` into `build.sh` it will default to the image with
 
 Within the container, you can run `claude` to begin interactive authentication to get it setup.
 
+## Formatting Hooks
+
+Install pre-commit hooks once per clone:
+
+```bash
+uvx pre-commit install
+```
+
+Run formatting hooks manually across the repo:
+
+```bash
+uvx pre-commit run --all-files
+```
+
+After installation, `isort` and `black` run automatically on staged Python files before each commit.
+
 ## Running Tests
 
 ### Unit tests
