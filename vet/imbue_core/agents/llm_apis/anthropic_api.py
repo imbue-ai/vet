@@ -21,9 +21,7 @@ from pydantic.functional_validators import field_validator
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicModelInfo
 from vet.imbue_core.agents.llm_apis.api_utils import convert_prompt_to_messages
-from vet.imbue_core.agents.llm_apis.api_utils import (
-    create_costed_language_model_response_for_single_result,
-)
+from vet.imbue_core.agents.llm_apis.api_utils import create_costed_language_model_response_for_single_result
 from vet.imbue_core.agents.llm_apis.data_types import CachedCountTokensResponse
 from vet.imbue_core.agents.llm_apis.data_types import CachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -36,9 +34,7 @@ from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
 from vet.imbue_core.agents.llm_apis.errors import LanguageModelInvalidModelNameError
 from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
 from vet.imbue_core.agents.llm_apis.errors import NewSeedRetriableLanguageModelError
-from vet.imbue_core.agents.llm_apis.errors import (
-    SafelyRetriableTransientLanguageModelError,
-)
+from vet.imbue_core.agents.llm_apis.errors import SafelyRetriableTransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import TransientLanguageModelError
 from vet.imbue_core.agents.llm_apis.errors import UnsetCachePathError
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
@@ -308,8 +304,7 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
             max_input_tokens=1_000_000,
             max_output_tokens=64_000,
             rate_limit_req=None,  # Currently no limit set in our dashboard
-            rate_limit_tok=1_000_000
-            / 60,  # <-- yeah they let us have one (1) 1M request per minute
+            rate_limit_tok=1_000_000 / 60,  # <-- yeah they let us have one (1) 1M request per minute
             rate_limit_output_tok=200_000 / 60,
         ),
         AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG: ModelInfo(
@@ -322,8 +317,7 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
             max_input_tokens=1_000_000,
             max_output_tokens=64_000,
             rate_limit_req=None,  # Currently no limit set in our dashboard
-            rate_limit_tok=1_000_000
-            / 60,  # <-- yeah they let us have one (1) 1M request per minute
+            rate_limit_tok=1_000_000 / 60,  # <-- yeah they let us have one (1) 1M request per minute
             rate_limit_output_tok=200_000 / 60,
         ),
         AnthropicModelName.CLAUDE_4_6_OPUS_LONG: ModelInfo(
@@ -354,15 +348,13 @@ _ROLE_TO_ANTHROPIC_ROLE: Final[FrozenMapping[str, str]] = FrozenDict(
     }
 )
 
-_ANTHROPIC_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopReason]] = (
-    FrozenDict(
-        {
-            "end_turn": ResponseStopReason.END_TURN,
-            "max_tokens": ResponseStopReason.MAX_TOKENS,
-            "stop_sequence": ResponseStopReason.STOP_SEQUENCE,
-            "refusal": ResponseStopReason.CONTENT_FILTER,
-        }
-    )
+_ANTHROPIC_STOP_REASON_TO_STOP_REASON: Final[FrozenMapping[str, ResponseStopReason]] = FrozenDict(
+    {
+        "end_turn": ResponseStopReason.END_TURN,
+        "max_tokens": ResponseStopReason.MAX_TOKENS,
+        "stop_sequence": ResponseStopReason.STOP_SEQUENCE,
+        "refusal": ResponseStopReason.CONTENT_FILTER,
+    }
 )
 
 _ANTHROPIC_BETA_PROMPT_CACHING = "prompt-caching-2024-07-31"
@@ -428,9 +420,7 @@ def _convert_prompt_to_anthropic_messages(
 
     if len(system_messages) > 1:
         logger.debug("system_messages: {}", system_messages)
-        raise ValueError(
-            f"Anthropic API supports only 0 or 1 system message; got {len(system_messages)}."
-        )
+        raise ValueError(f"Anthropic API supports only 0 or 1 system message; got {len(system_messages)}.")
 
     if len(non_system_messages) == 0:
         system_messages = None
@@ -458,12 +448,8 @@ def _anthropic_exception_manager() -> Iterator[None]:
     except anthropic.AuthenticationError as e:
         raise MissingAPIKeyError("Anthropic API key is invalid or expired.") from e
     except anthropic.RateLimitError as e:
-        extra_header_keys = [
-            x for x in e.response.headers.keys() if x.startswith("anthropic-")
-        ]
-        extra_data = ", ".join(
-            [f"{key}={e.response.headers[key]}" for key in extra_header_keys]
-        )
+        extra_header_keys = [x for x in e.response.headers.keys() if x.startswith("anthropic-")]
+        extra_data = ", ".join([f"{key}={e.response.headers[key]}" for key in extra_header_keys])
         extra_info = f"Rate limit data: {extra_data}"
         raise TransientLanguageModelError(extra_info) from e
     except anthropic.APIStatusError as e:
@@ -513,9 +499,7 @@ class AnthropicAPI(LanguageModelAPI):
     @classmethod
     def validate_model_name(cls, v: str) -> str:
         if v not in ANTHROPIC_MODEL_INFO_BY_NAME:
-            raise LanguageModelInvalidModelNameError(
-                v, cls.__name__, list(ANTHROPIC_MODEL_INFO_BY_NAME)
-            )
+            raise LanguageModelInvalidModelNameError(v, cls.__name__, list(ANTHROPIC_MODEL_INFO_BY_NAME))
         return v
 
     @property
@@ -546,9 +530,7 @@ class AnthropicAPI(LanguageModelAPI):
                 auth_token=auth_token,
                 max_retries=self.max_retries,
                 timeout=self.timeout,
-                default_headers={
-                    "anthropic-beta": f"{_ANTHROPIC_BETA_PROMPT_CACHING},{_ANTHROPIC_BETA_OAUTH}"
-                },
+                default_headers={"anthropic-beta": f"{_ANTHROPIC_BETA_PROMPT_CACHING},{_ANTHROPIC_BETA_OAUTH}"},
             )
 
     async def _call_api(
@@ -557,13 +539,11 @@ class AnthropicAPI(LanguageModelAPI):
         params: LanguageModelGenerationParams,
         network_failure_count: int = 0,
     ) -> CostedLanguageModelResponse:
-        assert params.count == 1, (
-            "Anthropic API only supports count=1.  It is possible to hack around this by using a for loop, but doesn't seem worth it right now."
-        )
+        assert (
+            params.count == 1
+        ), "Anthropic API only supports count=1.  It is possible to hack around this by using a for loop, but doesn't seem worth it right now."
 
-        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(
-            prompt
-        )
+        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(prompt)
 
         with _anthropic_exception_manager():
             async with self._get_client() as client:
@@ -578,9 +558,7 @@ class AnthropicAPI(LanguageModelAPI):
                         lambda: self.model_info.max_output_tokens,
                     )
                     params = chill(param_with_max_tokens_evolver)
-                assert params.max_tokens is not None, (
-                    "max_tokens must be provided for Anthropic API"
-                )
+                assert params.max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
@@ -589,15 +567,9 @@ class AnthropicAPI(LanguageModelAPI):
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if (
-                        self.model_name
-                        == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG
-                    ):
+                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
-                    elif (
-                        self.model_name
-                        == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG
-                    ):
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
                     elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_6_OPUS
@@ -605,9 +577,7 @@ class AnthropicAPI(LanguageModelAPI):
                         assert False, "unreachable"
                     api_result = await client.beta.messages.create(
                         messages=non_system_messages,
-                        stop_sequences=(
-                            [params.stop] if params.stop is not None else NOT_GIVEN
-                        ),
+                        stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                         model=model_name,
                         temperature=params.temperature,
                         system=prepend_claude_code_system_prompt(system_messages),
@@ -621,9 +591,7 @@ class AnthropicAPI(LanguageModelAPI):
                 else:
                     api_result = await client.messages.create(
                         messages=non_system_messages,
-                        stop_sequences=(
-                            [params.stop] if params.stop is not None else NOT_GIVEN
-                        ),
+                        stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                         model=self.model_name,
                         temperature=params.temperature,
                         system=prepend_claude_code_system_prompt(system_messages),
@@ -650,9 +618,7 @@ class AnthropicAPI(LanguageModelAPI):
                     read_from_cache=api_result.usage.cache_read_input_tokens,
                     provider_specific_data=detailed_caching_data,
                 )
-                dollars_used = self.calculate_cost(
-                    prompt_tokens, completion_tokens, caching_info
-                )
+                dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
                 logger.trace("Dollars used: {dollars_used}", dollars_used=dollars_used)
 
                 return create_costed_language_model_response_for_single_result(
@@ -670,22 +636,14 @@ class AnthropicAPI(LanguageModelAPI):
         prompt: str,
         params: LanguageModelGenerationParams,
     ) -> AsyncGenerator[LanguageModelStreamEvent, None]:
-        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(
-            prompt
-        )
+        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(prompt)
         with _anthropic_exception_manager():
             async with self._get_client() as client:
                 yield LanguageModelStreamStartEvent()
 
                 # NOTE: anthropic's API REQUIRES you to provide this, if you don't pass it in we just set it to the maximum possible
-                max_tokens = (
-                    params.max_tokens
-                    if params.max_tokens is not None
-                    else self.model_info.max_output_tokens
-                )
-                assert max_tokens is not None, (
-                    "max_tokens must be provided for Anthropic API"
-                )
+                max_tokens = params.max_tokens if params.max_tokens is not None else self.model_info.max_output_tokens
+                assert max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
                     AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
@@ -694,23 +652,15 @@ class AnthropicAPI(LanguageModelAPI):
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if (
-                        self.model_name
-                        == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG
-                    ):
+                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
-                    elif (
-                        self.model_name
-                        == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG
-                    ):
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
                     elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_6_OPUS
                     else:
                         assert False, "unreachable"
-                    stream_fn = lambda **kwargs: client.beta.messages.stream(
-                        **kwargs, betas=["context-1m-2025-08-07"]
-                    )
+                    stream_fn = lambda **kwargs: client.beta.messages.stream(**kwargs, betas=["context-1m-2025-08-07"])
                     cache_info_maker = lambda api_result: AnthropicCachingInfo(
                         written_5m=api_result.usage.cache_creation.ephemeral_5m_input_tokens,
                         written_1h=api_result.usage.cache_creation.ephemeral_1h_input_tokens,
@@ -726,9 +676,7 @@ class AnthropicAPI(LanguageModelAPI):
                     max_tokens=max_tokens,
                     messages=non_system_messages,
                     model=model_name,
-                    stop_sequences=(
-                        [params.stop] if params.stop is not None else NOT_GIVEN
-                    ),
+                    stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                     system=system_messages or NOT_GIVEN,
                     temperature=params.temperature,
                 ) as stream:
@@ -738,9 +686,7 @@ class AnthropicAPI(LanguageModelAPI):
                     final_message = await stream.get_final_message()
                     text = only(final_message.content).text
                     stop_reason = (
-                        final_message.stop_reason
-                        if final_message.stop_reason is not None
-                        else ResponseStopReason.NONE
+                        final_message.stop_reason if final_message.stop_reason is not None else ResponseStopReason.NONE
                     )
                     if params.stop and stop_reason == ResponseStopReason.STOP_SEQUENCE:
                         yield LanguageModelStreamDeltaEvent(delta=params.stop)
@@ -758,9 +704,7 @@ class AnthropicAPI(LanguageModelAPI):
                         read_from_cache=final_message.usage.cache_read_input_tokens,
                         provider_specific_data=cache_info_maker(final_message),
                     )
-                    dollars_used = self.calculate_cost(
-                        prompt_tokens, completion_tokens, caching_info
-                    )
+                    dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
 
                     if final_message.stop_reason:
                         stop_reason = _ANTHROPIC_STOP_REASON_TO_STOP_REASON.get(
@@ -769,9 +713,7 @@ class AnthropicAPI(LanguageModelAPI):
                     else:
                         stop_reason = ResponseStopReason.NONE
 
-                    logger.trace(
-                        "Dollars used: {dollars_used}", dollars_used=dollars_used
-                    )
+                    logger.trace("Dollars used: {dollars_used}", dollars_used=dollars_used)
                     yield LanguageModelStreamEndEvent(
                         usage=LanguageModelResponseUsage(
                             prompt_tokens_used=prompt_tokens,
@@ -790,19 +732,13 @@ class AnthropicAPI(LanguageModelAPI):
             raise UnsetCachePathError()
         return AsyncCache(self.count_tokens_cache_path, CachedCountTokensResponse)
 
-    async def check_count_tokens_cache(
-        self, cache_key: str
-    ) -> CountTokensResponse | None:
-        return await self.check_cache_core(
-            self.get_count_tokens_response_cache, cache_key
-        )
+    async def check_count_tokens_cache(self, cache_key: str) -> CountTokensResponse | None:
+        return await self.check_cache_core(self.get_count_tokens_response_cache, cache_key)
 
     async def _get_from_count_tokens_cache(
         self, frame: FrameType | None
     ) -> tuple[str | None, CountTokensResponse | None]:
-        return await self._get_from_cache_core(
-            frame, lambda cr: cr, self.check_count_tokens_cache
-        )
+        return await self._get_from_cache_core(frame, lambda cr: cr, self.check_count_tokens_cache)
 
     async def count_tokens_api(self, prompt: str, is_caching_enabled: bool) -> int:
         """
@@ -825,9 +761,7 @@ class AnthropicAPI(LanguageModelAPI):
 
         self.assert_not_offline_if_cache_miss(prompt)
 
-        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(
-            prompt
-        )
+        non_system_messages, system_messages = _convert_prompt_to_anthropic_messages(prompt)
 
         with _anthropic_exception_manager():
             async with self._get_client() as client:
@@ -873,25 +807,17 @@ class AnthropicAPI(LanguageModelAPI):
                     f"Missing required info for more precise cost estimates; caching info: {caching_info}, model info: {self.model_info.provider_specific_info}"
                 )
             anthropic_caching_usage = caching_info.provider_specific_data
-            assert isinstance(anthropic_caching_usage, AnthropicCachingInfo), (
-                "Expected AnthropicCachingInfo"
-            )
+            assert isinstance(anthropic_caching_usage, AnthropicCachingInfo), "Expected AnthropicCachingInfo"
             anthropic_caching_rates = self.model_info.provider_specific_info
-            assert isinstance(anthropic_caching_rates, AnthropicModelInfo), (
-                "Expected AnthropicModelInfo"
-            )
+            assert isinstance(anthropic_caching_rates, AnthropicModelInfo), "Expected AnthropicModelInfo"
             cache_write_5m_tokens = anthropic_caching_usage.written_5m
             cache_write_1h_tokens = anthropic_caching_usage.written_1h
             cache_read_tokens = caching_info.read_from_cache
-            regular_input_tokens = (
-                prompt_tokens - cache_write_5m_tokens - cache_write_1h_tokens
-            )
+            regular_input_tokens = prompt_tokens - cache_write_5m_tokens - cache_write_1h_tokens
 
             input_cost = (
-                cache_write_5m_tokens
-                * anthropic_caching_rates.cost_per_5m_cache_write_token
-                + cache_write_1h_tokens
-                * anthropic_caching_rates.cost_per_1h_cache_write_token
+                cache_write_5m_tokens * anthropic_caching_rates.cost_per_5m_cache_write_token
+                + cache_write_1h_tokens * anthropic_caching_rates.cost_per_1h_cache_write_token
                 + cache_read_tokens * anthropic_caching_rates.cost_per_cache_read_token
                 + regular_input_tokens * self.model_info.cost_per_input_token
             )
