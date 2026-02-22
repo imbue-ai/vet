@@ -578,14 +578,18 @@ def main(argv: list[str] | None = None) -> int:
         )
     except AgentAPIError as e:
         logger.opt(exception=e).debug("Agent error")
+        print(f"vet: {e}", file=sys.stderr)
         if isinstance(e, AgentProcessError) and not e.stderr:
-            print("vet: agent authentication error", file=sys.stderr)
             if args.agent_harness == AgentHarnessType.CODEX:
-                print("hint: run `codex` to complete setup", file=sys.stderr)
+                print(
+                    "hint: if this is an authentication error, run `codex` to complete setup",
+                    file=sys.stderr,
+                )
             else:
-                print("hint: run `claude` to complete setup", file=sys.stderr)
-        else:
-            print(f"vet: {e}", file=sys.stderr)
+                print(
+                    "hint: if this is an authentication error, run `claude` to complete setup",
+                    file=sys.stderr,
+                )
         return 2
     except MissingAPIKeyError as e:
         logger.opt(exception=e).debug("Missing API key")
