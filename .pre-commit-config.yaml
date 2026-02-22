@@ -7,4 +7,3 @@ repos:
     rev: 25.12.0
     hooks:
       - id: black
-        args: [--line-length=120]
