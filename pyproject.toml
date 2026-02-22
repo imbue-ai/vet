@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "verify-everything"
-version = "0.1.12"
+version = "0.1.13"
 description = "LLM-based code review tool that finds issues tests and linters miss"
 readme = "README.md"
 license = "AGPL-3.0-only"
