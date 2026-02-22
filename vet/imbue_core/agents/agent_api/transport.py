@@ -161,8 +161,8 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
                         raise SDKJSONDecodeError(line_str, e) from e
                     continue
 
-        except (subprocess.SubprocessError, BrokenPipeError):
-            pass
+        except (subprocess.SubprocessError, BrokenPipeError) as e:
+            logger.debug(f"Transport error during receive_messages: {type(e).__name__}: {e}")
 
         stderr_read_thread.join(timeout=5.0)
         process.wait()

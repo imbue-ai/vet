@@ -588,12 +588,14 @@ def main(argv: list[str] | None = None) -> int:
     except MissingAPIKeyError as e:
         logger.opt(exception=e).debug("Missing API key")
         print(f"vet: {e}", file=sys.stderr)
-        if e.env_var:
+        env_var = e.env_var
+        error_str = str(e)
+        if env_var and env_var not in error_str:
             print(
-                f"hint: set the {e.env_var} environment variable.",
+                f"hint: set the {env_var} environment variable.",
                 file=sys.stderr,
             )
-        else:
+        elif not env_var:
             print(
                 "hint: set the appropriate API key environment variable.",
                 file=sys.stderr,

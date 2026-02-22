@@ -835,7 +835,10 @@ def _get_api_key_or_auth_token() -> tuple[str | None, str | None]:
     api_key = get_secret("ANTHROPIC_API_KEY")
     auth_token = get_secret("ANTHROPIC_AUTH_TOKEN")
     if not api_key and not auth_token:
-        raise MissingAPIKeyError("Anthropic API key is not set.", env_var="ANTHROPIC_API_KEY")
+        raise MissingAPIKeyError(
+            "Neither ANTHROPIC_API_KEY nor ANTHROPIC_AUTH_TOKEN environment variable is set.",
+            env_var="ANTHROPIC_API_KEY",
+        )
     return api_key, auth_token
 
 
