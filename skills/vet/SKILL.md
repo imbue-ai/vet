@@ -75,4 +75,5 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
 - `--agentic`: Mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. Slower (~3 min) so not recommended as the default.
+- `--agent-harness {claude,codex}`: Which agent CLI to use in agentic mode (default: `claude`). Requires the selected agent to be installed and authenticated. Run `claude` or `codex` to complete setup.
 - `--help`: Show comprehensive list of options

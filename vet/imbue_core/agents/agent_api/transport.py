@@ -114,9 +114,12 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
         if not process or not stdin_stream:
             raise AgentCLIConnectionError("Not connected")
 
-        for message in messages:
-            stdin_stream.write(json.dumps(message) + "\n")
-            stdin_stream.flush()
+        try:
+            for message in messages:
+                stdin_stream.write(json.dumps(message) + "\n")
+                stdin_stream.flush()
+        except BrokenPipeError:
+            pass
 
     def _read_stderr(self, output_buffer: list[str]) -> None:
         """Read stderr in background."""
@@ -156,7 +159,7 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
                         raise SDKJSONDecodeError(line_str, e) from e
                     continue
 
-        except subprocess.SubprocessError:
+        except (subprocess.SubprocessError, BrokenPipeError):
             pass
 
         stderr_read_thread.join(timeout=5.0)

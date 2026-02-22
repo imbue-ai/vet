@@ -159,7 +159,8 @@ def collate_issues_with_agent(
         guides_by_issue_code,
     )
     claude_response = generate_response_from_agent(collation_prompt, options)
-    assert claude_response is not None
+    if claude_response is None:
+        raise RuntimeError("Agent returned no response. Enable verbose logging for details.")
     response_text, collation_messages = claude_response
     collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
     collation_invocation_info = extract_invocation_info_from_messages(collation_messages)

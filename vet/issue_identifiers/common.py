@@ -21,6 +21,8 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.agent_api.errors import AgentAPIError
+from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -250,9 +252,14 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
                     assistant_messages.append(message)
                 elif isinstance(message, AgentResultMessage):
                     result_message = message
+    except AgentAPIError:
+        raise
     except Exception as e:
         log_exception(e, "Agent API call failed")
         return None
+
+    if result_message and result_message.is_error:
+        raise AgentProcessError(result_message.error or result_message.result or "unknown error")
 
     # Try to get response from result message first
     response_text = ""

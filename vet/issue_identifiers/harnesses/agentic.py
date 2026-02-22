@@ -14,6 +14,7 @@ from loguru import logger
 
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
+from vet.imbue_core.agents.agent_api.errors import AgentAPIError
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
@@ -269,6 +270,8 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
+                    except AgentAPIError:
+                        raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
                         continue
@@ -298,7 +301,8 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         else:
             prompt = self._get_prompt(project_context, config, identifier_inputs)
             claude_response = generate_response_from_agent(prompt, options)
-            assert claude_response is not None
+            if claude_response is None:
+                raise RuntimeError("Agent returned no response. Enable verbose logging for details.")
             response_text, messages = claude_response
 
             message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)

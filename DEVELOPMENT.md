@@ -48,9 +48,16 @@ This will be slower the first time you run it because `uv` has to set up your vi
 
 ##### Agentic Verifier
 
-The agentic verifier calls out to Claude Code or Codex. Codex is part of the image by default, and if you have your `CODEX_API_KEY` set in your `.env` it will be used. As such, no further actions are required to run the agentic verifier with Codex unless you would like to use another auth approach which requires signing into Codex interactively (oauth and such).
+The agentic verifier calls out to Claude Code or Codex. You select which agent to use with `--agent-harness` (defaults to `claude`):
 
-Since Claude Code is proprietary, it is not installed by default. If you wish to have it installed as part of your image, run
+```bash
+uv run vet --agentic --agent-harness codex
+uv run vet --agentic --agent-harness claude
+```
+
+**Codex** is part of the image by default. If you encounter authentication issues, run `codex` inside the container to complete setup.
+
+**Claude Code** is proprietary and not installed by default. To include it in your image, run:
 
 ```bash
 ./dev/build.sh claude
@@ -64,7 +71,7 @@ Then, to start a container based on this image run:
 
 NOTE: Without passing `claude` into `build.sh` it will default to the image without Claude Code installed.
 
-Within the container, you can run `claude` to begin interactive authentication to get it setup.
+Within the container, if you encounter authentication issues, run `claude` to complete setup.
 
 ## Formatting Hooks
 

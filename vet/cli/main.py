@@ -496,7 +496,10 @@ def main(argv: list[str] | None = None) -> int:
     from vet.formatters import format_github_review
     from vet.formatters import format_issue_text
     from vet.formatters import issue_to_dict
+    from vet.imbue_core.agents.agent_api.errors import AgentAPIError
+    from vet.imbue_core.agents.agent_api.errors import AgentProcessError
     from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+    from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
     from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
     from vet.imbue_tools.types.vet_config import VetConfig
 
@@ -573,6 +576,25 @@ def main(argv: list[str] | None = None) -> int:
             conversation_history=conversation_history,
             extra_context=extra_context,
         )
+    except AgentAPIError as e:
+        logger.opt(exception=e).debug("Agent error")
+        if isinstance(e, AgentProcessError) and not e.stderr:
+            print("vet: agent authentication error", file=sys.stderr)
+            if args.agent_harness == AgentHarnessType.CODEX:
+                print("hint: run `codex` to complete setup", file=sys.stderr)
+            else:
+                print("hint: run `claude` to complete setup", file=sys.stderr)
+        else:
+            print(f"vet: {e}", file=sys.stderr)
+        return 2
+    except MissingAPIKeyError as e:
+        logger.opt(exception=e).debug("Missing API key")
+        print(f"vet: {e}", file=sys.stderr)
+        print(
+            "hint: set the ANTHROPIC_API_KEY environment variable.",
+            file=sys.stderr,
+        )
+        return 2
     # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.
     except (PromptTooLongError, BadAPIRequestError) as e:
         if _is_context_overflow(e):
