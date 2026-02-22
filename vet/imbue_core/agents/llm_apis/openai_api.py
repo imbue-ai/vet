@@ -387,7 +387,10 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
     def _get_client(self) -> AsyncOpenAI:
         api_key = get_secret("OPENAI_API_KEY")
         if not api_key:
-            raise MissingAPIKeyError("OPENAI_API_KEY environment variable is not set")
+            raise MissingAPIKeyError(
+                "OPENAI_API_KEY environment variable is not set",
+                env_var="OPENAI_API_KEY",
+            )
         return AsyncOpenAI(  # pyre-ignore[16]: pyre doesn't understand the auto-generated openai._client
             api_key=api_key
         )

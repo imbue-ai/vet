@@ -74,7 +74,9 @@ class LanguageModelError(Exception):
 
 
 class MissingAPIKeyError(LanguageModelError):
-    pass
+    def __init__(self, message: str, env_var: str | None = None) -> None:
+        self.env_var = env_var
+        super().__init__(message)
 
 
 class RetriableLanguageModelError(LanguageModelError):

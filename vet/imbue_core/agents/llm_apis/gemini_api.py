@@ -304,7 +304,10 @@ class GeminiAPI(LanguageModelAPI):
     def _get_client(self) -> genai.Client:
         api_key = get_secret("GOOGLE_API_KEY")
         if not api_key:
-            raise MissingAPIKeyError("GOOGLE_API_KEY environment variable is not set")
+            raise MissingAPIKeyError(
+                "GOOGLE_API_KEY environment variable is not set",
+                env_var="GOOGLE_API_KEY",
+            )
         return genai.Client(api_key=api_key)
 
     async def _call_api(

@@ -579,25 +579,25 @@ def main(argv: list[str] | None = None) -> int:
     except AgentAPIError as e:
         logger.opt(exception=e).debug("Agent error")
         print(f"vet: {e}", file=sys.stderr)
-        if isinstance(e, AgentProcessError) and not e.stderr:
-            if args.agent_harness == AgentHarnessType.CODEX:
-                print(
-                    "hint: if this is an authentication error, run `codex` to complete setup",
-                    file=sys.stderr,
-                )
-            else:
-                print(
-                    "hint: if this is an authentication error, run `claude` to complete setup",
-                    file=sys.stderr,
-                )
+        if isinstance(e, AgentProcessError) and e.exit_code is not None and not e.stderr:
+            print(
+                f"hint: if this is an authentication error, run `{args.agent_harness}` to complete setup",
+                file=sys.stderr,
+            )
         return 2
     except MissingAPIKeyError as e:
         logger.opt(exception=e).debug("Missing API key")
         print(f"vet: {e}", file=sys.stderr)
-        print(
-            "hint: set the ANTHROPIC_API_KEY environment variable.",
-            file=sys.stderr,
-        )
+        if e.env_var:
+            print(
+                f"hint: set the {e.env_var} environment variable.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "hint: set the appropriate API key environment variable.",
+                file=sys.stderr,
+            )
         return 2
     # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.
     except (PromptTooLongError, BadAPIRequestError) as e:

@@ -17,6 +17,8 @@ from typing import Self
 from typing import Sequence
 from typing import TypeVar
 
+from loguru import logger
+
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.errors import AgentCLIConnectionError
 from vet.imbue_core.agents.agent_api.errors import AgentCLIJSONDecodeError as SDKJSONDecodeError
@@ -119,7 +121,7 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
                 stdin_stream.write(json.dumps(message) + "\n")
                 stdin_stream.flush()
         except BrokenPipeError:
-            pass
+            logger.debug("BrokenPipeError: subprocess stdin pipe broke while sending request")
 
     def _read_stderr(self, output_buffer: list[str]) -> None:
         """Read stderr in background."""

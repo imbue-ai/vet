@@ -224,7 +224,7 @@ class GroqChatAPI(LanguageModelAPI):
     def _get_client(self) -> AsyncGroq:
         api_key = get_secret("GROQ_API_KEY")
         if not api_key:
-            raise MissingAPIKeyError("GROQ_API_KEY environment variable is not set")
+            raise MissingAPIKeyError("GROQ_API_KEY environment variable is not set", env_var="GROQ_API_KEY")
         return AsyncGroq(api_key=api_key)
 
     async def _call_api(

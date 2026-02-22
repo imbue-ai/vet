@@ -446,7 +446,7 @@ def _anthropic_exception_manager() -> Iterator[None]:
     except anthropic.APIConnectionError as e:
         raise TransientLanguageModelError(str(e)) from e
     except anthropic.AuthenticationError as e:
-        raise MissingAPIKeyError("Anthropic API key is invalid or expired.") from e
+        raise MissingAPIKeyError("Anthropic API key is invalid or expired.", env_var="ANTHROPIC_API_KEY") from e
     except anthropic.RateLimitError as e:
         extra_header_keys = [x for x in e.response.headers.keys() if x.startswith("anthropic-")]
         extra_data = ", ".join([f"{key}={e.response.headers[key]}" for key in extra_header_keys])
@@ -835,7 +835,7 @@ def _get_api_key_or_auth_token() -> tuple[str | None, str | None]:
     api_key = get_secret("ANTHROPIC_API_KEY")
     auth_token = get_secret("ANTHROPIC_AUTH_TOKEN")
     if not api_key and not auth_token:
-        raise MissingAPIKeyError("Anthropic API key is not set.")
+        raise MissingAPIKeyError("Anthropic API key is not set.", env_var="ANTHROPIC_API_KEY")
     return api_key, auth_token
 
 
