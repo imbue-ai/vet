@@ -53,7 +53,7 @@ curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/install-skill.sh 
 
 You will be prompted to choose between:
 
-- **Project level**: installs into `.agents/skills/vet/` and `.claude/skills/vet/` at the repo root (run from your repo directory)
+- **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, and `.codex/skills/vet/` at the repo root (run from your repo directory)
 - **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
 
 <details>
@@ -64,7 +64,7 @@ You will be prompted to choose between:
 From the root of your git repo:
 
 ```bash
-for dir in .agents .claude; do
+for dir in .agents .opencode .claude .codex; do
   mkdir -p "$dir/skills/vet/scripts"
   for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
     curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \

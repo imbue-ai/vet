@@ -15,7 +15,7 @@ echo ""
 echo "  Vet Skill Installer"
 echo "  --------------------"
 echo ""
-echo "  [1] Project level  - install into the current repo (.agents/ and .claude/)"
+echo "  [1] Project level  - install into the current repo (.agents/, .opencode/, .claude/, and .codex/)"
 echo "  [2] User level     - install into your home directory (~/.agents/, ~/.opencode/, ~/.claude/, ~/.codex/)"
 echo ""
 
@@ -24,7 +24,7 @@ read -r choice </dev/tty
 
 case "$choice" in
   1)
-    dirs=(".agents" ".claude")
+    dirs=(".agents" ".opencode" ".claude" ".codex")
     label="project"
     ;;
   2)
