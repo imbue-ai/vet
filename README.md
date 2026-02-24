@@ -15,40 +15,14 @@
 
 ## Why Vet
 
-- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
-- **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
-- **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
+- **Reviews intent and code**: checks agent conversations for goal adherence and code changes for correctness.
+- **Runs anywhere**: from the terminal, as an agent skill, or in CI.
+- **Bring-your-own-model**: works with any provider using your own API keys, no subscription ever.
 - **No data collection**: requests go directly to inference providers, never through our servers.
-
-## Installation
-
-```bash
-pip install verify-everything
-```
-
-Or install from source:
-
-```bash
-pip install git+https://github.com/imbue-ai/vet.git
-```
-
-## Quickstart
-
-Run Vet in the current repo:
-
-```bash
-vet "Implement X without breaking Y"
-```
-
-Compare against a base ref/commit:
-
-```bash
-vet "Refactor storage layer" --base-commit main
-```
 
 ## Using Vet with Coding Agents
 
-Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+Vet can run as an agent skill. When installed, agents will proactively run vet after code changes to find issues with the new code and mismatches between the user's request and the agent's actions.
 
 ### Install the skill
 
@@ -95,6 +69,32 @@ done
 ### Security note
 
 The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
+
+## Installation
+
+```bash
+pip install verify-everything
+```
+
+Or install from source:
+
+```bash
+pip install git+https://github.com/imbue-ai/vet.git
+```
+
+## Quickstart
+
+Run Vet in the current repo:
+
+```bash
+vet "Implement X without breaking Y"
+```
+
+Compare against a base ref/commit:
+
+```bash
+vet "Refactor storage layer" --base-commit main
+```
 
 ## GitHub PRs (Actions)
 
