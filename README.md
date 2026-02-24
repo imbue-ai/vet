@@ -11,7 +11,7 @@
   <a href="https://discord.gg/sBAVvHPUTE"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
-<p align="center">Vet is a CLI tool that reviews <b>code changes</b> and <b>coding agent behavior</b>. Run it from the terminal, as a skill your coding agent invokes automatically, or in CI on pull requests.</p>
+<p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
 
 ## Why Vet
 
