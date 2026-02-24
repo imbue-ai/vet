@@ -56,9 +56,17 @@ vet "goal"
     - IMPORTANT: Verify the session you found matches the current conversation. If the title is ambiguous, compare timestamps or check multiple candidates.
 3. Pass the session ID as `--session-id`.
 
-**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the correct conversation using the approach described above for opencode that uses textual search.
+**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. To find the correct session file:
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.codex/sessions/` to find the matching session file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
+3. Pass the matched file path as `--session-file`.
 
-**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the correct conversation using the approach described above for opencode that uses textual search.
+**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). To find the correct session file:
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.claude/projects/` to find the matching session file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
+3. Pass the matched file path as `--session-file`.
 
 NOTE: The examples in the standard usage section assume the user installed the vet skill at the user level, not the project level. Prior to trying to run vet, check if it was installed at the project level which should take precedence over the user level. If it is installed at the project level, ensure the history-loader option points to the correct location.
 
