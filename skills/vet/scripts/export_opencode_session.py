@@ -1,27 +1,37 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import subprocess
 import sys
+import tempfile
 
 parser = argparse.ArgumentParser(description="Export OpenCode session history for vet")
 parser.add_argument("--session-id", required=True, help="OpenCode session ID (ses_...)")
 args = parser.parse_args()
 
-result = subprocess.run(
-    ["opencode", "export", args.session_id],
-    capture_output=True,
-    text=True,
-)
+fd, tmppath = tempfile.mkstemp(suffix=".json")
+try:
+    with os.fdopen(fd, "w+b") as f:
+        result = subprocess.run(
+            ["opencode", "export", args.session_id],
+            stdout=f,
+            stderr=subprocess.PIPE,
+        )
 
-if result.returncode != 0:
-    print(
-        f"WARNING: opencode export failed for session {args.session_id}: {result.stderr.strip()}",
-        file=sys.stderr,
-    )
-    sys.exit(0)
+    if result.returncode != 0:
+        print(
+            f"WARNING: opencode export failed for session {args.session_id}: {result.stderr.decode().strip()}",
+            file=sys.stderr,
+        )
+        sys.exit(0)
 
-if not result.stdout.strip():
+    with open(tmppath, "r") as f:
+        raw = f.read()
+finally:
+    os.unlink(tmppath)
+
+if not raw.strip():
     print(
         f"WARNING: opencode export returned empty output for session {args.session_id}",
         file=sys.stderr,
@@ -29,7 +39,7 @@ if not result.stdout.strip():
     sys.exit(0)
 
 try:
-    data = json.loads(result.stdout)
+    data = json.loads(raw)
 except json.JSONDecodeError as e:
     print(f"WARNING: Failed to parse opencode export output: {e}", file=sys.stderr)
     sys.exit(0)
