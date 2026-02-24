@@ -17,7 +17,7 @@
 
 - **Reviews intent and code**: checks agent conversations for goal adherence and code changes for correctness.
 - **Runs anywhere**: from the terminal, as a coding agent skill, or in CI.
-- **Bring-your-own-model**: works with any provider using your own API keys, no subscription required.
+- **Bring-your-own-model**: works with any provider using your own API keys, no subscription ever.
 - **No data collection**: requests go directly to inference providers, never through our servers.
 
 ## Using Vet with Coding Agents
