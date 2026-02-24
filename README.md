@@ -16,13 +16,13 @@
 ## Why Vet
 
 - **Reviews intent and code**: checks agent conversations for goal adherence and code changes for correctness.
-- **Runs anywhere**: from the terminal, as a agent skill, or in CI.
+- **Runs anywhere**: from the terminal, as an agent skill, or in CI.
 - **Bring-your-own-model**: works with any provider using your own API keys, no subscription ever.
 - **No data collection**: requests go directly to inference providers, never through our servers.
 
 ## Using Vet with Coding Agents
 
-Vet can run as an agent skill. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+Vet can run as an agent skill. When installed, agents will proactively run vet after code changes to find issues with the new code and mismatches between the user's request and the agent's actions.
 
 ### Install the skill
 
