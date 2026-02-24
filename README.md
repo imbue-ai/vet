@@ -22,7 +22,7 @@
 
 ## Using Vet with Coding Agents
 
-Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+Vet can run as a skill coding agents can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
 
 ### Install the skill
 
