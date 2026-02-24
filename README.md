@@ -20,32 +20,6 @@
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
 - **No data collection**: requests go directly to inference providers, never through our servers.
 
-## Installation
-
-```bash
-pip install verify-everything
-```
-
-Or install from source:
-
-```bash
-pip install git+https://github.com/imbue-ai/vet.git
-```
-
-## Quickstart
-
-Run Vet in the current repo:
-
-```bash
-vet "Implement X without breaking Y"
-```
-
-Compare against a base ref/commit:
-
-```bash
-vet "Refactor storage layer" --base-commit main
-```
-
 ## Using Vet with Coding Agents
 
 Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
@@ -95,6 +69,32 @@ done
 ### Security note
 
 The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
+
+## Installation
+
+```bash
+pip install verify-everything
+```
+
+Or install from source:
+
+```bash
+pip install git+https://github.com/imbue-ai/vet.git
+```
+
+## Quickstart
+
+Run Vet in the current repo:
+
+```bash
+vet "Implement X without breaking Y"
+```
+
+Compare against a base ref/commit:
+
+```bash
+vet "Refactor storage layer" --base-commit main
+```
 
 ## GitHub PRs (Actions)
 
