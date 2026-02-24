@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/imbue-ai/vet">
-    <img alt="Vet: Verify Everything" src="vet.svg" width="30%">
+    <img alt="Vet: Verify Everything" src="https://raw.githubusercontent.com/imbue-ai/vet/main/images/vet.svg" width="30%">
   </a>
 </p>
 
@@ -18,6 +18,7 @@
 - **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
 - **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
+- **No data collection**: your code is sent directly to inference providers and never passes through our servers.
 
 ## Installation
 
@@ -134,7 +135,7 @@ The action handles Python setup, vet installation, merge base computation, and p
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/architecture.svg)
+![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/images/architecture.svg)
 
 ## Output & exit codes
 
