@@ -1,5 +1,7 @@
 <p align="center">
+  <a href="https://github.com/imbue-ai/vet">
     <img alt="Vet: Verify Everything" src="https://raw.githubusercontent.com/imbue-ai/vet/main/images/vet.svg" width="30%">
+  </a>
 </p>
 
 <p align="center">
