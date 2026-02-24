@@ -35,9 +35,7 @@ You will be prompted to choose between:
 - **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, and `.codex/skills/vet/` at the repo root (run from your repo directory)
 - **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
 
-### Network access
-
-Vet requires network access to call LLM inference APIs. Some coding agent environments, such as [Codex cloud](https://platform.openai.com/codex/cloud/internet-access), sandbox task execution without internet access by default. Ensure internet access is enabled in your environment before running vet.
+> **Note:** Ensure your execution environment has a network connection. Vet calls external LLM APIs and will not work in sandboxed environments without internet access.
 
 ### Demo
 
