@@ -1,13 +1,17 @@
-# Vet : Verify Everything
+<p align="center">
+  <a href="https://github.com/imbue-ai/vet">
+    <img alt="Vet: Verify Everything" src="vet.svg" width="30%">
+  </a>
+</p>
 
-[![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg)
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/sBAVvHPUTE)
+<p align="center">
+  <a href="https://pypi.python.org/pypi/verify-everything/"><img src="https://img.shields.io/pypi/v/verify-everything.svg" alt="PyPi"></a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
+  <img src="https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg" alt="Build Status">
+  <a href="https://discord.gg/sBAVvHPUTE"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
+</p>
 
-Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
-
-It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
+<p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
 
 ## Why Vet
 
