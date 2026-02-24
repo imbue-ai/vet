@@ -37,7 +37,7 @@ You will be prompted to choose between:
 
 ### Demo
 
-![demo](recording4.gif)
+![demo](https://raw.githubusercontent.com/imbue-ai/vet/main/images/demo.gif)
 
 <details>
 <summary>Manual installation</summary>
