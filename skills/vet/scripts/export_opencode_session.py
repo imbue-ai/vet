@@ -58,9 +58,7 @@ for msg in data.get("messages", []):
         content = []
         for p in parts:
             if p.get("type") == "text" and p.get("text"):
-                content.append(
-                    {"object_type": "TextBlock", "type": "text", "text": p["text"]}
-                )
+                content.append({"object_type": "TextBlock", "type": "text", "text": p["text"]})
         if content:
             print(
                 json.dumps(
