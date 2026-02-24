@@ -28,19 +28,25 @@ vet --help
 
 ### Standard Usage
 
+Before running vet, determine the correct Python binary:
+```bash
+$(command -v python3 || command -v python)
+```
+Use whichever resolves (prefer `python3`). The examples below use `python3` — substitute `python` if that is what your system provides.
+
 **OpenCode:**
 ```bash
-vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
 ```
 
 **Codex:**
 ```bash
-vet "goal" --history-loader "python ~/.codex/skills/vet/scripts/export_codex_session.py --session-file <path-to-session.jsonl>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.codex/skills/vet/scripts/export_codex_session.py --session-file <path-to-session.jsonl>"
 ```
 
 **Claude Code:**
 ```bash
-vet "goal" --history-loader "python ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
 ```
 
 **Without Conversation History**
@@ -50,16 +56,23 @@ vet "goal"
 
 ### Finding Your Session
 
-**OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for the first user message from this conversation in the part files:
+**OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID:
+1. Run: `opencode session list --format json` to list recent sessions with their IDs and titles.
+2. Identify the current session from the list by matching the title or timestamp.
+    - IMPORTANT: Verify the session you found matches the current conversation. If the title is ambiguous, compare timestamps or check multiple candidates.
+3. Pass the session ID as `--session-id`.
+
+**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. To find the correct session file:
 1. Find the most unique sentence / question / string in the current conversation.
-2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
-    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string. This happens frequently so it is paramount you verify this. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
-3. Read the `sessionID` field from that part JSON file.
-4. Pass that value as `--session-id`.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.codex/sessions/` to find the matching session file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
+3. Pass the matched file path as `--session-file`.
 
-**Codex:** Session files are stored in `~/.codex/sessions/YYYY/MM/DD/`. Find the correct conversation using the approach described above for opencode that uses textual search.
-
-**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). Find the correct conversation using the approach described above for opencode that uses textual search.
+**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). To find the correct session file:
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.claude/projects/` to find the matching session file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
+3. Pass the matched file path as `--session-file`.
 
 NOTE: The examples in the standard usage section assume the user installed the vet skill at the user level, not the project level. Prior to trying to run vet, check if it was installed at the project level which should take precedence over the user level. If it is installed at the project level, ensure the history-loader option points to the correct location.
 

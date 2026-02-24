@@ -1,52 +1,61 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
+import subprocess
 import sys
-from pathlib import Path
+import tempfile
 
 parser = argparse.ArgumentParser(description="Export OpenCode session history for vet")
 parser.add_argument("--session-id", required=True, help="OpenCode session ID (ses_...)")
 args = parser.parse_args()
 
-STORAGE = Path.home() / ".local/share/opencode/storage"
-MSG_DIR = STORAGE / "message" / args.session_id
-PART_DIR = STORAGE / "part"
+fd, tmppath = tempfile.mkstemp(suffix=".json")
+try:
+    with os.fdopen(fd, "w+b") as f:
+        try:
+            result = subprocess.run(
+                ["opencode", "export", args.session_id],
+                stdout=f,
+                stderr=subprocess.PIPE,
+            )
+        except (FileNotFoundError, OSError) as e:
+            print(
+                f"WARNING: Could not run 'opencode' command: {e}",
+                file=sys.stderr,
+            )
+            sys.exit(0)
 
-if not MSG_DIR.exists():
+    if result.returncode != 0:
+        print(
+            f"WARNING: opencode export failed for session {args.session_id}: {result.stderr.decode().strip()}",
+            file=sys.stderr,
+        )
+        sys.exit(0)
+
+    with open(tmppath, "r") as f:
+        raw = f.read()
+finally:
+    os.unlink(tmppath)
+
+if not raw.strip():
     print(
-        f"WARNING: Message directory not found for session {args.session_id}",
+        f"WARNING: opencode export returned empty output for session {args.session_id}",
         file=sys.stderr,
     )
     sys.exit(0)
 
-messages = []
-for msg_file in sorted(MSG_DIR.glob("*.json")):
-    try:
-        msg = json.loads(msg_file.read_text())
-    except json.JSONDecodeError as e:
-        print(f"WARNING: Skipping malformed message file {msg_file}: {e}", file=sys.stderr)
-        continue
-    messages.append((msg.get("time", {}).get("created", 0), msg))
+try:
+    data = json.loads(raw)
+except json.JSONDecodeError as e:
+    print(f"WARNING: Failed to parse opencode export output: {e}", file=sys.stderr)
+    sys.exit(0)
 
-for _, msg in sorted(messages, key=lambda x: x[0]):
-    msg_id = msg["id"]
-    role = msg.get("role", "user")
-    part_dir = PART_DIR / msg_id
-
-    if not part_dir.exists():
-        continue
-
-    parts = []
-    for part_file in part_dir.glob("*.json"):
-        try:
-            part = json.loads(part_file.read_text())
-        except json.JSONDecodeError as e:
-            print(
-                f"WARNING: Skipping malformed part file {part_file}: {e}",
-                file=sys.stderr,
-            )
-            continue
-        parts.append(part)
+for msg in data.get("messages", []):
+    info = msg.get("info", {})
+    parts = msg.get("parts", [])
+    role = info.get("role", "user")
+    msg_id = info.get("id", "")
 
     if role == "user":
         text = " ".join(p.get("text", "") for p in parts if p.get("type") == "text")
