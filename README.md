@@ -15,7 +15,7 @@
 
 ## Why Vet
 
-- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
+- **Reviews intent and code**: checks agent conversations for intent and code changes for correctness.
 - **Runs anywhere**: from the terminal, as a coding agent skill, or in CI.
 - **Bring-your-own-model**: works with any provider using your own API keys, no subscription required.
 - **No data collection**: requests go directly to inference providers, never through our servers.
