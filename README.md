@@ -70,7 +70,7 @@ done
 
 The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
 
-## Installation
+## Install the CLI
 
 ```bash
 pip install verify-everything
