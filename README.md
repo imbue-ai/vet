@@ -22,7 +22,7 @@
 
 ## Using Vet with Coding Agents
 
-Vet runs as a skill coding agents discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+Vet can run as a skill coding agents discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
 
 ### Install the skill
 
