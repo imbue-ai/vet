@@ -18,7 +18,7 @@
 - **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
 - **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
 - **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
-- **No data collection**: your code is sent directly to inference providers and never passes through our servers.
+- **No data collection**: Vet sends requests directly to inference providers and never routes anything through our servers.
 
 ## Installation
 
