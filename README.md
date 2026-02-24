@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <img src="recording1.gif" alt="demo" width="60%">
+  <img src="recording2.gif" alt="demo" width="60%">
 </p>
 
 <p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
