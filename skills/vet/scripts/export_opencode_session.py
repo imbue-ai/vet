@@ -66,6 +66,31 @@ for msg in data.get("messages", []):
         for p in parts:
             if p.get("type") == "text" and p.get("text"):
                 content.append({"object_type": "TextBlock", "type": "text", "text": p["text"]})
+            elif p.get("type") == "tool":
+                call_id = p.get("callID", "")
+                tool_name = p.get("tool", "")
+                state = p.get("state", {})
+                tool_input = state.get("input", {})
+                tool_output = state.get("output", "")
+                content.append(
+                    {
+                        "object_type": "ToolUseBlock",
+                        "type": "tool_use",
+                        "id": call_id,
+                        "name": tool_name,
+                        "input": tool_input,
+                    }
+                )
+                content.append(
+                    {
+                        "object_type": "ToolResultBlock",
+                        "type": "tool_result",
+                        "tool_use_id": call_id,
+                        "tool_name": tool_name,
+                        "invocation_string": f"{tool_name}({json.dumps(tool_input)})",
+                        "content": {"content_type": "generic", "text": tool_output},
+                    }
+                )
         if content:
             print(
                 json.dumps(
