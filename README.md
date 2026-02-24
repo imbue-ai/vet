@@ -5,6 +5,8 @@
 ![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg)
 [![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/sBAVvHPUTE)
 
+[![asciicast](https://asciinema.org/a/Osz4WXnjEDHLCCet.svg)](https://asciinema.org/a/Osz4WXnjEDHLCCet)
+
 Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
 
 It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
