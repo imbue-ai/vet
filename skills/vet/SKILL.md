@@ -50,7 +50,15 @@ vet "goal"
 
 ### Finding Your Session
 
-**OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for the first user message from this conversation in the part files:
+**OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID, search for a unique string from this conversation. The export script supports both OpenCode's SQLite database (v1.x+) and the legacy JSON file storage, so the same `--session-id` works regardless of which format is on disk.
+
+**SQLite (OpenCode v1.x+):** Session data is stored in `~/.local/share/opencode/opencode.db`.
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `sqlite3 ~/.local/share/opencode/opencode.db "SELECT session_id FROM part WHERE data LIKE '%UNIQUE_MESSAGE%' LIMIT 1;"`
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string. This happens frequently so it is paramount you verify this. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
+3. Pass the returned value as `--session-id`.
+
+**Legacy JSON (older OpenCode versions):** Session data is stored in `~/.local/share/opencode/storage/`.
 1. Find the most unique sentence / question / string in the current conversation.
 2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.local/share/opencode/storage/part/` to find the matching part file.
     - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string. This happens frequently so it is paramount you verify this. Repeat steps 1 and 2 until you have verified the session you found is the current conversation.
