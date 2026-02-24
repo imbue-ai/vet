@@ -4,13 +4,21 @@ import json
 import sys
 from pathlib import Path
 
-parser = argparse.ArgumentParser(description="Export Claude Code session history for vet")
-parser.add_argument("--session-file", required=True, help="Path to Claude Code session .jsonl file")
+parser = argparse.ArgumentParser(
+    description="Export Claude Code session history for vet"
+)
+parser.add_argument(
+    "--session-file", required=True, help="Path to Claude Code session .jsonl file"
+)
 args = parser.parse_args()
 
 SESSION_FILE = Path(args.session_file)
 if not SESSION_FILE.exists():
     sys.exit(0)
+
+# Map tool_use_id -> (tool_name, tool_input) so ToolResultBlocks can reference the tool name
+tool_use_info: dict[str, tuple[str, dict]] = {}
+msg_counter = 0
 
 for line in SESSION_FILE.read_text().splitlines():
     if not line.strip():
@@ -39,7 +47,7 @@ for line in SESSION_FILE.read_text().splitlines():
             print(json.dumps({"object_type": "ChatInputUserMessage", "text": content}))
         elif isinstance(content, list):
             text_parts = []
-            tool_results = []
+            tool_result_blocks = []
             for c in content:
                 if not isinstance(c, dict):
                     continue
@@ -53,19 +61,38 @@ for line in SESSION_FILE.read_text().splitlines():
                             for rc in result_content
                             if isinstance(rc, dict) and rc.get("type") == "text"
                         )
-                    tool_results.append(
+                    tool_use_id = c.get("tool_use_id", "")
+                    tool_name, tool_input = tool_use_info.get(
+                        tool_use_id, ("unknown", {})
+                    )
+                    tool_result_blocks.append(
                         {
                             "object_type": "ToolResultBlock",
                             "type": "tool_result",
-                            "tool_use_id": c.get("tool_use_id", ""),
-                            "content": result_content,
+                            "tool_use_id": tool_use_id,
+                            "tool_name": tool_name,
+                            "invocation_string": f"{tool_name}({json.dumps(tool_input)})",
+                            "content": {
+                                "content_type": "generic",
+                                "text": result_content,
+                            },
                         }
                     )
             text = " ".join(text_parts)
             if text.strip():
                 print(json.dumps({"object_type": "ChatInputUserMessage", "text": text}))
-            for tr in tool_results:
-                print(json.dumps(tr))
+            if tool_result_blocks:
+                msg_counter += 1
+                print(
+                    json.dumps(
+                        {
+                            "object_type": "ResponseBlockAgentMessage",
+                            "role": "user",
+                            "assistant_message_id": f"claude_code_tool_result_{msg_counter}",
+                            "content": tool_result_blocks,
+                        }
+                    )
+                )
     elif entry_type == "assistant":
         if not isinstance(content, list):
             continue
@@ -74,15 +101,22 @@ for line in SESSION_FILE.read_text().splitlines():
             if not isinstance(c, dict):
                 continue
             if c.get("type") == "text" and c.get("text"):
-                blocks.append({"object_type": "TextBlock", "type": "text", "text": c["text"]})
+                blocks.append(
+                    {"object_type": "TextBlock", "type": "text", "text": c["text"]}
+                )
             elif c.get("type") == "tool_use":
+                tool_use_id = c.get("id", "")
+                tool_name = c.get("name", "")
+                tool_input = c.get("input", {})
+                # Record for later ToolResultBlock lookups
+                tool_use_info[tool_use_id] = (tool_name, tool_input)
                 blocks.append(
                     {
                         "object_type": "ToolUseBlock",
                         "type": "tool_use",
-                        "id": c.get("id", ""),
-                        "name": c.get("name", ""),
-                        "input": c.get("input", {}),
+                        "id": tool_use_id,
+                        "name": tool_name,
+                        "input": tool_input,
                     }
                 )
         if blocks:
@@ -91,7 +125,9 @@ for line in SESSION_FILE.read_text().splitlines():
                     {
                         "object_type": "ResponseBlockAgentMessage",
                         "role": "assistant",
-                        "assistant_message_id": message.get("id", entry.get("uuid", "claude_code_msg")),
+                        "assistant_message_id": message.get(
+                            "id", entry.get("uuid", "claude_code_msg")
+                        ),
                         "content": blocks,
                     }
                 )
