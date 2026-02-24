@@ -139,7 +139,9 @@ The action handles Python setup, vet installation, merge base computation, and p
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/images/architecture.svg)
+<p align="center">
+<img alt="Architecture" src="https://raw.githubusercontent.com/imbue-ai/vet/main/images/architecture.svg" width="30%">
+</p>
 
 ## Output & exit codes
 
