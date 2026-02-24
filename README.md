@@ -11,9 +11,7 @@
   <a href="https://discord.gg/sBAVvHPUTE"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
-<p align="center">
-  <img src="recording2.gif" alt="demo" width="60%">
-</p>
+![demo](recording1.gif)
 
 <p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
 
