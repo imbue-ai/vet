@@ -28,7 +28,46 @@ for line in Path(SESSION_FILE).read_text().splitlines():
         continue
 
     payload = entry.get("payload", {})
-    if payload.get("type") != "message":
+    payload_type = payload.get("type")
+
+    if payload_type == "function_call":
+        call_id = payload.get("call_id", payload.get("id", ""))
+        fn_name = payload.get("name", "")
+        fn_args = payload.get("arguments", "")
+        # arguments is a JSON string in the Responses API; try to parse it
+        try:
+            fn_input = json.loads(fn_args) if isinstance(fn_args, str) else fn_args
+        except (json.JSONDecodeError, TypeError):
+            fn_input = {"raw": fn_args}
+        print(
+            json.dumps(
+                {
+                    "object_type": "ToolUseBlock",
+                    "type": "tool_use",
+                    "id": call_id,
+                    "name": fn_name,
+                    "input": fn_input,
+                }
+            )
+        )
+        continue
+
+    if payload_type == "function_call_output":
+        call_id = payload.get("call_id", "")
+        output = payload.get("output", "")
+        print(
+            json.dumps(
+                {
+                    "object_type": "ToolResultBlock",
+                    "type": "tool_result",
+                    "tool_use_id": call_id,
+                    "content": output,
+                }
+            )
+        )
+        continue
+
+    if payload_type != "message":
         continue
 
     role = payload.get("role")
