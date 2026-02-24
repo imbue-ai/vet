@@ -11,8 +11,6 @@
   <a href="https://discord.gg/sBAVvHPUTE"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
 </p>
 
-![demo](recording4.gif)
-
 <p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
 
 ## Why Vet
@@ -36,6 +34,8 @@ You will be prompted to choose between:
 
 - **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, and `.codex/skills/vet/` at the repo root (run from your repo directory)
 - **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
+
+![demo](recording4.gif)
 
 <details>
 <summary>Manual installation</summary>
