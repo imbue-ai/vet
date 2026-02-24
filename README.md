@@ -22,7 +22,7 @@
 
 ## Using Vet with Coding Agents
 
-Vet can run as an agent skill. When installed, agents will proactively run vet after code changes to find issues with the new code and mismatches between the user's request and the agent's actions.
+Vet includes an agent skill. When installed, agents will proactively run vet after code changes to find issues with the new code and mismatches between the user's request and the agent's actions.
 
 ### Install the skill
 
@@ -98,7 +98,7 @@ vet "Refactor storage layer" --base-commit main
 
 ## GitHub PRs (Actions)
 
-Vet can run on pull requests using the reusable GitHub Action.
+Vet reviews pull requests using a reusable GitHub Action.
 
 Create `.github/workflows/vet.yml`:
 
