@@ -28,19 +28,25 @@ vet --help
 
 ### Standard Usage
 
+Before running vet, determine the correct Python binary:
+```bash
+$(command -v python3 || command -v python)
+```
+Use whichever resolves (prefer `python3`). The examples below use `python3` — substitute `python` if that is what your system provides.
+
 **OpenCode:**
 ```bash
-vet "goal" --history-loader "python ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.agents/skills/vet/scripts/export_opencode_session.py --session-id <ses_ID>"
 ```
 
 **Codex:**
 ```bash
-vet "goal" --history-loader "python ~/.codex/skills/vet/scripts/export_codex_session.py --session-file <path-to-session.jsonl>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.codex/skills/vet/scripts/export_codex_session.py --session-file <path-to-session.jsonl>"
 ```
 
 **Claude Code:**
 ```bash
-vet "goal" --history-loader "python ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
+vet "goal" --history-loader "$(command -v python3 || command -v python) ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
 ```
 
 **Without Conversation History**
