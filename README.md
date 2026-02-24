@@ -1,51 +1,30 @@
-# Vet : Verify Everything
+<p align="center">
+  <a href="https://github.com/imbue-ai/vet">
+    <img alt="Vet: Verify Everything" src="https://raw.githubusercontent.com/imbue-ai/vet/main/images/vet.svg" width="30%">
+  </a>
+</p>
 
-[![PyPi](https://img.shields.io/pypi/v/verify-everything.svg)](https://pypi.python.org/pypi/verify-everything/)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-![Build Status](https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg)
-[![Discord](https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white)](https://discord.gg/sBAVvHPUTE)
+<p align="center">
+  <a href="https://pypi.python.org/pypi/verify-everything/"><img src="https://img.shields.io/pypi/v/verify-everything.svg" alt="PyPi"></a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0"><img src="https://img.shields.io/badge/License-AGPL_v3-blue.svg" alt="License: AGPL v3"></a>
+  <img src="https://github.com/imbue-ai/vet/actions/workflows/test-unit.yml/badge.svg" alt="Build Status">
+  <a href="https://discord.gg/sBAVvHPUTE"><img src="https://img.shields.io/badge/Discord-Join%20us-5865F2?logo=discord&logoColor=white" alt="Discord"></a>
+</p>
 
 ![demo](recording.gif)
 
-Vet is a standalone verification tool for **code changes** and **coding agent behavior**.
-
-It reviews git diffs, and optionally an agent's conversation history, to find issues that tests and linters often miss. Vet is optimized for use by humans, CI, and coding agents.
+<p align="center">Vet is a standalone verification tool for <b>code changes</b> and <b>coding agent behavior</b>.</p>
 
 ## Why Vet
 
-- **Verification for agentic workflows**: "the agent said it ran tests" is not the same as "all tests ran successfully".
-- **CI-friendly safety net**: catches classes of problems that may not be covered by existing tests.
-- **Bring-your-own-model**: can run against hosted providers or local/self-hosted OpenAI-compatible endpoints.
-
-## Installation
-
-```bash
-pip install verify-everything
-```
-
-Or install from source:
-
-```bash
-pip install git+https://github.com/imbue-ai/vet.git
-```
-
-## Quickstart
-
-Run Vet in the current repo:
-
-```bash
-vet "Implement X without breaking Y"
-```
-
-Compare against a base ref/commit:
-
-```bash
-vet "Refactor storage layer" --base-commit main
-```
+- **Reviews intent and code**: checks agent conversations for goal adherence and code changes for correctness.
+- **Runs anywhere**: from the terminal, as an agent skill, or in CI.
+- **Bring-your-own-model**: works with any provider using your own API keys, no subscription ever.
+- **No data collection**: requests go directly to inference providers, never through our servers.
 
 ## Using Vet with Coding Agents
 
-Vet ships as an [agent skill](https://agentskills.io) that coding agents like [OpenCode](https://opencode.ai) and [Codex](https://github.com/openai/codex) can discover and use automatically. When installed, agents will proactively run vet after code changes and include conversation history for better analysis.
+Vet includes an agent skill. When installed, agents will proactively run vet after code changes to find issues with the new code and mismatches between the user's request and the agent's actions.
 
 ### Install the skill
 
@@ -93,9 +72,35 @@ done
 
 The `--history-loader` option executes the specified shell command as the current user to load the conversation history. It is important to review history loader commands and shared config presets before use.
 
+## Install the CLI
+
+```bash
+pip install verify-everything
+```
+
+Or install from source:
+
+```bash
+pip install git+https://github.com/imbue-ai/vet.git
+```
+
+### Usage
+
+Run Vet in the current repo:
+
+```bash
+vet "Implement X without breaking Y"
+```
+
+Compare against a base ref/commit:
+
+```bash
+vet "Refactor storage layer" --base-commit main
+```
+
 ## GitHub PRs (Actions)
 
-Vet can run on pull requests using the reusable GitHub Action.
+Vet reviews pull requests using a reusable GitHub Action.
 
 Create `.github/workflows/vet.yml`:
 
@@ -132,7 +137,7 @@ The action handles Python setup, vet installation, merge base computation, and p
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
 
-![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/architecture.svg)
+![architecture](https://raw.githubusercontent.com/imbue-ai/vet/main/images/architecture.svg)
 
 ## Output & exit codes
 
