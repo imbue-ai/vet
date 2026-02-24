@@ -5,9 +5,7 @@ import sys
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Export Codex session history for vet")
-parser.add_argument(
-    "--session-file", required=True, help="Path to Codex session .jsonl file"
-)
+parser.add_argument("--session-file", required=True, help="Path to Codex session .jsonl file")
 args = parser.parse_args()
 
 SESSION_FILE = args.session_file
@@ -104,9 +102,7 @@ for line in Path(SESSION_FILE).read_text().splitlines():
     if role == "user":
         # Flush any pending tool blocks before the user message
         flush_tool_blocks()
-        text = " ".join(
-            c.get("text", "") for c in content if c.get("type") == "input_text"
-        )
+        text = " ".join(c.get("text", "") for c in content if c.get("type") == "input_text")
         if text:
             print(json.dumps({"object_type": "ChatInputUserMessage", "text": text}))
     elif role == "assistant":
@@ -115,9 +111,7 @@ for line in Path(SESSION_FILE).read_text().splitlines():
         tool_block_buffer.clear()
         for c in content:
             if c.get("type") == "output_text" and c.get("text"):
-                blocks.append(
-                    {"object_type": "TextBlock", "type": "text", "text": c["text"]}
-                )
+                blocks.append({"object_type": "TextBlock", "type": "text", "text": c["text"]})
         if blocks:
             msg_counter += 1
             print(

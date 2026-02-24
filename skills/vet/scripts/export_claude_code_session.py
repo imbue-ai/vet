@@ -4,12 +4,8 @@ import json
 import sys
 from pathlib import Path
 
-parser = argparse.ArgumentParser(
-    description="Export Claude Code session history for vet"
-)
-parser.add_argument(
-    "--session-file", required=True, help="Path to Claude Code session .jsonl file"
-)
+parser = argparse.ArgumentParser(description="Export Claude Code session history for vet")
+parser.add_argument("--session-file", required=True, help="Path to Claude Code session .jsonl file")
 args = parser.parse_args()
 
 SESSION_FILE = Path(args.session_file)
@@ -62,9 +58,7 @@ for line in SESSION_FILE.read_text().splitlines():
                             if isinstance(rc, dict) and rc.get("type") == "text"
                         )
                     tool_use_id = c.get("tool_use_id", "")
-                    tool_name, tool_input = tool_use_info.get(
-                        tool_use_id, ("unknown", {})
-                    )
+                    tool_name, tool_input = tool_use_info.get(tool_use_id, ("unknown", {}))
                     tool_result_blocks.append(
                         {
                             "object_type": "ToolResultBlock",
@@ -101,9 +95,7 @@ for line in SESSION_FILE.read_text().splitlines():
             if not isinstance(c, dict):
                 continue
             if c.get("type") == "text" and c.get("text"):
-                blocks.append(
-                    {"object_type": "TextBlock", "type": "text", "text": c["text"]}
-                )
+                blocks.append({"object_type": "TextBlock", "type": "text", "text": c["text"]})
             elif c.get("type") == "tool_use":
                 tool_use_id = c.get("id", "")
                 tool_name = c.get("name", "")
@@ -125,9 +117,7 @@ for line in SESSION_FILE.read_text().splitlines():
                     {
                         "object_type": "ResponseBlockAgentMessage",
                         "role": "assistant",
-                        "assistant_message_id": message.get(
-                            "id", entry.get("uuid", "claude_code_msg")
-                        ),
+                        "assistant_message_id": message.get("id", entry.get("uuid", "claude_code_msg")),
                         "content": blocks,
                     }
                 )
