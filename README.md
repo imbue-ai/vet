@@ -35,6 +35,8 @@ You will be prompted to choose between:
 - **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, and `.codex/skills/vet/` at the repo root (run from your repo directory)
 - **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
 
+### Demo
+
 ![demo](recording4.gif)
 
 <details>
