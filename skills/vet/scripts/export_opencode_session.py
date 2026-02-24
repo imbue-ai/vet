@@ -13,11 +13,18 @@ args = parser.parse_args()
 fd, tmppath = tempfile.mkstemp(suffix=".json")
 try:
     with os.fdopen(fd, "w+b") as f:
-        result = subprocess.run(
-            ["opencode", "export", args.session_id],
-            stdout=f,
-            stderr=subprocess.PIPE,
-        )
+        try:
+            result = subprocess.run(
+                ["opencode", "export", args.session_id],
+                stdout=f,
+                stderr=subprocess.PIPE,
+            )
+        except (FileNotFoundError, OSError) as e:
+            print(
+                f"WARNING: Could not run 'opencode' command: {e}",
+                file=sys.stderr,
+            )
+            sys.exit(0)
 
     if result.returncode != 0:
         print(
@@ -58,7 +65,9 @@ for msg in data.get("messages", []):
         content = []
         for p in parts:
             if p.get("type") == "text" and p.get("text"):
-                content.append({"object_type": "TextBlock", "type": "text", "text": p["text"]})
+                content.append(
+                    {"object_type": "TextBlock", "type": "text", "text": p["text"]}
+                )
         if content:
             print(
                 json.dumps(
