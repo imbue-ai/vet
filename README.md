@@ -82,7 +82,7 @@ Or install from source:
 pip install git+https://github.com/imbue-ai/vet.git
 ```
 
-## Quickstart
+### Usage
 
 Run Vet in the current repo:
 
