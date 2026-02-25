@@ -21,10 +21,6 @@ ARGS=("${INPUT_GOAL}" --quiet --output-format github --base-commit "${MERGE_BASE
 [[ -n "${INPUT_DISABLED_ISSUE_CODES}" ]] && ARGS+=(--disabled-issue-codes ${INPUT_DISABLED_ISSUE_CODES})
 [[ -n "${INPUT_EXTRA_CONTEXT}" ]] && ARGS+=(--extra-context ${INPUT_EXTRA_CONTEXT})
 
-echo "INPUT_MODEL: $INPUT_MODEL"
-echo "Config file:"
-cat .vet/configs.toml || echo "No configs file"
-
 vet "${ARGS[@]}" > "${RUNNER_TEMP}/review.json"
 status=$?
 

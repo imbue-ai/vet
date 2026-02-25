@@ -108,4 +108,4 @@ runs:
 
           Additional context (not necessarily part of the goal):
           ${{ github.event.pull_request.body }}
-      run: ${{ github.action_path }}/action/run.sh
+      run: python "${{ github.action_path }}/action/run.py"
