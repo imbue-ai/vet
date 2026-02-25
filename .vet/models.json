@@ -45,7 +45,7 @@
           "supports_temperature": true
         },
         "haiku": {
-          "model_id": "claude-haiku-4-5-20251001",
+          "model_id": "claude-haiku-4-5",
           "context_window": 200000,
           "max_output_tokens": 16384,
           "supports_temperature": true

@@ -3,13 +3,19 @@ from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.gemini_api import GEMINI_MODEL_INFO_BY_NAME
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
-from vet.imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model_info
+from vet.imbue_core.agents.llm_apis.groq_api import (
+    get_model_info as get_groq_model_info,
+)
 from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
+from vet.imbue_core.agents.llm_apis.openai_api import (
+    get_model_info as get_openai_model_info,
+)
 
-ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
+ModelName = (
+    AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
+)
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:
@@ -57,7 +63,7 @@ def get_formatted_model_name(model_name: str) -> str:
 
     - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
     - 'groq/llama-3.3-70b-versatile' -> 'groq-llama-3.3-70b-versatile'
-    - 'claude-3-5-haiku-20241022' -> 'claude-3-5-haiku-20241022'
+    - 'claude-opus-4-6' -> 'claude-opus-4-6'
 
     """
     if model_name.startswith("models/"):
