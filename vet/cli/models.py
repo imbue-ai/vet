@@ -6,7 +6,6 @@ from vet.cli.config.schema import ModelsConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
-from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 
 DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
@@ -46,7 +45,6 @@ def get_builtin_models_by_provider() -> dict[str, list[str]]:
         "anthropic": [m.value for m in AnthropicModelName],
         "openai": [m.value for m in OpenAIModelName],
         "gemini": [m.value for m in GeminiModelName],
-        "groq": [m.value for m in GroqSupportedModelName],
     }
 
 

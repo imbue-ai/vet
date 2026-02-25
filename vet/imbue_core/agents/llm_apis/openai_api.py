@@ -49,36 +49,20 @@ from vet.imbue_core.frozen_utils import FrozenMapping
 from vet.imbue_core.itertools import only
 from vet.imbue_core.secrets_utils import get_secret
 
-# note: we require that these model versions are explicit, just like the rest of our dependencies
-# the reason is that these models are actually now mostly deterministic, and it is much easier to debug if we know what model was used
-# also, there's no need to troll yourself by wondering why results have improved (or gotten worse) when you dont realized that the version has shifted under you
-# if you want to use an upgraded model, just upgrade the model to the key displayed here: https://platform.openai.com/docs/models/overview
-# please do NOT set these back to the generic model names!
-
 FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX = "ft:gpt-4o-mini-2024-07-18"
 FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"
 
 
 class OpenAIModelName(enum.StrEnum):
-    GPT_3_5_TURBO = "gpt-3.5-turbo-0125"
-    GPT_4_0613 = "gpt-4-0613"
-    GPT_4_1106_PREVIEW = "gpt-4-1106-preview"
-    GPT_4_0125_PREVIEW = "gpt-4-0125-preview"
-    GPT_4_TURBO_2024_04_09 = "gpt-4-turbo-2024-04-09"
-    GPT_4O_2024_05_13 = "gpt-4o-2024-05-13"
-    GPT_4O_2024_08_06 = "gpt-4o-2024-08-06"
-    GPT_4O_MINI_2024_07_18 = "gpt-4o-mini-2024-07-18"
-    O1_2024_12_17 = "o1-2024-12-17"
-    GPT_4_1_2025_04_14 = "gpt-4.1-2025-04-14"
-    GPT_4_1_MINI_2025_04_14 = "gpt-4.1-mini-2025-04-14"
-    GPT_4_1_NANO_2025_04_14 = "gpt-4.1-nano-2025-04-14"
-    O3_2025_04_16 = "o3-2025-04-16"
-    O3_MINI_2025_01_31 = "o3-mini-2025-01-31"
-    O4_MINI_2025_04_16 = "o4-mini-2025-04-16"
-    GPT_5_2025_08_07 = "gpt-5-2025-08-07"
-    GPT_5_MINI_2025_08_07 = "gpt-5-mini-2025-08-07"
-    GPT_5_NANO_2025_08_07 = "gpt-5-nano-2025-08-07"
-    GPT_5_1_2025_11_13 = "gpt-5.1-2025-11-13"
+    GPT_4_1 = "gpt-4.1"
+    GPT_4_1_MINI = "gpt-4.1-mini"
+    O3 = "o3"
+    O3_MINI = "o3-mini"
+    O4_MINI = "o4-mini"
+    GPT_5 = "gpt-5"
+    GPT_5_MINI = "gpt-5-mini"
+    GPT_5_1 = "gpt-5.1"
+    GPT_5_2 = "gpt-5.2"
 
 
 # Using Tier 5 rate limits
@@ -86,154 +70,74 @@ class OpenAIModelName(enum.StrEnum):
 
 OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDict(
     {
-        OpenAIModelName.GPT_3_5_TURBO: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_3_5_TURBO),
-            cost_per_input_token=0.5 / 1_000_000,
-            cost_per_output_token=1.5 / 1_000_000,
-            max_input_tokens=16_385,
-            max_output_tokens=4096,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4_0613: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_0613),
-            cost_per_input_token=30.0 / 1_000_000,
-            cost_per_output_token=60.0 / 1_000_000,
-            max_input_tokens=8192,
-            max_output_tokens=8192,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4_1106_PREVIEW: ModelInfo(  # Cannot find this model
-            model_name=str(OpenAIModelName.GPT_4_1106_PREVIEW),
-            cost_per_input_token=10.0 / 1_000_000,
-            cost_per_output_token=30.0 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=4096,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4_0125_PREVIEW: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_0125_PREVIEW),
-            cost_per_input_token=10.0 / 1_000_000,
-            cost_per_output_token=30.0 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=4096,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4_TURBO_2024_04_09: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_TURBO_2024_04_09),
-            cost_per_input_token=10.0 / 1_000_000,
-            cost_per_output_token=30.0 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=4096,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4O_2024_05_13: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4O_2024_05_13),
-            cost_per_input_token=5.0 / 1_000_000,
-            cost_per_output_token=15.0 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=4096,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4O_2024_08_06: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4O_2024_08_06),
-            cost_per_input_token=2.5 / 1_000_000,
-            cost_per_output_token=10.0 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=16_384,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4O_MINI_2024_07_18: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4O_MINI_2024_07_18),
-            cost_per_input_token=0.15 / 1_000_000,
-            cost_per_output_token=0.60 / 1_000_000,
-            max_input_tokens=128_000,
-            max_output_tokens=16_384,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
-        OpenAIModelName.O1_2024_12_17: ModelInfo(
-            model_name=str(OpenAIModelName.O1_2024_12_17),
-            cost_per_input_token=15 / 1_000_000,
-            cost_per_output_token=60 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=100_000,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
-        ),
-        OpenAIModelName.GPT_4_1_2025_04_14: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_1_2025_04_14),
+        OpenAIModelName.GPT_4_1: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_4_1),
             cost_per_input_token=2 / 1_000_000,
             cost_per_output_token=8 / 1_000_000,
             max_input_tokens=1_047_576,
             max_output_tokens=32_768,
             rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
         ),
-        OpenAIModelName.GPT_4_1_MINI_2025_04_14: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_1_MINI_2025_04_14),
+        OpenAIModelName.GPT_4_1_MINI: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_4_1_MINI),
             cost_per_input_token=0.4 / 1_000_000,
             cost_per_output_token=1.6 / 1_000_000,
             max_input_tokens=1_047_576,
             max_output_tokens=32_768,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
         ),
-        OpenAIModelName.GPT_4_1_NANO_2025_04_14: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_1_NANO_2025_04_14),
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.4 / 1_000_000,
-            max_input_tokens=1_047_576,
-            max_output_tokens=32_768,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
-        OpenAIModelName.O4_MINI_2025_04_16: ModelInfo(
-            model_name=str(OpenAIModelName.O4_MINI_2025_04_16),
-            cost_per_input_token=1.1 / 1_000_000,
-            cost_per_output_token=4.4 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=100_000,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
-        OpenAIModelName.O3_2025_04_16: ModelInfo(
-            model_name=str(OpenAIModelName.O3_2025_04_16),
-            cost_per_input_token=10 / 1_000_000,
-            cost_per_output_token=40 / 1_000_000,
+        OpenAIModelName.O3: ModelInfo(
+            model_name=str(OpenAIModelName.O3),
+            cost_per_input_token=2 / 1_000_000,
+            cost_per_output_token=8 / 1_000_000,
             max_input_tokens=200_000,
             max_output_tokens=100_000,
             rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
         ),
-        OpenAIModelName.O3_MINI_2025_01_31: ModelInfo(
-            model_name=str(OpenAIModelName.O3_MINI_2025_01_31),
+        OpenAIModelName.O3_MINI: ModelInfo(
+            model_name=str(OpenAIModelName.O3_MINI),
             cost_per_input_token=1.1 / 1_000_000,
             cost_per_output_token=4.4 / 1_000_000,
             max_input_tokens=200_000,
             max_output_tokens=100_000,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
         ),
-        OpenAIModelName.GPT_5_2025_08_07: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_2025_08_07),
+        OpenAIModelName.O4_MINI: ModelInfo(
+            model_name=str(OpenAIModelName.O4_MINI),
+            cost_per_input_token=1.1 / 1_000_000,
+            cost_per_output_token=4.4 / 1_000_000,
+            max_input_tokens=200_000,
+            max_output_tokens=100_000,
+            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
+        ),
+        OpenAIModelName.GPT_5: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5),
             cost_per_input_token=1.25 / 1_000_000,
             cost_per_output_token=10 / 1_000_000,
             max_input_tokens=400_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
         ),
-        OpenAIModelName.GPT_5_MINI_2025_08_07: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_MINI_2025_08_07),
+        OpenAIModelName.GPT_5_MINI: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_MINI),
             cost_per_input_token=0.25 / 1_000_000,
             cost_per_output_token=2.00 / 1_000_000,
             max_input_tokens=400_000,
             max_output_tokens=128_000,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
         ),
-        OpenAIModelName.GPT_5_NANO_2025_08_07: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_NANO_2025_08_07),
-            cost_per_input_token=0.05 / 1_000_000,
-            cost_per_output_token=0.40 / 1_000_000,
-            max_input_tokens=400_000,
-            max_output_tokens=128_000,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
-        OpenAIModelName.GPT_5_1_2025_11_13: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_1_2025_11_13),
+        OpenAIModelName.GPT_5_1: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_1),
             cost_per_input_token=1.25 / 1_000_000,
             cost_per_output_token=10 / 1_000_000,
+            max_input_tokens=400_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+        ),
+        OpenAIModelName.GPT_5_2: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_2),
+            cost_per_input_token=1.75 / 1_000_000,
+            cost_per_output_token=14 / 1_000_000,
             max_input_tokens=400_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
@@ -269,32 +173,24 @@ def get_model_info(model_name: OpenAIModelName) -> ModelInfo:
 
 _CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[OpenAIModelName, asyncio.Semaphore] = defaultdict(
     lambda: asyncio.Semaphore(20),
-    {
-        OpenAIModelName.GPT_3_5_TURBO: asyncio.Semaphore(100),
-        OpenAIModelName.GPT_4_0613: asyncio.Semaphore(60),
-        OpenAIModelName.GPT_4_1_NANO_2025_04_14: asyncio.Semaphore(80),
-    },
 )
 
 
 def _get_capacity_semaphor(model_name: OpenAIModelName) -> asyncio.Semaphore:
     # Fine-tuned models share rate limits with the base model.
-    if model_name.startswith(FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX):
-        model_name = OpenAIModelName.GPT_4O_MINI_2024_07_18
-    elif model_name.startswith(FINE_TUNED_GPT4O_2024_08_06_PREFIX):
-        model_name = OpenAIModelName.GPT_4O_2024_08_06
+    # Note: fine-tuned model prefixes fall through to the defaultdict default.
     return _CAPACITY_SEMAPHOR_BY_MODEL_NAME[model_name]
 
 
 def is_openai_reasoning_model(model_name: str) -> bool:
     return model_name in (
-        OpenAIModelName.O1_2024_12_17,
-        OpenAIModelName.O4_MINI_2025_04_16,
-        OpenAIModelName.O3_2025_04_16,
-        OpenAIModelName.O3_MINI_2025_01_31,
-        OpenAIModelName.GPT_5_2025_08_07,
-        OpenAIModelName.GPT_5_MINI_2025_08_07,
-        OpenAIModelName.GPT_5_NANO_2025_08_07,
+        OpenAIModelName.O3,
+        OpenAIModelName.O3_MINI,
+        OpenAIModelName.O4_MINI,
+        OpenAIModelName.GPT_5,
+        OpenAIModelName.GPT_5_MINI,
+        OpenAIModelName.GPT_5_1,
+        OpenAIModelName.GPT_5_2,
     )
 
 
@@ -316,7 +212,7 @@ def get_openai_tokenizer(model_name: str) -> tiktoken.Encoding:
     """Get the appropriate tiktoken tokenizer for an OpenAI model.
 
     Args:
-        model_name: The OpenAI model name (e.g., "gpt-4o-2024-08-06").
+        model_name: The OpenAI model name (e.g., "gpt-4.1").
 
     Returns:
         The tiktoken Encoding for the model.
@@ -371,7 +267,7 @@ def _openai_exception_manager() -> Iterator[None]:
 
 
 class OpenAIChatAPI(OpenAICompatibleAPI):
-    model_name: OpenAIModelName = OpenAIModelName.GPT_4O_MINI_2024_07_18
+    model_name: OpenAIModelName = OpenAIModelName.GPT_4_1
 
     @field_validator("model_name")  # pyre-ignore[56]: pyre doesn't understand pydantic
     @classmethod
