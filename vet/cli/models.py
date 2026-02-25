@@ -28,9 +28,7 @@ def is_valid_model_id(model_id: str, user_config: ModelsConfig | None = None) ->
     return model_id in get_all_model_ids(user_config)
 
 
-def is_user_defined_model(
-    model_id: str, user_config: ModelsConfig | None = None
-) -> bool:
+def is_user_defined_model(model_id: str, user_config: ModelsConfig | None = None) -> bool:
     if user_config is None:
         return False
     return model_id in get_user_defined_model_ids(user_config)
@@ -38,9 +36,7 @@ def is_user_defined_model(
 
 def validate_model_id(model_id: str, user_config: ModelsConfig | None = None) -> str:
     if not is_valid_model_id(model_id, user_config):
-        raise ValueError(
-            f"Unknown model: {model_id}. Use --list-models to see available models."
-        )
+        raise ValueError(f"Unknown model: {model_id}. Use --list-models to see available models.")
     return model_id
 
 

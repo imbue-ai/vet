@@ -5,9 +5,7 @@ from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
-from vet.imbue_core.agents.llm_apis.openai_api import (
-    get_model_info as get_openai_model_info,
-)
+from vet.imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
 
 ModelName = AnthropicModelName | OpenAIModelName | GeminiModelName
 
