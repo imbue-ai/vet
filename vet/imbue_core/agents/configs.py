@@ -15,7 +15,7 @@ from vet.imbue_core.pydantic_serialization import SerializableModel
 
 
 class LanguageModelGenerationConfig(SerializableModel):
-    model_name: ModelStr = OpenAIModelName.GPT_4O_2024_08_06
+    model_name: ModelStr = OpenAIModelName.GPT_4_1
     # this should almost always be None (you dont want to save your cache path into the hammer invocation data!)
     cache_path: Path | None = None
     count_tokens_cache_path: Path | None = None
