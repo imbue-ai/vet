@@ -7,7 +7,7 @@ from typing import Tuple
 
 import requests
 
-from vet.git_utils import SyncLocalGitRepo
+from vet.git import SyncLocalGitRepo
 
 
 def get_env(name: str, required: bool = True) -> str:
