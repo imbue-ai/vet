@@ -6,7 +6,6 @@ from vet.cli.config.schema import ModelConfig
 from vet.cli.config.schema import ModelsConfig
 from vet.cli.config.schema import ProviderConfig
 from vet.cli.models import DEFAULT_MODEL_ID
-from vet.cli.models import get_agentic_models_by_provider
 from vet.cli.models import get_all_model_ids
 from vet.cli.models import get_builtin_model_ids
 from vet.cli.models import get_builtin_models_by_provider
@@ -14,10 +13,6 @@ from vet.cli.models import get_models_by_provider
 from vet.cli.models import is_user_defined_model
 from vet.cli.models import is_valid_model_id
 from vet.cli.models import validate_model_id
-from vet.imbue_core.agents.agent_api.api import get_supported_providers_for_harness
-from vet.imbue_core.agents.agent_api.claude.client import ClaudeCodeClient
-from vet.imbue_core.agents.agent_api.codex.client import CodexClient
-from vet.imbue_core.data_types import AgentHarnessType
 
 SAMPLE_USER_CONFIG = ModelsConfig(
     providers={
@@ -198,66 +193,3 @@ def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name()
     providers = get_models_by_provider(user_config)
 
     assert providers["anthropic"] == ["custom-model"]
-
-
-# --- supported_providers() on concrete clients ---
-
-
-def test_claude_code_client_supported_providers() -> None:
-    assert ClaudeCodeClient.supported_providers() == ("anthropic",)
-
-
-def test_codex_client_supported_providers() -> None:
-    assert CodexClient.supported_providers() == ("openai",)
-
-
-# --- get_supported_providers_for_harness ---
-
-
-def test_get_supported_providers_for_claude_harness() -> None:
-    providers = get_supported_providers_for_harness(AgentHarnessType.CLAUDE)
-    assert providers == ("anthropic",)
-
-
-def test_get_supported_providers_for_codex_harness() -> None:
-    providers = get_supported_providers_for_harness(AgentHarnessType.CODEX)
-    assert providers == ("openai",)
-
-
-# --- get_agentic_models_by_provider ---
-
-
-def test_get_agentic_models_for_claude_harness_returns_only_anthropic() -> None:
-    providers = get_agentic_models_by_provider(AgentHarnessType.CLAUDE)
-
-    assert "anthropic" in providers
-    assert "openai" not in providers
-    assert "gemini" not in providers
-    assert "groq" not in providers
-
-
-def test_get_agentic_models_for_codex_harness_returns_only_openai() -> None:
-    providers = get_agentic_models_by_provider(AgentHarnessType.CODEX)
-
-    assert "openai" in providers
-    assert "anthropic" not in providers
-    assert "gemini" not in providers
-    assert "groq" not in providers
-
-
-def test_get_agentic_models_values_are_lists_of_strings() -> None:
-    for harness_type in AgentHarnessType:
-        providers = get_agentic_models_by_provider(harness_type)
-        for provider_name, models in providers.items():
-            assert isinstance(models, list), f"{provider_name} should have a list of models"
-            assert all(isinstance(m, str) for m in models), f"{provider_name} models should all be strings"
-
-
-def test_get_agentic_models_is_subset_of_all_builtin_models() -> None:
-    all_providers = get_builtin_models_by_provider()
-
-    for harness_type in AgentHarnessType:
-        agentic_providers = get_agentic_models_by_provider(harness_type)
-        for provider_name, models in agentic_providers.items():
-            assert provider_name in all_providers, f"{provider_name} should be a builtin provider"
-            assert set(models) == set(all_providers[provider_name])

@@ -36,22 +36,6 @@ class RealAgentClient(AgentClient[AgentOptionsT]):
 
     @staticmethod
     @abc.abstractmethod
-    def supported_providers() -> tuple[str, ...]:
-        """Return the provider names whose models this agent harness supports.
-
-        Provider names must match the keys returned by
-        ``vet.cli.models.get_builtin_models_by_provider`` (e.g. ``"anthropic"``,
-        ``"openai"``).  This is used by ``--list-models`` to filter the displayed
-        models when running in agentic mode.
-
-        Note: the returned providers indicate *API compatibility*, not an
-        exhaustive model list.  The underlying CLI will accept any model that
-        the provider's API supports, including models not tracked in vet's
-        built-in enums.
-        """
-
-    @staticmethod
-    @abc.abstractmethod
     def _find_cli() -> str:
         """Find the CLI binary for the agent."""
 
