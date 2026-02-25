@@ -56,16 +56,13 @@ FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"
 class OpenAIModelName(enum.StrEnum):
     GPT_4_1 = "gpt-4.1"
     GPT_4_1_MINI = "gpt-4.1-mini"
-    GPT_4_1_NANO = "gpt-4.1-nano"
     O3 = "o3"
     O3_MINI = "o3-mini"
     O4_MINI = "o4-mini"
     GPT_5 = "gpt-5"
     GPT_5_MINI = "gpt-5-mini"
-    GPT_5_NANO = "gpt-5-nano"
     GPT_5_1 = "gpt-5.1"
     GPT_5_2 = "gpt-5.2"
-    GPT_5_2_PRO = "gpt-5.2-pro"
 
 
 # Using Tier 5 rate limits
@@ -85,14 +82,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             model_name=str(OpenAIModelName.GPT_4_1_MINI),
             cost_per_input_token=0.4 / 1_000_000,
             cost_per_output_token=1.6 / 1_000_000,
-            max_input_tokens=1_047_576,
-            max_output_tokens=32_768,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
-        OpenAIModelName.GPT_4_1_NANO: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_4_1_NANO),
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.4 / 1_000_000,
             max_input_tokens=1_047_576,
             max_output_tokens=32_768,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
@@ -137,14 +126,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_output_tokens=128_000,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
         ),
-        OpenAIModelName.GPT_5_NANO: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_NANO),
-            cost_per_input_token=0.05 / 1_000_000,
-            cost_per_output_token=0.40 / 1_000_000,
-            max_input_tokens=400_000,
-            max_output_tokens=128_000,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-        ),
         OpenAIModelName.GPT_5_1: ModelInfo(
             model_name=str(OpenAIModelName.GPT_5_1),
             cost_per_input_token=1.25 / 1_000_000,
@@ -160,14 +141,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=400_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
-        ),
-        OpenAIModelName.GPT_5_2_PRO: ModelInfo(
-            model_name=str(OpenAIModelName.GPT_5_2_PRO),
-            cost_per_input_token=21 / 1_000_000,
-            cost_per_output_token=168 / 1_000_000,
-            max_input_tokens=400_000,
-            max_output_tokens=128_000,
-            rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
         ),
     }
 )
@@ -200,9 +173,6 @@ def get_model_info(model_name: OpenAIModelName) -> ModelInfo:
 
 _CAPACITY_SEMAPHOR_BY_MODEL_NAME: Mapping[OpenAIModelName, asyncio.Semaphore] = defaultdict(
     lambda: asyncio.Semaphore(20),
-    {
-        OpenAIModelName.GPT_4_1_NANO: asyncio.Semaphore(80),
-    },
 )
 
 
@@ -219,10 +189,8 @@ def is_openai_reasoning_model(model_name: str) -> bool:
         OpenAIModelName.O4_MINI,
         OpenAIModelName.GPT_5,
         OpenAIModelName.GPT_5_MINI,
-        OpenAIModelName.GPT_5_NANO,
         OpenAIModelName.GPT_5_1,
         OpenAIModelName.GPT_5_2,
-        OpenAIModelName.GPT_5_2_PRO,
     )
 
 
