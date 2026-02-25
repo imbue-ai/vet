@@ -149,6 +149,7 @@ def collate_issues_with_agent(
         cwd=project_context.repo_path,
         model_name=config.language_model_generation_config.model_name,
         agent_harness_type=config.agent_harness_type,
+        models_config=config.models_config,
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
     collation_prompt = _get_collation_prompt(

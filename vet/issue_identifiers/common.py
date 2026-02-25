@@ -11,6 +11,7 @@ from loguru import logger
 from pydantic import Field
 from pydantic import PrivateAttr
 
+from vet.cli.config.schema import ModelsConfig
 from vet.imbue_core.agents.agent_api.api import get_agent_client
 from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
@@ -21,6 +22,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
+from vet.imbue_core.agents.agent_api.smolagents.data_types import SmolagentsOptions
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -200,9 +202,43 @@ _DEFAULT_CODEX_MODEL = "gpt-5.2-codex"
 _DEFAULT_CLAUDE_MODEL = AnthropicModelName.CLAUDE_4_6_OPUS
 
 
-def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
+def get_agent_options(
+    cwd: Path | None,
+    model_name: str,
+    agent_harness_type: AgentHarnessType,
+    models_config: ModelsConfig | None = None,
+) -> AgentOptions:
     # NOTE: This if/else is intentionally simple. We're unlikely to support many harness types,
     # but if we do, this should be refactored into a registry or factory pattern.
+    if agent_harness_type == AgentHarnessType.SMOLAGENTS:
+        from vet.cli.config.loader import get_provider_and_alias_for_model_id
+
+        if models_config is None:
+            raise ValueError(
+                "models_config is required for the smolagents harness. "
+                "Define the model in your .vet/models.json file."
+            )
+        result = get_provider_and_alias_for_model_id(model_name, models_config)
+        if result is None:
+            raise ValueError(
+                f"Model '{model_name}' not found in models.json. "
+                "The smolagents harness only supports OpenAI-compatible models "
+                "defined in your .vet/models.json file."
+            )
+        provider, alias = result
+        model_config = provider.models[alias]
+        actual_model_id = model_config.model_id or model_name
+        api_key = ""
+        if provider.api_key_env:
+            import os
+
+            api_key = os.environ.get(provider.api_key_env, "")
+        return SmolagentsOptions(
+            cwd=cwd,
+            model=actual_model_id,
+            api_base=provider.base_url,
+            api_key=api_key,
+        )
     if agent_harness_type == AgentHarnessType.CODEX:
         if model_name in _ANTHROPIC_MODEL_NAMES:
             logger.debug(

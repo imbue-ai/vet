@@ -553,6 +553,7 @@ def main(argv: list[str] | None = None) -> int:
         max_identifier_spend_dollars=args.max_spend,
         custom_guides_config=custom_guides_config,
         agent_harness_type=args.agent_harness,
+        models_config=user_config,
         # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
         filter_issues_through_llm_evaluator=not args.agentic,
         enable_deduplication=not args.agentic,
