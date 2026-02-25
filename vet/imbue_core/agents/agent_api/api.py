@@ -12,9 +12,11 @@ from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
 from vet.imbue_core.agents.agent_api.client import AgentClient
 from vet.imbue_core.agents.agent_api.client import AgentOptionsT
 from vet.imbue_core.agents.agent_api.client import CachedAgentClient
+from vet.imbue_core.agents.agent_api.client import RealAgentClient
 from vet.imbue_core.agents.agent_api.codex.client import CodexClient
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
+from vet.imbue_core.data_types import AgentHarnessType
 
 
 @singledispatch
@@ -57,3 +59,23 @@ def get_agent_client(
             return
 
         yield CachedAgentClient(client, cache_path)
+
+
+_HARNESS_TO_CLIENT: dict[AgentHarnessType, type[RealAgentClient[Any]]] = {
+    AgentHarnessType.CLAUDE: ClaudeCodeClient,
+    AgentHarnessType.CODEX: CodexClient,
+}
+
+
+def get_supported_providers_for_harness(
+    harness_type: AgentHarnessType,
+) -> tuple[str, ...]:
+    """Return the provider names supported by the given agent harness.
+
+    This delegates to the ``supported_providers()`` method on the concrete
+    :class:`RealAgentClient` subclass registered for *harness_type*.
+    """
+    client_cls = _HARNESS_TO_CLIENT.get(harness_type)
+    if client_cls is None:
+        raise ValueError(f"Unknown agent harness type: {harness_type}")
+    return client_cls.supported_providers()

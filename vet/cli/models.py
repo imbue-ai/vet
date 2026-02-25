@@ -8,6 +8,7 @@ from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
+from vet.imbue_core.data_types import AgentHarnessType
 
 DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
 
@@ -61,3 +62,23 @@ def get_models_by_provider(
             providers[provider_name] = model_ids
 
     return providers
+
+
+def get_agentic_models_by_provider(
+    harness_type: AgentHarnessType,
+) -> dict[str, list[str]]:
+    """Return only the providers/models compatible with *harness_type*.
+
+    In agentic mode the analysis is delegated to an external CLI (e.g. Claude
+    Code or Codex) which only supports a subset of providers.  This function
+    filters the built-in model registry to those providers.
+
+    Note: the underlying CLIs will accept any model their API supports —
+    including models not tracked in vet's built-in enums.  The list returned
+    here is therefore a *representative* subset, not an exhaustive enumeration.
+    """
+    from vet.imbue_core.agents.agent_api.api import get_supported_providers_for_harness
+
+    supported = set(get_supported_providers_for_harness(harness_type))
+    all_providers = get_builtin_models_by_provider()
+    return {name: models for name, models in all_providers.items() if name in supported}

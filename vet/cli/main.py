@@ -265,18 +265,36 @@ def list_issue_codes() -> None:
         print(f"  {code}")
 
 
-def list_models(user_config: ModelsConfig | None = None) -> None:
+def list_models(
+    user_config: ModelsConfig | None = None,
+    *,
+    agentic: bool = False,
+    agent_harness: AgentHarnessType | None = None,
+) -> None:
     from vet.cli.models import DEFAULT_MODEL_ID
+    from vet.cli.models import get_agentic_models_by_provider
     from vet.cli.models import get_models_by_provider
 
-    print("Available models:")
+    if agentic and agent_harness is not None:
+        models_by_provider = get_agentic_models_by_provider(agent_harness)
+        print(f"Available models (agentic mode, {agent_harness.value} harness):")
+    else:
+        models_by_provider = get_models_by_provider(user_config)
+        print("Available models:")
+
     print()
-    models_by_provider = get_models_by_provider(user_config)
     for provider, model_ids in sorted(models_by_provider.items()):
         print(f"  {provider}:")
         for model_id in sorted(model_ids):
             default_marker = " (default)" if model_id == DEFAULT_MODEL_ID else ""
             print(f"    {model_id}{default_marker}")
+
+    if agentic:
+        print()
+        print(
+            f"  Note: The {agent_harness.value if agent_harness else 'agent'} CLI accepts any model"
+            " supported by the provider's API, including models not listed here."
+        )
 
 
 def list_fields() -> None:
@@ -416,7 +434,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.list_models:
-        list_models(user_config)
+        list_models(
+            user_config,
+            agentic=args.agentic,
+            agent_harness=args.agent_harness if args.agentic else None,
+        )
         return 0
 
     if args.list_fields:

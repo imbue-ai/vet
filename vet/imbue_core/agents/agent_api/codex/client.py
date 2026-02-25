@@ -75,6 +75,10 @@ class CodexClient(RealAgentClient[CodexOptions]):
         )
 
     @staticmethod
+    def supported_providers() -> tuple[str, ...]:
+        return ("openai",)
+
+    @staticmethod
     def _find_cli() -> str:
         """Find Codex CLI binary."""
         cli = shutil.which("codex")

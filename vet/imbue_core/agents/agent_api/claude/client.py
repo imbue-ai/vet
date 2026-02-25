@@ -91,6 +91,10 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         )
 
     @staticmethod
+    def supported_providers() -> tuple[str, ...]:
+        return ("anthropic",)
+
+    @staticmethod
     def _find_cli() -> str:
         """Find Claude Code CLI binary."""
         cli = shutil.which("claude")
