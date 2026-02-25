@@ -7,6 +7,7 @@ from typing import Tuple
 
 import requests
 
+# reusing SyncLocalGitRepo from vet.git to compute merge base
 from vet.git import SyncLocalGitRepo
 
 
@@ -37,7 +38,7 @@ def build_vet_args(goal: str, merge_base: str) -> list[str]:
         merge_base,
     ]
 
-    # Multi-value flags (must replicate bash word-splitting behavior)
+    # Multi-value flags (space-splitting like bash)
     multi_value_envs = {
         "INPUT_ENABLED_ISSUE_CODES": "--enabled-issue-codes",
         "INPUT_DISABLED_ISSUE_CODES": "--disabled-issue-codes",
@@ -84,7 +85,6 @@ def run_vet(args: list[str]) -> Tuple[dict, int]:
 
     status = result.returncode
 
-    # Mirror run.sh behavior
     if status not in (0, 10):
         print(f"::error::Vet failed with exit code {status}")
         print(result.stderr)
@@ -136,7 +136,7 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
             headers=headers,
         )
     except Exception:
-        # If this fails too, we allow workflow to continue
+        # If this fails too we allow workflow to continue
         pass
 
 
