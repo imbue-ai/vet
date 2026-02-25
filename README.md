@@ -77,6 +77,12 @@ The `--history-loader` option executes the specified shell command as the curren
 ## Install the CLI
 
 ```bash
+pip install verify-everything
+```
+
+Or with [pipx](https://pipx.pypa.io/):
+
+```bash
 pipx install verify-everything
 ```
 
@@ -85,23 +91,6 @@ Or with [uv](https://docs.astral.sh/uv/):
 ```bash
 uv tool install verify-everything
 ```
-
-<details>
-<summary>Other installation methods</summary>
-
-With pip (a [virtual environment](https://docs.python.org/3/library/venv.html) is recommended):
-
-```bash
-pip install verify-everything
-```
-
-From source:
-
-```bash
-pip install git+https://github.com/imbue-ai/vet.git
-```
-
-</details>
 
 ### Usage
 
