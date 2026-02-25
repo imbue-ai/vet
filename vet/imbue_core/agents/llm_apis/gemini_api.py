@@ -53,95 +53,93 @@ from vet.imbue_core.secrets_utils import get_secret
 
 
 class GeminiModelName(enum.StrEnum):
-    GEMINI_1_0_PRO = "models/gemini-1.0-pro-001"
-    GEMINI_1_5_FLASH = "models/gemini-1.5-flash-001"
-    GEMINI_1_5_PRO = "models/gemini-1.5-pro-001"
-    GEMINI_1_5_PRO_2 = "models/gemini-1.5-pro-002"
-    GEMINI_1_5_FLASH_2 = "models/gemini-1.5-flash-002"
-    GEMINI_2_0_FLASH = "models/gemini-2.0-flash-001"
+    # GA models
+    GEMINI_2_0_FLASH = "models/gemini-2.0-flash"
+    GEMINI_2_0_FLASH_LITE = "models/gemini-2.0-flash-lite"
     GEMINI_2_5_FLASH = "models/gemini-2.5-flash"
-    GEMINI_2_5_FLASH_LITE_PREVIEW = "models/gemini-2.5-flash-lite-preview-06-17"
+    GEMINI_2_5_FLASH_LITE = "models/gemini-2.5-flash-lite"
+    GEMINI_2_5_PRO = "models/gemini-2.5-pro"
+    # Preview models
+    GEMINI_3_FLASH_PREVIEW = "models/gemini-3-flash-preview"
+    GEMINI_3_1_PRO_PREVIEW = "models/gemini-3.1-pro-preview"
 
 
 # Rate limits for Google Gemini models based on published API documentation
 # Reference: https://ai.google.dev/gemini-api/docs/rate-limits#tier-3
 # Using Tier 3 rate limits
+#
+# Pricing references:
+# - https://cloud.google.com/vertex-ai/generative-ai/pricing
+# - https://ai.google.dev/pricing
+# For pricing there are different rates depending on context/prompt size, so below we use the most
+# expensive value (the >200K token tier for 2.5+ models, >128K for 2.0 models).
 
 GEMINI_MODEL_INFO_BY_NAME: FrozenMapping[GeminiModelName, ModelInfo] = FrozenDict(
     {
-        # https://ai.google.dev/gemini-api/docs/models/gemini
-        # https://ai.google.dev/pricing
-        # For pricing there are different rates depending on context/prompt size, so below we use the most
-        # expensive value. Note that this only kicks in at 128k tokens, the cost for most prompts is 2x lower
-        GeminiModelName.GEMINI_1_0_PRO: ModelInfo(
-            model_name="models/gemini-1.0-pro-001",
-            cost_per_input_token=0.5 / 1_000_000,
-            cost_per_output_token=1.5 / 1_000_000,
-            max_input_tokens=30_720,
-            max_output_tokens=2048,
-            rate_limit_req=2000 / 60,  # 2000 RPM = 33.33 RPS
-        ),
-        GeminiModelName.GEMINI_1_5_FLASH: ModelInfo(
-            model_name="models/gemini-1.5-flash-001",
-            cost_per_input_token=0.15 / 1_000_000,
-            cost_per_output_token=0.60 / 1_000_000,
-            max_input_tokens=1_048_576,
-            max_output_tokens=8192,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500.00 RPS
-        ),
-        GeminiModelName.GEMINI_1_5_FLASH_2: ModelInfo(
-            model_name="models/gemini-1.5-flash-002",
-            cost_per_input_token=0.15 / 1_000_000,
-            cost_per_output_token=0.60 / 1_000_000,
-            max_input_tokens=1_048_576,
-            max_output_tokens=8192,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500.00 RPS
-        ),
-        GeminiModelName.GEMINI_1_5_PRO: ModelInfo(
-            model_name="models/gemini-1.5-pro-001",
-            cost_per_input_token=2.5 / 1_000_000,
-            cost_per_output_token=10.0 / 1_000_000,
-            max_input_tokens=2_097_152,
-            max_output_tokens=8192,
-            rate_limit_req=4000 / 60,  # 4000 RPM = 66.67 RPS
-        ),
-        GeminiModelName.GEMINI_1_5_PRO_2: ModelInfo(
-            model_name="models/gemini-1.5-pro-002",
-            cost_per_input_token=2.5 / 1_000_000,
-            cost_per_output_token=10.0 / 1_000_000,
-            max_input_tokens=2_097_152,
-            max_output_tokens=8192,
-            rate_limit_req=4000 / 60,  # 4000 RPM = 66.67 RPS
-        ),
         GeminiModelName.GEMINI_2_0_FLASH: ModelInfo(
-            model_name="models/gemini-2.0-flash-001",
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.4 / 1_000_000,
+            model_name="models/gemini-2.0-flash",
+            cost_per_input_token=0.10 / 1_000_000,
+            cost_per_output_token=0.40 / 1_000_000,
             max_input_tokens=1_048_576,
             max_output_tokens=8192,
-            rate_limit_req=30000 / 60,  # 30000 RPM = 500.00 RPS
+            rate_limit_req=30_000 / 60,  # 30000 RPM = 500.00 RPS
+        ),
+        GeminiModelName.GEMINI_2_0_FLASH_LITE: ModelInfo(
+            model_name="models/gemini-2.0-flash-lite",
+            cost_per_input_token=0.075 / 1_000_000,
+            cost_per_output_token=0.30 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=8192,
+            rate_limit_req=30_000 / 60,  # 30000 RPM = 500.00 RPS
         ),
         GeminiModelName.GEMINI_2_5_FLASH: ModelInfo(
             model_name="models/gemini-2.5-flash",
-            cost_per_input_token=0.3 / 1_000_000,
-            cost_per_output_token=2.5 / 1_000_000,
+            cost_per_input_token=0.30 / 1_000_000,
+            cost_per_output_token=2.50 / 1_000_000,
             max_input_tokens=1_048_576,
-            max_output_tokens=65536,
+            max_output_tokens=65_536,
             rate_limit_req=10_000 / 60,  # 10000 RPM = 166.67 RPS
             rate_limit_tok=8_000_000 / 60,  # 8,000,000 TPM = 133,333.33 TPS
-            max_thinking_budget=24576,
+            max_thinking_budget=24_576,
         ),
-        GeminiModelName.GEMINI_2_5_FLASH_LITE_PREVIEW: ModelInfo(
-            model_name="models/gemini-2.5-flash-lite-preview-06-17",
-            cost_per_input_token=0.1 / 1_000_000,
-            cost_per_output_token=0.4 / 1_000_000,
-            max_input_tokens=1_000_000,
-            max_output_tokens=64_000,
-            # these are the tier 2 rate limits. the above claims that we're on tier 3, but i've never actually seen that
+        GeminiModelName.GEMINI_2_5_FLASH_LITE: ModelInfo(
+            model_name="models/gemini-2.5-flash-lite",
+            cost_per_input_token=0.10 / 1_000_000,
+            cost_per_output_token=0.40 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=65_535,
             rate_limit_req=10_000 / 60,
             rate_limit_tok=10_000_000 / 60,
-            # rate_limit_req=30_000 / 60,  # 30000 RPM = 500.00 RPS
-            # rate_limit_tok=30_000_000 / 60,  # 30,000,000 TPM = 500,000 TPS
+            max_thinking_budget=24_576,
+        ),
+        GeminiModelName.GEMINI_2_5_PRO: ModelInfo(
+            model_name="models/gemini-2.5-pro",
+            cost_per_input_token=2.50 / 1_000_000,
+            cost_per_output_token=15.0 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=65_535,
+            rate_limit_req=4_000 / 60,  # 4000 RPM = 66.67 RPS
+            rate_limit_tok=8_000_000 / 60,  # 8,000,000 TPM = 133,333.33 TPS
+            max_thinking_budget=24_576,
+        ),
+        GeminiModelName.GEMINI_3_FLASH_PREVIEW: ModelInfo(
+            model_name="models/gemini-3-flash-preview",
+            cost_per_input_token=0.50 / 1_000_000,
+            cost_per_output_token=3.0 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=65_536,
+            rate_limit_req=10_000 / 60,  # 10000 RPM = 166.67 RPS
+            rate_limit_tok=8_000_000 / 60,  # 8,000,000 TPM = 133,333.33 TPS
+            max_thinking_budget=24_576,
+        ),
+        GeminiModelName.GEMINI_3_1_PRO_PREVIEW: ModelInfo(
+            model_name="models/gemini-3.1-pro-preview",
+            cost_per_input_token=4.0 / 1_000_000,
+            cost_per_output_token=18.0 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=65_536,
+            rate_limit_req=4_000 / 60,  # 4000 RPM = 66.67 RPS
+            rate_limit_tok=8_000_000 / 60,  # 8,000,000 TPM = 133,333.33 TPS
             max_thinking_budget=24_576,
         ),
     }
@@ -285,7 +283,7 @@ def fmap(fn: Callable[[T], R], values: T | None) -> R | None:
 
 
 class GeminiAPI(LanguageModelAPI):
-    model_name: GeminiModelName = GeminiModelName.GEMINI_1_5_FLASH
+    model_name: GeminiModelName = GeminiModelName.GEMINI_2_5_FLASH
     is_conversational: bool = True
 
     count_tokens_cache_path: Path | None = None
