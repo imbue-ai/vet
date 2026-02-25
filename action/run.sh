@@ -41,4 +41,6 @@ if [[ "${INPUT_FAIL_ON_ISSUES}" == "true" ]] && [ "$status" -eq 10 ]; then
   exit 1
 fi
 
+echo "OpenRouter key set? ${OPENROUTER_API_KEY:+yes}"
+
 exit 0
