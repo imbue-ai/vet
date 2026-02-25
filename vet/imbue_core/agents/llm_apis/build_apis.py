@@ -8,8 +8,6 @@ from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.constants import approximate_token_count
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiAPI
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
-from vet.imbue_core.agents.llm_apis.groq_api import GroqChatAPI
-from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
 from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
 from vet.imbue_core.agents.llm_apis.mock_api import FileBasedLanguageModelMock
 from vet.imbue_core.agents.llm_apis.mock_api import MockModelName
@@ -43,16 +41,6 @@ def build_language_model_from_config(
         return FileBasedLanguageModelMock(cache_path=config.cache_path)
     if config.model_name in (v for v in OpenAIModelName):
         return OpenAIChatAPI(
-            model_name=config.model_name,
-            cache_path=config.cache_path,
-            is_caching_inputs=config.is_caching_inputs,
-            is_running_offline=config.is_running_offline,
-            is_conversational=True,
-            is_using_logprobs=config.is_using_logprobs,
-            retry_jitter_factor=config.retry_jitter_factor,
-        )
-    if config.model_name in (v for v in GroqSupportedModelName):
-        return GroqChatAPI(
             model_name=config.model_name,
             cache_path=config.cache_path,
             is_caching_inputs=config.is_caching_inputs,

@@ -44,9 +44,7 @@ def test_get_code_to_check(simple_test_git_repo: Path) -> None:
     with open((repo_path / "file1.txt"), "a+") as f:
         f.write("\nunstaged written modified content")
 
-    git_hash, diff, diff_no_binary = get_code_to_check(
-        first_commit, repo_path=repo_path
-    )
+    git_hash, diff, diff_no_binary = get_code_to_check(first_commit, repo_path=repo_path)
 
     assert git_hash == first_commit
 
@@ -79,9 +77,7 @@ def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) 
         text=True,
         check=True,
     ).stdout.strip()
-    git_hash, diff, _diff_no_binary = get_code_to_check(
-        first_commit, repo_path=simple_test_git_repo
-    )
+    git_hash, diff, _diff_no_binary = get_code_to_check(first_commit, repo_path=simple_test_git_repo)
     project_context = LazyProjectContext.build(
         git_hash,
         diff,
