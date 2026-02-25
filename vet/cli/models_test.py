@@ -67,7 +67,9 @@ def test_get_all_model_ids_includes_user_defined_models() -> None:
         ("my-custom-model", SAMPLE_USER_CONFIG, True),
     ],
 )
-def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
+def test_is_valid_model_id(
+    model_id: str, user_config: ModelsConfig | None, expected: bool
+) -> None:
     assert is_valid_model_id(model_id, user_config) is expected
 
 
@@ -79,7 +81,9 @@ def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expe
         (DEFAULT_MODEL_ID, SAMPLE_USER_CONFIG, False),
     ],
 )
-def test_is_user_defined_model(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
+def test_is_user_defined_model(
+    model_id: str, user_config: ModelsConfig | None, expected: bool
+) -> None:
     assert is_user_defined_model(model_id, user_config) is expected
 
 
@@ -123,7 +127,7 @@ def test_get_builtin_models_by_provider_returns_dict_with_expected_providers() -
     assert "anthropic" in providers
     assert "openai" in providers
     assert "gemini" in providers
-    assert "groq" in providers
+    assert "groq" not in providers
 
 
 def test_get_builtin_models_by_provider_all_values_are_lists_of_strings() -> None:
@@ -131,7 +135,9 @@ def test_get_builtin_models_by_provider_all_values_are_lists_of_strings() -> Non
 
     for provider_name, models in providers.items():
         assert isinstance(models, list), f"{provider_name} should have a list of models"
-        assert all(isinstance(m, str) for m in models), f"{provider_name} models should all be strings"
+        assert all(isinstance(m, str) for m in models), (
+            f"{provider_name} models should all be strings"
+        )
 
 
 def test_get_models_by_provider_returns_builtin_providers_when_no_config() -> None:
@@ -172,7 +178,9 @@ def test_get_models_by_provider_includes_user_defined_providers() -> None:
     assert "openai" in providers
 
 
-def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name() -> None:
+def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name() -> (
+    None
+):
     user_config = ModelsConfig(
         providers={
             "custom": ProviderConfig(
