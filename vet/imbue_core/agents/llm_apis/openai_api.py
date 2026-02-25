@@ -212,7 +212,7 @@ def get_openai_tokenizer(model_name: str) -> tiktoken.Encoding:
     """Get the appropriate tiktoken tokenizer for an OpenAI model.
 
     Args:
-        model_name: The OpenAI model name (e.g., "gpt-4o-2024-08-06").
+        model_name: The OpenAI model name (e.g., "gpt-4.1").
 
     Returns:
         The tiktoken Encoding for the model.
