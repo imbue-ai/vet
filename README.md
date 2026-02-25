@@ -80,10 +80,16 @@ The `--history-loader` option executes the specified shell command as the curren
 pip install verify-everything
 ```
 
-Or install from source:
+Or with [pipx](https://pipx.pypa.io/):
 
 ```bash
-pip install git+https://github.com/imbue-ai/vet.git
+pipx install verify-everything
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install verify-everything
 ```
 
 ### Usage

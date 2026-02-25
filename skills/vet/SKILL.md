@@ -11,14 +11,17 @@ Vet reviews git diffs and conversation history to find issues in code changes an
 
 ## Installation
 
-Install vet using pip or uv:
+Install vet using pip, pipx, or uv:
 
 ```bash
 # Using pip
 pip install verify-everything
 
-# Using uv (recommended)
-uv pip install verify-everything
+# Using pipx
+pipx install verify-everything
+
+# Using uv
+uv tool install verify-everything
 
 # Verify installation:
 vet --help
