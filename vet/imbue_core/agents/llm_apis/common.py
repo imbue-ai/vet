@@ -46,12 +46,12 @@ def get_all_model_names() -> list[str]:
 def get_formatted_model_name(model_name: str) -> str:
     """Get a nicely formatted model name.
 
-    Does things like removing generic prefixes like 'models/' and forward slashes (which can interfere with file names).
+        Does things like removing generic prefixes like 'models/' and forward slashes (which can interfere with file names).
 
-    Some examples:
+        Some examples:
 
-    - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
-    - 'claude-3-5-haiku-20241022' -> 'claude-3-5-haiku-20241022'
+        - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
+    - 'claude-opus-4-6' -> 'claude-opus-4-6'
 
     """
     if model_name.startswith("models/"):

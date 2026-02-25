@@ -81,7 +81,7 @@ def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) 
     project_context = LazyProjectContext.build(
         git_hash,
         diff,
-        language_model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01,
+        language_model_name=AnthropicModelName.CLAUDE_4_5_HAIKU,
         repo_path=simple_test_git_repo,
         tokens_to_reserve=20000,
     ).to_base_project_context()
