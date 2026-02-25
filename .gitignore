@@ -87,3 +87,4 @@ v*.tar.gz
 # Project-specific
 .imbue/
 vet-output.txt
+*.cast
