@@ -219,7 +219,7 @@ def evaluate_code_issue_through_llm(
 
 
 MODEL_CONFIDENCE_THRESHOLD_DEFAULTS: dict[str, float] = {
-    "gpt-5.1-2025-11-13": 0.0,
+    "gpt-5.1": 0.0,
 }
 
 

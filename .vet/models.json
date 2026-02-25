@@ -45,7 +45,7 @@
           "supports_temperature": true
         },
         "haiku": {
-          "model_id": "claude-haiku-4-5-20251001",
+          "model_id": "claude-haiku-4-5",
           "context_window": 200000,
           "max_output_tokens": 16384,
           "supports_temperature": true
@@ -53,20 +53,6 @@
         "opus": {
           "model_id": "claude-opus-4-6",
           "context_window": 200000,
-          "max_output_tokens": 16384,
-          "supports_temperature": true
-        }
-      }
-    },
-    "openai": {
-      "name": "OpenAI",
-      "api_type": "openai_compatible",
-      "base_url": "https://api.openai.com/v1",
-      "api_key_env": "OPENAI_API_KEY",
-      "models": {
-        "gpt-5.2": {
-          "model_id": "gpt-5.2-2025-12-11",
-          "context_window": 128000,
           "max_output_tokens": 16384,
           "supports_temperature": true
         }

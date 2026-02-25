@@ -55,31 +55,20 @@ from vet.imbue_core.secrets_utils import get_secret
 
 
 class AnthropicModelName(enum.StrEnum):
-    CLAUDE_3_HAIKU_2024_03_07 = "claude-3-haiku-20240307"
-    CLAUDE_3_OPUS_2024_02_29 = "claude-3-opus-20240229"
-    CLAUDE_3_5_SONNET_2024_06_20 = "claude-3-5-sonnet-20240620"
-    CLAUDE_3_5_SONNET_2024_10_22 = "claude-3-5-sonnet-20241022"
-    CLAUDE_3_5_HAIKU_2024_10_22 = "claude-3-5-haiku-20241022"
-    CLAUDE_3_7_SONNET_2025_02_19 = "claude-3-7-sonnet-20250219"
-    CLAUDE_4_OPUS_2025_05_14 = "claude-opus-4-20250514"
-    CLAUDE_4_1_OPUS_2025_08_05 = "claude-opus-4-1-20250805"
-    CLAUDE_4_SONNET_2025_05_14 = "claude-sonnet-4-20250514"
-    CLAUDE_4_5_SONNET_2025_09_29 = "claude-sonnet-4-5-20250929"
-    CLAUDE_4_5_HAIKU_2025_10_01 = "claude-haiku-4-5-20251001"
-    CLAUDE_4_5_OPUS_2025_11_01 = "claude-opus-4-5-20251101"
+    CLAUDE_4_OPUS = "claude-opus-4-0"
+    CLAUDE_4_1_OPUS = "claude-opus-4-1"
+    CLAUDE_4_5_OPUS = "claude-opus-4-5"
     CLAUDE_4_6_OPUS = "claude-opus-4-6"
+    CLAUDE_4_SONNET = "claude-sonnet-4-0"
+    CLAUDE_4_5_SONNET = "claude-sonnet-4-5"
     CLAUDE_4_6_SONNET = "claude-sonnet-4-6"
+    CLAUDE_4_5_HAIKU = "claude-haiku-4-5"
     # the same as above but with the token limit and cost per token for the 1M token limit
     # TODO: combine these and add ability for token costs to be nonlinear
     # FIXME: this is an exception where the model name is not the same as the model name in the API
-    CLAUDE_4_SONNET_2025_05_14_LONG = "claude-sonnet-4-20250514-long"
-    CLAUDE_4_5_SONNET_2025_09_29_LONG = "claude-sonnet-4-5-20250929-long"
+    CLAUDE_4_SONNET_LONG = "claude-sonnet-4-0-long"
+    CLAUDE_4_5_SONNET_LONG = "claude-sonnet-4-5-long"
     CLAUDE_4_6_OPUS_LONG = "claude-opus-4-6-long"
-
-    # the following are 'retired' and are no longer available: https://docs.claude.com/en/docs/about-claude/model-deprecations
-    # CLAUDE_2_1 = "claude-2.1"
-    # CLAUDE_2 = "claude-2"
-    # CLAUDE_3_SONNET_2024_02_29 = "claude-3-sonnet-20240229"
 
 
 # Basic info is available at https://docs.anthropic.com/claude/reference/models
@@ -89,93 +78,8 @@ class AnthropicModelName(enum.StrEnum):
 # NOTE: as of 2025-06-04, there are some models that don't have rate limits set in our dashboard
 ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = FrozenDict(
     {
-        AnthropicModelName.CLAUDE_3_HAIKU_2024_03_07: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_HAIKU_2024_03_07,
-            cost_per_input_token=0.25 / 1_000_000,
-            cost_per_output_token=1.25 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=4096,
-            rate_limit_req=4000 / 60,  # 4000 RPM = 66.67 RPS
-            rate_limit_tok=4_000_000 / 60,
-            rate_limit_output_tok=800_000 / 60,
-            provider_specific_info=AnthropicModelInfo(
-                cost_per_5m_cache_write_token=0.3 / 1_000_000,
-                cost_per_1h_cache_write_token=0.5 / 1_000_000,
-                cost_per_cache_read_token=0.03 / 1_000_000,
-            ),
-        ),
-        AnthropicModelName.CLAUDE_3_OPUS_2024_02_29: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_OPUS_2024_02_29,
-            cost_per_input_token=15.00 / 1_000_000,
-            cost_per_output_token=75.00 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=4096,
-            rate_limit_req=4000 / 60,  # 4000 RPM = 66.67 RPS
-            rate_limit_tok=1_000_000 / 60,
-            rate_limit_output_tok=150_000 / 60,
-            provider_specific_info=AnthropicModelInfo(
-                cost_per_5m_cache_write_token=18.75 / 1_000_000,
-                cost_per_1h_cache_write_token=30 / 1_000_000,
-                cost_per_cache_read_token=1.5 / 1_000_000,
-            ),
-        ),
-        AnthropicModelName.CLAUDE_3_5_SONNET_2024_06_20: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_5_SONNET_2024_06_20,
-            cost_per_input_token=3.00 / 1_000_000,
-            cost_per_output_token=15.00 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=4096,
-            rate_limit_req=5000 / 60,  # 5000 RPM = 83.33 RPS
-            rate_limit_tok=8_000_000 / 60,
-            rate_limit_output_tok=1_600_000 / 60,
-            provider_specific_info=AnthropicModelInfo(
-                cost_per_5m_cache_write_token=3.75 / 1_000_000,
-                cost_per_1h_cache_write_token=6 / 1_000_000,
-                cost_per_cache_read_token=0.3 / 1_000_000,
-            ),
-        ),
-        AnthropicModelName.CLAUDE_3_5_SONNET_2024_10_22: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_5_SONNET_2024_10_22,
-            cost_per_input_token=3.00 / 1_000_000,
-            cost_per_output_token=15.00 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=8192,
-            rate_limit_req=5000 / 60,  # 5000 RPM = 83.33 RPS
-            rate_limit_tok=8_000_000 / 60,
-            rate_limit_output_tok=400_000 / 60,
-        ),
-        AnthropicModelName.CLAUDE_3_5_HAIKU_2024_10_22: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_5_HAIKU_2024_10_22,
-            cost_per_input_token=1.00 / 1_000_000,
-            cost_per_output_token=5.00 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=8192,
-            rate_limit_req=4000 / 60,  # 4000 RPM = 66.67 RPS
-            rate_limit_tok=4_000_000 / 60,
-            rate_limit_output_tok=800_000 / 60,
-            provider_specific_info=AnthropicModelInfo(
-                cost_per_5m_cache_write_token=1 / 1_000_000,
-                cost_per_1h_cache_write_token=1.6 / 1_000_000,
-                cost_per_cache_read_token=0.08 / 1_000_000,
-            ),
-        ),
-        AnthropicModelName.CLAUDE_3_7_SONNET_2025_02_19: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_3_7_SONNET_2025_02_19,
-            cost_per_input_token=3.00 / 1_000_000,
-            cost_per_output_token=15.00 / 1_000_000,
-            max_input_tokens=200_000,
-            max_output_tokens=8192,
-            rate_limit_req=None,  # Currently no limit set in our dashboard
-            rate_limit_tok=2_000_000 / 60,
-            rate_limit_output_tok=400_000 / 60,
-            provider_specific_info=AnthropicModelInfo(
-                cost_per_5m_cache_write_token=3.75 / 1_000_000,
-                cost_per_1h_cache_write_token=6 / 1_000_000,
-                cost_per_cache_read_token=0.3 / 1_000_000,
-            ),
-        ),
-        AnthropicModelName.CLAUDE_4_OPUS_2025_05_14: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_OPUS_2025_05_14,
+        AnthropicModelName.CLAUDE_4_OPUS: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_OPUS,
             cost_per_input_token=15.00 / 1_000_000,
             cost_per_output_token=75.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -189,8 +93,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=1.5 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_1_OPUS_2025_08_05: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_1_OPUS_2025_08_05,
+        AnthropicModelName.CLAUDE_4_1_OPUS: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_1_OPUS,
             cost_per_input_token=15.00 / 1_000_000,
             cost_per_output_token=75.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -204,8 +108,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=1.5 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_5_OPUS_2025_11_01: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_5_OPUS_2025_11_01,
+        AnthropicModelName.CLAUDE_4_5_OPUS: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_5_OPUS,
             cost_per_input_token=5.00 / 1_000_000,
             cost_per_output_token=25.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -234,8 +138,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=0.50 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_SONNET_2025_05_14: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_SONNET_2025_05_14,
+        AnthropicModelName.CLAUDE_4_SONNET: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_SONNET,
             cost_per_input_token=3.00 / 1_000_000,
             cost_per_output_token=15.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -249,8 +153,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=0.3 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29,
+        AnthropicModelName.CLAUDE_4_5_SONNET: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_5_SONNET,
             cost_per_input_token=3.00 / 1_000_000,
             cost_per_output_token=15.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -279,8 +183,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=0.3 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_5_HAIKU_2025_10_01,
+        AnthropicModelName.CLAUDE_4_5_HAIKU: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_5_HAIKU,
             cost_per_input_token=1.00 / 1_000_000,
             cost_per_output_token=5.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -294,8 +198,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
                 cost_per_cache_read_token=0.1 / 1_000_000,
             ),
         ),
-        AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG,
+        AnthropicModelName.CLAUDE_4_SONNET_LONG: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_SONNET_LONG,
             # the first 200_000 input tokens use the rates above, and the next up to 800_000 use the rate 6.0 / 1_000_000.
             # thus the maximum average cost per input token is (3.0 * 200_000 + 6.0 * 800_000) / 1_000_000 = 5.4 per 1_000_000.
             # (all output tokens may be past 200_000 input tokens, so the max average cost there is just the cost for tokens after 200_000)
@@ -307,8 +211,8 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
             rate_limit_tok=1_000_000 / 60,  # <-- yeah they let us have one (1) 1M request per minute
             rate_limit_output_tok=200_000 / 60,
         ),
-        AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG: ModelInfo(
-            model_name=AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
+        AnthropicModelName.CLAUDE_4_5_SONNET_LONG: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_5_SONNET_LONG,
             # the first 200_000 input tokens use the rates above, and the next up to 800_000 use the rate 6.0 / 1_000_000.
             # thus the maximum average cost per input token is (3.0 * 200_000 + 6.0 * 800_000) / 1_000_000 = 5.4 per 1_000_000.
             # (all output tokens may be past 200_000 input tokens, so the max average cost there is just the cost for tokens after 200_000)
@@ -484,7 +388,7 @@ class MissingCachingInfoError(Exception):
 
 
 class AnthropicAPI(LanguageModelAPI):
-    model_name: AnthropicModelName = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
+    model_name: AnthropicModelName = AnthropicModelName.CLAUDE_4_SONNET
     is_conversational: bool = True
 
     # Anthropic specific args
@@ -559,16 +463,16 @@ class AnthropicAPI(LanguageModelAPI):
                 assert params.max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
-                    AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
-                    AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG,
+                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG,
+                    AnthropicModelName.CLAUDE_4_SONNET_LONG,
                     AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
+                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_SONNET
                     elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_6_OPUS
                     else:
@@ -644,16 +548,16 @@ class AnthropicAPI(LanguageModelAPI):
                 assert max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
                 if self.model_name in (
-                    AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG,
-                    AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG,
+                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG,
+                    AnthropicModelName.CLAUDE_4_SONNET_LONG,
                     AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
                 ):
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET_2025_09_29
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_2025_05_14_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_SONNET_2025_05_14
+                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET
+                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_LONG:
+                        model_name = AnthropicModelName.CLAUDE_4_SONNET
                     elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
                         model_name = AnthropicModelName.CLAUDE_4_6_OPUS
                     else:

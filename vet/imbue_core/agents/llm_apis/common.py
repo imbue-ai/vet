@@ -2,14 +2,12 @@ from vet.imbue_core.agents.llm_apis.anthropic_api import ANTHROPIC_MODEL_INFO_BY
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.gemini_api import GEMINI_MODEL_INFO_BY_NAME
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
-from vet.imbue_core.agents.llm_apis.groq_api import GroqSupportedModelName
-from vet.imbue_core.agents.llm_apis.groq_api import get_model_info as get_groq_model_info
 from vet.imbue_core.agents.llm_apis.mock_api import MY_MOCK_MODEL_INFO
 from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.openai_api import get_model_info as get_openai_model_info
 
-ModelName = AnthropicModelName | OpenAIModelName | GroqSupportedModelName | GeminiModelName
+ModelName = AnthropicModelName | OpenAIModelName | GeminiModelName
 
 
 def get_model_info_from_name(model_name: str) -> ModelInfo:
@@ -19,8 +17,6 @@ def get_model_info_from_name(model_name: str) -> ModelInfo:
         return ANTHROPIC_MODEL_INFO_BY_NAME[AnthropicModelName(model_name)]
     elif model_name in (v for v in OpenAIModelName):
         return get_openai_model_info(OpenAIModelName(model_name))
-    elif model_name in (v for v in GroqSupportedModelName):
-        return get_groq_model_info(GroqSupportedModelName(model_name))
     elif model_name in (v for v in GeminiModelName):
         return GEMINI_MODEL_INFO_BY_NAME[GeminiModelName(model_name)]
     else:
@@ -43,7 +39,6 @@ def get_all_model_names() -> list[str]:
     names = []
     names.extend(list(v for v in AnthropicModelName))
     names.extend(list(v for v in OpenAIModelName))
-    names.extend(list(v for v in GroqSupportedModelName))
     names.extend(list(v for v in GeminiModelName))
     return names
 
@@ -51,13 +46,12 @@ def get_all_model_names() -> list[str]:
 def get_formatted_model_name(model_name: str) -> str:
     """Get a nicely formatted model name.
 
-    Does things like removing generic prefixes like 'models/' and forward slashes (which can interfere with file names).
+        Does things like removing generic prefixes like 'models/' and forward slashes (which can interfere with file names).
 
-    Some examples:
+        Some examples:
 
-    - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
-    - 'groq/llama-3.3-70b-versatile' -> 'groq-llama-3.3-70b-versatile'
-    - 'claude-3-5-haiku-20241022' -> 'claude-3-5-haiku-20241022'
+        - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
+    - 'claude-opus-4-6' -> 'claude-opus-4-6'
 
     """
     if model_name.startswith("models/"):
