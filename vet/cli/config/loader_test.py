@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -10,6 +11,7 @@ import pytest
 from vet.cli.config.loader import ConfigLoadError
 from vet.cli.config.loader import MissingAPIKeyError
 from vet.cli.config.loader import _load_single_config_file
+from vet.cli.config.loader import _refresh_remote_registry_cache
 from vet.cli.config.loader import find_git_repo_root
 from vet.cli.config.loader import get_config_file_paths
 from vet.cli.config.loader import get_models_by_provider_from_config
@@ -55,7 +57,9 @@ def test_find_git_repo_root_returns_none_when_not_in_repo(tmp_path: Path) -> Non
 
 
 def test_get_config_file_paths_returns_global_path(tmp_path: Path) -> None:
-    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path)}):
+    with patch.dict(
+        os.environ, {"XDG_CONFIG_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "0"}
+    ):
         paths = get_config_file_paths(repo_path=None)
         assert len(paths) == 1
         assert paths[0] == tmp_path / "vet" / "models.json"
@@ -69,7 +73,9 @@ def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     subdir = git_root / "src" / "submodule"
     subdir.mkdir(parents=True)
 
-    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
+    with patch.dict(
+        os.environ, {"XDG_CONFIG_HOME": str(xdg_config), "VET_REMOTE_REGISTRY": "0"}
+    ):
         paths = get_config_file_paths(repo_path=subdir)
         assert len(paths) == 2
         assert paths[0] == xdg_config / "vet" / "models.json"
@@ -436,3 +442,256 @@ def test_get_models_by_provider_groups_models() -> None:
 
     assert "openrouter" in result
     assert result["openrouter"] == ["anthropic/claude-3"]
+
+
+# --- Remote registry tests ---
+
+_REMOTE_PROVIDER_JSON = json.dumps(
+    {
+        "providers": {
+            "remote-provider": {
+                "base_url": "http://remote:8080/v1",
+                "api_key_env": "REMOTE_KEY",
+                "models": {
+                    "remote-model": {
+                        "context_window": 128000,
+                        "max_output_tokens": 16384,
+                        "supports_temperature": True,
+                    }
+                },
+            }
+        }
+    }
+)
+
+
+def test_remote_registry_disabled_via_env(tmp_path: Path) -> None:
+    with patch.dict(
+        os.environ, {"VET_REMOTE_REGISTRY": "0", "XDG_CACHE_HOME": str(tmp_path)}
+    ):
+        result = _refresh_remote_registry_cache()
+    assert result is None
+
+
+def test_remote_registry_disabled_via_false(tmp_path: Path) -> None:
+    with patch.dict(
+        os.environ, {"VET_REMOTE_REGISTRY": "false", "XDG_CACHE_HOME": str(tmp_path)}
+    ):
+        result = _refresh_remote_registry_cache()
+    assert result is None
+
+
+def test_remote_registry_uses_fresh_cache(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(_REMOTE_PROVIDER_JSON)
+
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+    with patch.dict(os.environ, env):
+        with patch("vet.cli.config.loader.urllib.request.urlopen") as mock_urlopen:
+            result = _refresh_remote_registry_cache()
+
+    # Should not have made a network request — cache is fresh
+    mock_urlopen.assert_not_called()
+    assert result == cache_file
+
+
+def test_remote_registry_fetches_when_no_cache(tmp_path: Path) -> None:
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
+        ):
+            result = _refresh_remote_registry_cache()
+
+    assert result is not None
+    assert result.exists()
+    assert json.loads(result.read_text())["providers"]["remote-provider"]
+
+
+def test_remote_registry_fetches_when_cache_stale(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text('{"providers": {}}')
+    # Make cache appear old
+    old_time = time.time() - 100000
+    os.utime(cache_file, (old_time, old_time))
+
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
+        ):
+            result = _refresh_remote_registry_cache()
+
+    assert result is not None
+    # Cache should now contain the fresh data
+    assert "remote-provider" in json.loads(result.read_text())["providers"]
+
+
+def test_remote_registry_falls_back_to_stale_cache_on_error(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(_REMOTE_PROVIDER_JSON)
+    # Make cache stale
+    old_time = time.time() - 100000
+    os.utime(cache_file, (old_time, old_time))
+
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen",
+            side_effect=OSError("no network"),
+        ):
+            result = _refresh_remote_registry_cache()
+
+    # Falls back to stale cache
+    assert result == cache_file
+
+
+def test_remote_registry_returns_none_on_error_without_cache(tmp_path: Path) -> None:
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen",
+            side_effect=OSError("no network"),
+        ):
+            result = _refresh_remote_registry_cache()
+
+    assert result is None
+
+
+def test_remote_registry_respects_custom_url(tmp_path: Path) -> None:
+    custom_url = "https://example.com/custom/models.json"
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    env = {
+        "XDG_CACHE_HOME": str(tmp_path),
+        "VET_REGISTRY_URL": custom_url,
+        "VET_REMOTE_REGISTRY": "1",
+    }
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
+        ) as mock_urlopen:
+            _refresh_remote_registry_cache()
+
+    # Verify the custom URL was used
+    call_args = mock_urlopen.call_args
+    assert call_args[0][0].full_url == custom_url
+
+
+def test_load_models_config_remote_overridden_by_local(tmp_path: Path) -> None:
+    """Remote registry providers are overridden by local config with the same key."""
+    # Set up remote cache with a provider
+    cache_dir = tmp_path / "cache" / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(
+        json.dumps(
+            {
+                "providers": {
+                    "shared": {
+                        "name": "Remote Name",
+                        "base_url": "http://remote:8080/v1",
+                        "api_key_env": "REMOTE_KEY",
+                        "models": {
+                            "shared-model": {
+                                "context_window": 64000,
+                                "max_output_tokens": 8192,
+                                "supports_temperature": True,
+                            }
+                        },
+                    },
+                    "remote-only": {
+                        "base_url": "http://remote-only:8080/v1",
+                        "models": {
+                            "remote-only-model": {
+                                "context_window": 64000,
+                                "max_output_tokens": 8192,
+                                "supports_temperature": True,
+                            }
+                        },
+                    },
+                }
+            }
+        )
+    )
+
+    # Set up local project config that overrides "shared"
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+    vet_dir = repo_path / ".vet"
+    vet_dir.mkdir()
+    (vet_dir / "models.json").write_text(
+        json.dumps(
+            {
+                "providers": {
+                    "shared": {
+                        "name": "Local Name",
+                        "base_url": "http://local:8080/v1",
+                        "api_key_env": "LOCAL_KEY",
+                        "models": {
+                            "local-model": {
+                                "context_window": 128000,
+                                "max_output_tokens": 16384,
+                                "supports_temperature": True,
+                            }
+                        },
+                    }
+                }
+            }
+        )
+    )
+
+    xdg_config = tmp_path / "xdg"
+    env = {
+        "XDG_CACHE_HOME": str(tmp_path / "cache"),
+        "XDG_CONFIG_HOME": str(xdg_config),
+        "VET_REMOTE_REGISTRY": "1",
+    }
+    with patch.dict(os.environ, env):
+        # Patch _refresh to just return our pre-made cache file
+        with patch(
+            "vet.cli.config.loader._refresh_remote_registry_cache",
+            return_value=cache_file,
+        ):
+            result = load_models_config(repo_path=repo_path)
+
+    # "shared" should have local values (local overrides remote)
+    assert result.providers["shared"].name == "Local Name"
+    assert result.providers["shared"].base_url == "http://local:8080/v1"
+    # "remote-only" should still be present (not in local config)
+    assert "remote-only" in result.providers

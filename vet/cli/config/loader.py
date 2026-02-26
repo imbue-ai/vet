@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
+import time
 import tomllib
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -31,11 +34,50 @@ class MissingAPIKeyError(Exception):
         )
 
 
+_DEFAULT_REGISTRY_URL = (
+    "https://raw.githubusercontent.com/imbue-ai/vet/main/registry/models.json"
+)
+_REGISTRY_CACHE_TTL_SECONDS = 86400
+_REGISTRY_FETCH_TIMEOUT_SECONDS = 5
+
+
 def get_xdg_config_home() -> Path:
     xdg_config = os.environ.get("XDG_CONFIG_HOME")
     if xdg_config:
         return Path(xdg_config)
     return Path.home() / ".config"
+
+
+def _get_xdg_cache_home() -> Path:
+    xdg_cache = os.environ.get("XDG_CACHE_HOME")
+    if xdg_cache:
+        return Path(xdg_cache)
+    return Path.home() / ".cache"
+
+
+def _refresh_remote_registry_cache() -> Path | None:
+    if os.environ.get("VET_REMOTE_REGISTRY", "1").lower() in ("0", "false", "no"):
+        return None
+
+    cache_path = _get_xdg_cache_home() / "vet" / "remote_models.json"
+
+    if cache_path.exists():
+        age = time.time() - cache_path.stat().st_mtime
+        if age < _REGISTRY_CACHE_TTL_SECONDS:
+            return cache_path
+
+    url = os.environ.get("VET_REGISTRY_URL", _DEFAULT_REGISTRY_URL)
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "vet"})
+        with urllib.request.urlopen(
+            req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS
+        ) as resp:
+            data = resp.read()
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_bytes(data)
+        return cache_path
+    except Exception:
+        return cache_path if cache_path.exists() else None
 
 
 def find_git_repo_root(start_path: Path) -> Path | None:
@@ -66,7 +108,14 @@ def _get_config_file_paths(
 
 
 def get_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    return _get_config_file_paths("vet", "models.json", "models.json", repo_path)
+    paths: list[Path] = []
+
+    remote_cache = _refresh_remote_registry_cache()
+    if remote_cache is not None:
+        paths.append(remote_cache)
+
+    paths.extend(_get_config_file_paths("vet", "models.json", "models.json", repo_path))
+    return paths
 
 
 def _load_single_config_file(config_path: Path) -> ModelsConfig:
@@ -97,7 +146,9 @@ def get_user_defined_model_ids(config: ModelsConfig) -> set[str]:
     return model_ids
 
 
-def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfig | None:
+def get_provider_for_model(
+    model_id: str, config: ModelsConfig
+) -> ProviderConfig | None:
     for provider in config.providers.values():
         if model_id in provider.models:
             return provider
@@ -205,10 +256,15 @@ def get_config_preset(
     if config_name not in cli_configs:
         available = sorted(cli_configs.keys())
         if available:
-            raise ConfigLoadError(f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}")
+            raise ConfigLoadError(
+                f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}"
+            )
         else:
             paths = get_cli_config_file_paths(repo_path)
-            paths_list = "\n".join(f"  - {p} ({'global' if i == 0 else 'project'})" for i, p in enumerate(paths))
+            paths_list = "\n".join(
+                f"  - {p} ({'global' if i == 0 else 'project'})"
+                for i, p in enumerate(paths)
+            )
             raise ConfigLoadError(
                 f"Configuration '{config_name}' not found.\n\n"
                 f"No configuration files found. Create a config at one of these locations:\n{paths_list}"
@@ -234,14 +290,19 @@ def _load_single_guides_file(config_path: Path) -> CustomGuidesConfig:
     for key, value in data.items():
         if key not in all_issue_code_values:
             raise ConfigLoadError(
-                f"Unknown issue code '{key}' in {config_path}. " f"Use --list-issue-codes to see valid codes."
+                f"Unknown issue code '{key}' in {config_path}. "
+                f"Use --list-issue-codes to see valid codes."
             )
         if not isinstance(value, dict):
-            raise ConfigLoadError(f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}")
+            raise ConfigLoadError(
+                f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}"
+            )
         try:
             guides[key] = CustomGuideConfig.model_validate(value)
         except ValidationError as e:
-            raise ConfigLoadError(f"Invalid guide configuration for '{key}' in {config_path}: {e}") from e
+            raise ConfigLoadError(
+                f"Invalid guide configuration for '{key}' in {config_path}: {e}"
+            ) from e
 
     return CustomGuidesConfig(guides=guides)
 
