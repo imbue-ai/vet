@@ -90,7 +90,7 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
-- `--agentic`: Mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. This is slower (~3 min) so it is not as the default, but often results in higher precision.
+- `--agentic`: Mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. This is slower (~3 min) so it is not the default, but it often results in higher precision issue identification.
 - `--agent-harness`: The two options for this are `codex` and `claude`. Claude Code is the default.
 - `--help`: Show comprehensive list of options
 
