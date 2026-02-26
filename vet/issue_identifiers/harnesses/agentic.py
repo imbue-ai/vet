@@ -14,6 +14,7 @@ from loguru import logger
 
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
+from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
@@ -269,6 +270,8 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
+                    except AgentCLINotFoundError:
+                        raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
                         continue
@@ -297,12 +300,12 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
         else:
             prompt = self._get_prompt(project_context, config, identifier_inputs)
-            claude_response = generate_response_from_agent(prompt, options)
-            if claude_response is None:
+            agent_response = generate_response_from_agent(prompt, options)
+            if agent_response is None:
                 raise RuntimeError(
                     "Agentic issue identification failed: no response received from agent CLI. See log file for details."
                 )
-            response_text, messages = claude_response
+            response_text, messages = agent_response
 
             message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
             invocation_info = extract_invocation_info_from_messages(messages)
