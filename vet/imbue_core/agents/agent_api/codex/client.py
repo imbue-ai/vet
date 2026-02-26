@@ -98,7 +98,7 @@ class CodexClient(RealAgentClient[CodexOptions]):
         if not node_installed or not npm_installed:
             raise AgentCLINotFoundError("Codex CLI not found. Node.js and npm are required but may not be installed.")
 
-        raise AgentCLINotFoundError("Codex CLI not found. Ensure it is installed and available on your PATH.")
+        raise AgentCLINotFoundError("Codex CLI not found. Ensure it is installed and available on your PATH, or specify a different harness with --agent-harness.")
 
     @classmethod
     def _build_cli_cmd(cls, options: CodexOptions) -> list[str]:

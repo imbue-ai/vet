@@ -116,7 +116,7 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         if not node_installed:
             raise AgentCLINotFoundError("Claude Code CLI not found. Node.js is required but not installed.")
 
-        raise AgentCLINotFoundError("Claude Code CLI not found. Ensure it is installed and available on your PATH.")
+        raise AgentCLINotFoundError("Claude Code CLI not found. Ensure it is installed and available on your PATH, or specify a different harness with --agent-harness.")
 
     @classmethod
     def _build_cli_cmd(cls, options: ClaudeCodeOptions) -> list[str]:
