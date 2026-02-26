@@ -177,12 +177,8 @@ def _generate_issues_worker(
 class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
     _identification_guides: tuple[IssueIdentificationGuide, ...]
 
-    def __init__(
-        self, identification_guides: tuple[IssueIdentificationGuide, ...]
-    ) -> None:
-        assert len(identification_guides) > 0, (
-            "At least one identification guide must be provided"
-        )
+    def __init__(self, identification_guides: tuple[IssueIdentificationGuide, ...]) -> None:
+        assert len(identification_guides) > 0, "At least one identification guide must be provided"
         self._identification_guides = identification_guides
 
     @cached_property
@@ -198,13 +194,11 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
         jinja_template = env.from_string(PROMPT_TEMPLATE)
         additional_guidance_by_issue_code = {
-            guide.issue_code: guide.additional_guide_for_agent
-            for guide in self._identification_guides
+            guide.issue_code: guide.additional_guide_for_agent for guide in self._identification_guides
         }
 
         formatted_guides = {
-            guide.issue_code: format_issue_identification_guide_for_llm(guide)
-            for guide in self._identification_guides
+            guide.issue_code: format_issue_identification_guide_for_llm(guide) for guide in self._identification_guides
         }
 
         prompt = jinja_template.render(
@@ -248,9 +242,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
         project_context: ProjectContext,
         config: VetConfig,
     ) -> Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo]:
-        assert project_context.repo_path is not None, (
-            "Project context must have a valid repo_path, got None"
-        )
+        assert project_context.repo_path is not None, "Project context must have a valid repo_path, got None"
 
         options = get_agent_options(
             cwd=project_context.repo_path,
@@ -264,19 +256,13 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             issue_prompts = [
                 (
                     guide.issue_code,
-                    self._get_prompt_for_issue_type(
-                        project_context, identifier_inputs, guide
-                    ),
+                    self._get_prompt_for_issue_type(project_context, identifier_inputs, guide),
                 )
                 for guide in self._identification_guides
             ]
-            with ThreadPoolExecutor(
-                max_workers=config.max_identify_workers
-            ) as executor:
+            with ThreadPoolExecutor(max_workers=config.max_identify_workers) as executor:
                 tasks = [
-                    executor.submit(
-                        _generate_issues_worker, issue_code, prompt, options
-                    )
+                    executor.submit(_generate_issues_worker, issue_code, prompt, options)
                     for issue_code, prompt in issue_prompts
                 ]
 
@@ -292,13 +278,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
 
                     issue_code, issue_type_response_text, messages = result
 
-                    yield from generate_issues_from_response_texts(
-                        response_texts=(issue_type_response_text,)
-                    )
+                    yield from generate_issues_from_response_texts(response_texts=(issue_type_response_text,))
 
-                    message_dumps = tuple(
-                        json.dumps(message.model_dump()) for message in messages
-                    )
+                    message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
                     invocation_info = extract_invocation_info_from_messages(messages)
 
                     llm_responses.append(
@@ -319,9 +301,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             assert claude_response is not None
             response_text, messages = claude_response
 
-            message_dumps = tuple(
-                json.dumps(message.model_dump()) for message in messages
-            )
+            message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
             invocation_info = extract_invocation_info_from_messages(messages)
 
             llm_responses = [
@@ -335,9 +315,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 )
             ]
 
-            yield from generate_issues_from_response_texts(
-                response_texts=(response_text,)
-            )
+            yield from generate_issues_from_response_texts(response_texts=(response_text,))
 
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
 
