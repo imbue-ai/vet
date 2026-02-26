@@ -17,6 +17,6 @@ set -a; source .env; set +a
 IMAGE_NAME="vet"
 INSTALL_CLAUDE="false"
 if [ "${I_CHOOSE_CONVENIENCE_OVER_FREEDOM:-}" = "true" ]; then
-    IMAGE_NAME="vet-claude"
+    IMAGE_NAME="vet-proprietary"
     INSTALL_CLAUDE="true"
 fi

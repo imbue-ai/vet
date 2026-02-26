@@ -22,13 +22,13 @@ You can use the `Containerfile` in `dev/` at the repo root to create a container
 
 Create a `.env` file at the repo root with your API keys. The recommended keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
 
-To include Claude Code in the image (proprietary, requires `ANTHROPIC_API_KEY`), add:
+To include Claude Code in the image add:
 
 ```
 I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
 ```
 
-Without this, only Codex is available as an agent harness.
+Without this Claude Code will not be installed in the image.
 
 #### Running Vet in a Container
 
@@ -39,7 +39,7 @@ Without this, only Codex is available as an agent harness.
 ./dev/vet.sh --base-commit main --agentic --agent-harness claude  # requires I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
 ```
 
-The image is built automatically on each run; layer caching makes this near-instant when nothing has changed. To build without running vet, use `./dev/build.sh`.
+The image is built automatically on each run. This process should be fast due to layer caching.
 
 #### Interactive Development
 
@@ -47,7 +47,7 @@ The image is built automatically on each run; layer caching makes this near-inst
 ./dev/run.sh
 ```
 
-Starts an interactive shell in the container. The repo is bind-mounted at `/app`. If `I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true` is set, Claude Code is available — run `claude` inside to authenticate. The first `uv run vet` is slower while `uv` sets up the venv; subsequent runs are fast.
+Starts an interactive shell in the container. The repo is bind-mounted at `/app`.
 
 ## Formatting Hooks
 
