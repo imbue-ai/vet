@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
-import requests
+import httpx
 
 # reusing SyncLocalGitRepo from vet.git to compute merge base
 from vet.git import SyncLocalGitRepo
@@ -79,7 +79,7 @@ def run_vet(args: list[str]) -> Tuple[dict, int]:
     result = subprocess.run(
         ["vet"] + args,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=None,
         text=True,
     )
 
@@ -87,7 +87,6 @@ def run_vet(args: list[str]) -> Tuple[dict, int]:
 
     if status not in (0, 10):
         print(f"::error::Vet failed with exit code {status}")
-        print(result.stderr)
         sys.exit(status)
 
     try:
@@ -107,37 +106,41 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
     }
 
     review_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}/reviews"
-
-    try:
-        response = requests.post(review_url, json=review_json, headers=headers)
-        if response.status_code in (200, 201):
-            return
-    except Exception:
-        # Fall through to comment fallback
-        pass
-
-    # Fallback: Post as PR comment (matches gh || fallback behavior)
-    body_parts = [review_json.get("body", "")]
-
-    for comment in review_json.get("comments", []):
-        path = comment.get("path")
-        line = comment.get("line")
-        text = comment.get("body", "")
-        body_parts.append(f"**{path}:{line}**\n\n{text}")
-
-    comment_body = "\n\n---\n\n".join(body_parts)
-
     comment_url = f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"
 
-    try:
-        requests.post(
-            comment_url,
-            json={"body": comment_body},
-            headers=headers,
-        )
-    except Exception:
-        # If this fails too we allow workflow to continue
-        pass
+    with httpx.Client(timeout=10.0) as client:
+        # Try review post
+        try:
+            response = client.post(review_url, json=review_json, headers=headers)
+            if response.status_code in (200, 201):
+                return
+        except httpx.HTTPError:
+            pass
+
+        # Fallback to comment
+        body_parts = [review_json.get("body", "")]
+        for comment in review_json.get("comments", []):
+            path = comment.get("path")
+            line = comment.get("line")
+            text = comment.get("body", "")
+            body_parts.append(f"**{path}:{line}**\n\n{text}")
+
+        comment_body = "\n\n---\n\n".join(body_parts)
+
+        try:
+            fallback_response = client.post(
+                comment_url,
+                json={"body": comment_body},
+                headers=headers,
+            )
+            if fallback_response.status_code in (200, 201):
+                return
+        except httpx.HTTPError:
+            pass
+
+    # both failing results in workflow failure
+    print("::error::Failed to post GitHub review and fallback comment")
+    sys.exit(1)
 
 
 def main():
