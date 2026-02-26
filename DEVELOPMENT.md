@@ -24,18 +24,19 @@ Create a `.env` file at the repo root that contains your API keys you'd like to 
 
 #### Running Vet in a Container
 
-The simplest way to run vet in a container is with `dev/vet.sh`, which handles building the image, selecting the right container, and passing all arguments through to vet:
+There are two wrapper scripts that handle building the image and passing all arguments through to vet:
+
+- `dev/vet.sh` — uses the base `vet` image
+- `dev/vet-claude.sh` — uses the `vet-claude` image (which includes Claude Code)
 
 ```bash
 ./dev/vet.sh --list-models
 ./dev/vet.sh "check for bugs" --base-commit main
 ./dev/vet.sh --base-commit main --agentic --agent-harness codex
-./dev/vet.sh --base-commit main --agentic --agent-harness claude
+./dev/vet-claude.sh --base-commit main --agentic --agent-harness claude
 ```
 
-All vet CLI arguments are passed through directly. When `--agent-harness claude` is specified, the script automatically uses the `vet-claude` image (which includes Claude Code).
-
-The image is built automatically on each run. Docker/podman layer caching makes this near-instant when nothing has changed. On first run or after Containerfile changes, there will be a brief pause while the image builds.
+All vet CLI arguments are passed through directly. The image is built automatically on each run. Docker/podman layer caching makes this near-instant when nothing has changed. On first run or after Containerfile changes, there will be a brief pause while the image builds.
 
 #### Interactive Development
 
@@ -50,7 +51,7 @@ The repo is bind-mounted into the container at `/app`. Running `uv run vet` insi
 
 #### Building Images Manually
 
-Images are built automatically by `vet.sh` and `run.sh`, but you can also build them directly:
+Images are built automatically by `vet.sh`, `vet-claude.sh`, and `run.sh`, but you can also build them directly:
 
 ```bash
 ./dev/build.sh          # builds both vet and vet-claude images
@@ -64,7 +65,7 @@ The agentic verifier calls out to Claude Code or Codex. Codex is part of both im
 Since Claude Code is proprietary, it is only installed in the `vet-claude` image. To use the agentic verifier with Claude Code:
 
 ```bash
-./dev/vet.sh --base-commit main --agentic --agent-harness claude
+./dev/vet-claude.sh --base-commit main --agentic --agent-harness claude
 ```
 
 Or interactively:

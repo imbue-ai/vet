@@ -15,8 +15,6 @@ require_env_file() {
     [ -f .env ] || { echo '.env file not found, please create one before proceeding'; exit 1; }
 }
 
-# Build (or rebuild) a container image, suppressing output unless something fails.
-# Usage: ensure_image [claude]
 ensure_image() {
     local build_arg="${1:-}"
     local image_name="vet"
@@ -31,4 +29,18 @@ ensure_image() {
         echo "$build_output"
         exit 1
     fi
+}
+
+run_vet() {
+    local image_name="$1"
+    local build_arg="$2"
+    shift 2
+
+    require_env_file
+    ensure_image "$build_arg"
+
+    $RUNTIME run --rm \
+        --mount type=bind,source="$(pwd)",target=/app \
+        --env-file .env \
+        "$image_name" /root/.local/bin/uv run vet "$@"
 }
