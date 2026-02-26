@@ -90,11 +90,12 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
-- `--agentic`: Mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. Slower (~3 min) so not recommended as the default.
+- `--agentic`: Mode that routes analysis through the locally installed Claude Code or Codex CLI instead of calling the API directly. Try this if vet fails due to missing API keys. This is slower (~3 min) so it is not as the default, but often results in higher precision.
+- `--agent-harness`: The two options for this are `codex` and `claude`. Claude Code is the default.
 - `--help`: Show comprehensive list of options
 
 ## Updating
 
-The vet CLI, skill files, and export scripts can become outdated as things change. The export scripts in particular are tightly coupled to the session storage formats of Codex, Claude Code, and OpenCode, which will change over time.
+The vet CLI, skill files, and export scripts can become outdated as agent harnesses and APIs change.
 
 If vet or the export scripts fail unexpectedly, try updating them. Run `which vet` to determine how vet was installed and update accordingly. For the skill files, check which skill directories exist on disk and update them with the latest versions from https://github.com/imbue-ai/vet/tree/main/skills/vet.
