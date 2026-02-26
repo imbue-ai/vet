@@ -47,9 +47,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
             options = self._options.model_copy(update={"resume_session_id": self._session_id})
         cmd = self._build_cli_cmd(options)
         with AgentSubprocessCLITransport.build(
-            AgentSubprocessCLITransportOptions(cmd=[*cmd, prompt], cwd=options.cwd)
+            AgentSubprocessCLITransportOptions(cmd=[*cmd, "-"], cwd=options.cwd)
         ) as transport:
-            transport.send_request([prompt], options)
+            transport.write_stdin(prompt)
 
             thread_id: str | None = None
             for data in transport.receive_messages():

@@ -158,12 +158,7 @@ def collate_issues_with_agent(
         combined_issues_string,
         guides_by_issue_code,
     )
-    agent_response = generate_response_from_agent(collation_prompt, options)
-    if agent_response is None:
-        raise RuntimeError(
-            "Agentic issue collation failed: no response received from agent CLI." " Re-run with --verbose for details."
-        )
-    response_text, collation_messages = agent_response
+    response_text, collation_messages = generate_response_from_agent(collation_prompt, options)
     collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
     collation_invocation_info = extract_invocation_info_from_messages(collation_messages)
 

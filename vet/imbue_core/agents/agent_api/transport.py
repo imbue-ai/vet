@@ -118,6 +118,16 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
             stdin_stream.write(json.dumps(message) + "\n")
             stdin_stream.flush()
 
+    def write_stdin(self, text: str) -> None:
+        stdin_stream = self._stdin_stream
+        if not self._process or not stdin_stream:
+            raise AgentCLIConnectionError("Not connected")
+
+        stdin_stream.write(text)
+        stdin_stream.flush()
+        stdin_stream.close()
+        self._stdin_stream = None
+
     def _read_stderr(self, output_buffer: list[str]) -> None:
         """Read stderr in background."""
         stderr_stream = self._stderr_stream
