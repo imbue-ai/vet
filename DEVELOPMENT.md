@@ -20,34 +20,34 @@ You can use the `Containerfile` in `dev/` at the repo root to create a container
 
 #### Setup
 
-Create a `.env` file at the repo root that contains your API keys you'd like to use with Vet. The recommended API keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
+Create a `.env` file at the repo root with your API keys. The recommended keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
+
+To include Claude Code in the image (proprietary, requires `ANTHROPIC_API_KEY`), add:
+
+```
+I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
+```
+
+Without this, only Codex is available as an agent harness.
 
 #### Running Vet in a Container
-
-Two wrapper scripts handle building the image and passing all CLI arguments through to vet:
-
-- `dev/vet.sh` — uses the base `vet` image (includes Codex)
-- `dev/vet-claude.sh` — uses the `vet-claude` image (adds Claude Code)
 
 ```bash
 ./dev/vet.sh --list-models
 ./dev/vet.sh "check for bugs" --base-commit main
 ./dev/vet.sh --base-commit main --agentic --agent-harness codex
-./dev/vet-claude.sh --base-commit main --agentic --agent-harness claude
+./dev/vet.sh --base-commit main --agentic --agent-harness claude  # requires I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
 ```
 
-Images are built automatically on each run; layer caching makes this near-instant when nothing has changed. To build images without running vet, use `./dev/build.sh` (both images) or `./dev/build.sh claude` (claude image only).
+The image is built automatically on each run; layer caching makes this near-instant when nothing has changed. To build without running vet, use `./dev/build.sh`.
 
 #### Interactive Development
 
-To start an interactive shell in a container (e.g. for running opencode or editing code):
-
 ```bash
-./dev/run.sh            # base image
-./dev/run.sh claude     # claude image — run `claude` inside to authenticate
+./dev/run.sh
 ```
 
-The repo is bind-mounted at `/app`. The first `uv run vet` inside the container is slower while `uv` sets up the venv; subsequent runs are fast.
+Starts an interactive shell in the container. The repo is bind-mounted at `/app`. If `I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true` is set, Claude Code is available — run `claude` inside to authenticate. The first `uv run vet` is slower while `uv` sets up the venv; subsequent runs are fast.
 
 ## Formatting Hooks
 

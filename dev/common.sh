@@ -15,16 +15,23 @@ require_env_file() {
     [ -f .env ] || { echo '.env file not found, please create one before proceeding'; exit 1; }
 }
 
-ensure_image() {
-    local build_arg="${1:-}"
-    local image_name="vet"
-    if [ "$build_arg" = "claude" ]; then
-        image_name="vet-claude"
-    fi
+# Read .env and derive image settings from I_CHOOSE_CONVENIENCE_OVER_FREEDOM.
+require_env_file
+set -a
+source .env
+set +a
 
-    echo "Ensuring $image_name image is up to date..."
+IMAGE_NAME="vet"
+INSTALL_CLAUDE="false"
+if [ "${I_CHOOSE_CONVENIENCE_OVER_FREEDOM:-}" = "true" ]; then
+    IMAGE_NAME="vet-claude"
+    INSTALL_CLAUDE="true"
+fi
+
+ensure_image() {
+    echo "Ensuring $IMAGE_NAME image is up to date..."
     local build_output
-    if ! build_output=$("$SCRIPT_DIR/build.sh" "$build_arg" 2>&1); then
+    if ! build_output=$("$SCRIPT_DIR/build.sh" 2>&1); then
         echo "Image build failed:"
         echo "$build_output"
         exit 1
@@ -32,15 +39,10 @@ ensure_image() {
 }
 
 run_vet() {
-    local image_name="$1"
-    local build_arg="$2"
-    shift 2
-
-    require_env_file
-    ensure_image "$build_arg"
+    ensure_image
 
     $RUNTIME run --rm \
         --mount type=bind,source="$(pwd)",target=/app \
         --env-file .env \
-        "$image_name" /root/.local/bin/uv run vet "$@"
+        "$IMAGE_NAME" /root/.local/bin/uv run vet "$@"
 }
