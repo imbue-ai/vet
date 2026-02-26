@@ -265,12 +265,52 @@ def list_issue_codes() -> None:
         print(f"  {code}")
 
 
-def list_models(user_config: ModelsConfig | None = None) -> None:
+_HARNESS_ISSUE_URLS: dict[AgentHarnessType, str] = {
+    AgentHarnessType.CLAUDE: "https://github.com/anthropics/claude-code/issues",
+    AgentHarnessType.CODEX: "https://github.com/openai/codex/issues",
+}
+
+
+def list_models(
+    user_config: ModelsConfig | None = None,
+    *,
+    agentic: bool = False,
+    agent_harness: AgentHarnessType | None = None,
+) -> None:
     from vet.cli.models import DEFAULT_MODEL_ID
     from vet.cli.models import get_models_by_provider
 
-    print("Available models:")
-    print()
+    if agentic and agent_harness is not None:
+        harness_name = agent_harness.value
+        print(f"Model listing for agentic mode ({harness_name} harness):")
+        print()
+        print(
+            f"  In agentic mode, the --model value is passed directly to the {harness_name} CLI."
+        )
+        print(
+            "  vet does not know which models the CLI supports. If --model is omitted,"
+        )
+        print(f"  the {harness_name} CLI will use its own configured default.")
+        print()
+        print(
+            "  The models listed below are vet's built-in models for non-agentic mode."
+        )
+        print("  Some may not be supported by the agent harness, and the harness may")
+        print("  support additional models not listed here.")
+        print()
+        issue_url = _HARNESS_ISSUE_URLS.get(agent_harness)
+        if issue_url:
+            print(
+                f"  If better model listing support would be useful, consider requesting"
+            )
+            print(f"  a model listing feature from the {harness_name} CLI maintainers:")
+            print(f"    {issue_url}")
+            print()
+
+    else:
+        print("Available models:")
+        print()
+
     models_by_provider = get_models_by_provider(user_config)
     for provider, model_ids in sorted(models_by_provider.items()):
         print(f"  {provider}:")
@@ -310,17 +350,27 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         print()
 
 
-_DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "vet" / "vet.log"
+_DEFAULT_LOG_FILE = (
+    Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+    / "vet"
+    / "vet.log"
+)
 
 
 def configure_logging(verbose: int, log_file: Path | None) -> None:
     if log_file is None:
-        log_file = Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else _DEFAULT_LOG_FILE
+        log_file = (
+            Path(os.environ["VET_LOG_FILE"])
+            if "VET_LOG_FILE" in os.environ
+            else _DEFAULT_LOG_FILE
+        )
     logger.remove()
     if verbose == 1:
         logger.add(sys.stderr, level="DEBUG", format="{level}: {message}")
     elif verbose >= 2:
-        logger.add(sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}")
+        logger.add(
+            sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}"
+        )
 
     try:
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -333,10 +383,14 @@ def configure_logging(verbose: int, log_file: Path | None) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
-    from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+    from vet.imbue_tools.get_conversation_history.get_conversation_history import (
+        parse_conversation_history,
+    )
 
     logger.debug("Running history loader command: {}", command)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
+    result = subprocess.run(
+        command, shell=True, capture_output=True, text=True, cwd=cwd
+    )
     if result.returncode != 0:
         print(
             f"vet: warning: history loader command failed (exit {result.returncode}): {result.stderr.strip()}",
@@ -344,7 +398,9 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
         )
         return ()
     if not result.stdout.strip():
-        logger.debug("History loader command returned empty output, no conversation history loaded")
+        logger.debug(
+            "History loader command returned empty output, no conversation history loaded"
+        )
         return ()
     messages = parse_conversation_history(result.stdout)
     logger.debug(
@@ -354,7 +410,9 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     return messages
 
 
-def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> argparse.Namespace:
+def apply_config_preset(
+    args: argparse.Namespace, preset: CliConfigPreset
+) -> argparse.Namespace:
     preset_dict = preset.model_dump(exclude_none=True)
 
     for field, preset_value in preset_dict.items():
@@ -416,7 +474,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.list_models:
-        list_models(user_config)
+        list_models(
+            user_config,
+            agentic=args.agentic,
+            agent_harness=args.agent_harness if args.agentic else None,
+        )
         return 0
 
     if args.list_fields:
@@ -502,9 +564,13 @@ def main(argv: list[str] | None = None) -> int:
 
     conversation_history = None
     if args.history_loader is not None:
-        conversation_history = load_conversation_from_command(args.history_loader, repo_path)
+        conversation_history = load_conversation_from_command(
+            args.history_loader, repo_path
+        )
     else:
-        logger.debug("No history loader provided, skipping conversation history loading")
+        logger.debug(
+            "No history loader provided, skipping conversation history loading"
+        )
     extra_context = None
     if args.extra_context:
         extra_context_parts = []
@@ -519,44 +585,73 @@ def main(argv: list[str] | None = None) -> int:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
-    model_id = args.model or DEFAULT_MODEL_ID
-
-    try:
-        model_id = validate_model_id(model_id, user_config)
-    except ValueError as e:
-        print(f"vet: {e}", file=sys.stderr)
-        return 2
-
-    try:
-        validate_api_key_for_model(model_id, user_config)
-    except Exception as e:
-        print(f"vet: {e}", file=sys.stderr)
-        return 2
-
-    # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
-    language_model_config = build_language_model_config(model_id, user_config)
-    max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
-
     enabled_identifiers = ("agentic_issue_identifier",) if args.agentic else None
     disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
 
-    config = VetConfig(
-        enabled_identifiers=enabled_identifiers,
-        disabled_identifiers=disabled_identifiers,
-        language_model_generation_config=language_model_config,
-        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
-        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
-        temperature=args.temperature,
-        filter_issues_below_confidence=args.confidence_threshold,
-        max_identify_workers=args.max_workers,
-        max_output_tokens=max_output_tokens or 20000,
-        max_identifier_spend_dollars=args.max_spend,
-        custom_guides_config=custom_guides_config,
-        agent_harness_type=args.agent_harness,
-        # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
-        filter_issues_through_llm_evaluator=not args.agentic,
-        enable_deduplication=not args.agentic,
-    )
+    if args.agentic:
+        # In agentic mode the model string is passed directly to the external CLI
+        # (e.g. Claude Code, Codex).  We skip vet's own model validation because
+        # the CLI is the authority on which models it supports.  When the user
+        # doesn't specify --model, we pass None so the CLI uses its own default.
+        config = VetConfig(
+            enabled_identifiers=enabled_identifiers,
+            disabled_identifiers=disabled_identifiers,
+            agent_model_name=args.model,
+            enabled_issue_codes=(
+                tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+            ),
+            disabled_issue_codes=(
+                tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
+            ),
+            temperature=args.temperature,
+            filter_issues_below_confidence=args.confidence_threshold,
+            max_identify_workers=args.max_workers,
+            max_identifier_spend_dollars=args.max_spend,
+            custom_guides_config=custom_guides_config,
+            agent_harness_type=args.agent_harness,
+            filter_issues_through_llm_evaluator=False,
+            enable_deduplication=False,
+        )
+    else:
+        model_id = args.model or DEFAULT_MODEL_ID
+
+        try:
+            model_id = validate_model_id(model_id, user_config)
+        except ValueError as e:
+            print(f"vet: {e}", file=sys.stderr)
+            return 2
+
+        try:
+            validate_api_key_for_model(model_id, user_config)
+        except Exception as e:
+            print(f"vet: {e}", file=sys.stderr)
+            return 2
+
+        # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
+        language_model_config = build_language_model_config(model_id, user_config)
+        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
+
+        config = VetConfig(
+            enabled_identifiers=enabled_identifiers,
+            disabled_identifiers=disabled_identifiers,
+            language_model_generation_config=language_model_config,
+            enabled_issue_codes=(
+                tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+            ),
+            disabled_issue_codes=(
+                tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
+            ),
+            temperature=args.temperature,
+            filter_issues_below_confidence=args.confidence_threshold,
+            max_identify_workers=args.max_workers,
+            max_output_tokens=max_output_tokens or 20000,
+            max_identifier_spend_dollars=args.max_spend,
+            custom_guides_config=custom_guides_config,
+            agent_harness_type=args.agent_harness,
+            # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
+            filter_issues_through_llm_evaluator=True,
+            enable_deduplication=True,
+        )
 
     if not args.quiet:
         print(

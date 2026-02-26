@@ -11,7 +11,9 @@ from vet.imbue_core.data_types import IssueIdentificationLLMResponseMetadata
 from vet.imbue_core.data_types import LLMResponse
 from vet.imbue_tools.get_conversation_history.input_data_types import CommitInputs
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
-from vet.imbue_tools.get_conversation_history.input_data_types import to_specific_inputs_type
+from vet.imbue_tools.get_conversation_history.input_data_types import (
+    to_specific_inputs_type,
+)
 from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.imbue_tools.types.vet_config import VetConfig
@@ -77,7 +79,8 @@ def _get_collation_prompt(
     # Sort issue codes to make the resulting prompts deterministic (for snapshot tests and LLM caching)
     sorted_issue_codes = sorted(enabled_issue_codes)
     formatted_guides = {
-        code: format_issue_identification_guide_for_llm(guides_by_issue_code[code]) for code in sorted_issue_codes
+        code: format_issue_identification_guide_for_llm(guides_by_issue_code[code])
+        for code in sorted_issue_codes
     }
 
     env = jinja2.Environment(undefined=jinja2.StrictUndefined)
@@ -113,7 +116,9 @@ def _convert_parsed_issues_to_combined_string(
 
 
 def collate_issues_with_agent(
-    issue_generator: Generator[GeneratedIssueSchema, None, IssueIdentificationDebugInfo],
+    issue_generator: Generator[
+        GeneratedIssueSchema, None, IssueIdentificationDebugInfo
+    ],
     identifier_inputs: IdentifierInputs,
     project_context: ProjectContext,
     config: VetConfig,
@@ -147,7 +152,7 @@ def collate_issues_with_agent(
 
     options = get_agent_options(
         cwd=project_context.repo_path,
-        model_name=config.language_model_generation_config.model_name,
+        model_name=config.agent_model_name,
         agent_harness_type=config.agent_harness_type,
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
@@ -161,8 +166,12 @@ def collate_issues_with_agent(
     claude_response = generate_response_from_agent(collation_prompt, options)
     assert claude_response is not None
     response_text, collation_messages = claude_response
-    collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
-    collation_invocation_info = extract_invocation_info_from_messages(collation_messages)
+    collation_raw_messages = tuple(
+        json.dumps(message.model_dump()) for message in collation_messages
+    )
+    collation_invocation_info = extract_invocation_info_from_messages(
+        collation_messages
+    )
 
     collation_llm_responses = (
         LLMResponse(
