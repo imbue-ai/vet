@@ -643,7 +643,7 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return 2
-        print(f"vet: {e}", file=sys.stderr)
+        print(f"vet: {e}\nRe-run with -vv for more details.", file=sys.stderr)
         return 1
     except MissingAPIKeyError as e:
         print(f"vet: {e}", file=sys.stderr)
