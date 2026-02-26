@@ -10,5 +10,5 @@ fi
 
 $RUNTIME run --rm -it \
     --mount type=bind,source="$(pwd)",target=/app \
-    --env-file .env \
+    --env-file "$REPO_ROOT/.env" \
     "$IMAGE_NAME" bash
