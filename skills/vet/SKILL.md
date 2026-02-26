@@ -59,6 +59,8 @@ vet "goal"
 
 ### Finding Your Session
 
+You should only search for sessions from your coding harness. If a user requests you use a different harness, they are likely referring to vet's agentic mode, not the session.
+
 **OpenCode:** The `--session-id` argument requires a `ses_...` session ID. To find the current session ID:
 1. Run: `opencode session list --format json` to list recent sessions with their IDs and titles.
 2. Identify the current session from the list by matching the title or timestamp.
