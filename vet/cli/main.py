@@ -26,6 +26,7 @@ from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
 from vet.formatters import validate_output_fields
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
+from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
 from vet.imbue_core.data_types import get_valid_issue_code_values
@@ -408,15 +409,16 @@ _CONTEXT_OVERFLOW_PATTERNS = [
     "maximum context length",
     "too many tokens",
     "reduce the length of the messages",
+    "ran out of room in the model's context window",
 ]
 
 
-def _is_context_overflow(e) -> bool:
+def _is_context_overflow(e: Exception) -> bool:
     from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
 
     if isinstance(e, PromptTooLongError):
         return True
-    error_msg = e.error_message.lower()
+    error_msg = getattr(e, "error_message", str(e)).lower()
     return any(pattern in error_msg for pattern in _CONTEXT_OVERFLOW_PATTERNS)
 
 
@@ -530,6 +532,7 @@ def main(argv: list[str] | None = None) -> int:
     from vet.formatters import format_issue_text
     from vet.formatters import issue_to_dict
     from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+    from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
     from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
     from vet.imbue_tools.types.vet_config import VetConfig
 
@@ -630,6 +633,19 @@ def main(argv: list[str] | None = None) -> int:
             extra_context=extra_context,
         )
     except AgentCLINotFoundError as e:
+        print(f"vet: {e}", file=sys.stderr)
+        return 2
+    except AgentProcessError as e:
+        if _is_context_overflow(e):
+            print(
+                "vet: review failed because too much context was provided to the model. "
+                "Consider using a model with a larger context window, or a narrower base commit.",
+                file=sys.stderr,
+            )
+            return 2
+        print(f"vet: {e}\nRe-run with -vv for more details.", file=sys.stderr)
+        return 1
+    except MissingAPIKeyError as e:
         print(f"vet: {e}", file=sys.stderr)
         return 2
     # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.

@@ -168,11 +168,9 @@ def _generate_issues_worker(
     issue_code: IssueCode,
     prompt: str,
     options: AgentOptions,
-) -> tuple[IssueCode, ResponseText, list[AgentMessage]] | None:
-    issue_result = generate_response_from_agent(prompt, options)
-    if issue_result is None:
-        return None
-    return issue_code, issue_result[0], issue_result[1]
+) -> tuple[IssueCode, ResponseText, list[AgentMessage]]:
+    response_text, agent_messages = generate_response_from_agent(prompt, options)
+    return issue_code, response_text, agent_messages
 
 
 class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
@@ -267,6 +265,8 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                     for issue_code, prompt in issue_prompts
                 ]
 
+                num_succeeded = 0
+                last_error: Exception | None = None
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
@@ -274,11 +274,10 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                         raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
+                        last_error = e
                         continue
 
-                    if result is None:
-                        continue
-
+                    num_succeeded += 1
                     issue_code, issue_type_response_text, messages = result
 
                     yield from generate_issues_from_response_texts(response_texts=(issue_type_response_text,))
@@ -297,16 +296,14 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                         )
                     )
 
+                # If every task failed, re-raise the last error so it propagates to main().
+                if num_succeeded == 0 and last_error is not None:
+                    raise last_error
+
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
         else:
             prompt = self._get_prompt(project_context, config, identifier_inputs)
-            agent_response = generate_response_from_agent(prompt, options)
-            if agent_response is None:
-                raise RuntimeError(
-                    "Agentic issue identification failed: no response received from agent CLI."
-                    " Re-run with --verbose for details."
-                )
-            response_text, messages = agent_response
+            response_text, messages = generate_response_from_agent(prompt, options)
 
             message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
             invocation_info = extract_invocation_info_from_messages(messages)
