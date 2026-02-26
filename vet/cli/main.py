@@ -285,20 +285,14 @@ def list_models(
         harness_name = agent_harness.value
         print(f"Model listing for agentic mode ({harness_name} harness):")
         print()
-        print(
-            f"  In agentic mode, --model is passed directly to the agent harness CLI."
-        )
+        print(f"  In agentic mode, --model is passed directly to the agent harness CLI.")
         print(f"  vet does not know which models the current harness supports. Some")
         print(f"  models listed below may not work, and the harness may accept models")
-        print(
-            f"  not listed here. If --model is omitted, the harness uses its own default."
-        )
+        print(f"  not listed here. If --model is omitted, the harness uses its own default.")
         print()
         issue_url = _HARNESS_ISSUE_URLS.get(agent_harness)
         if issue_url:
-            print(
-                f"  If better model listing support would be useful, consider requesting"
-            )
+            print(f"  If better model listing support would be useful, consider requesting")
             print(f"  a model listing feature from the {harness_name} CLI maintainers:")
             print(f"    {issue_url}")
             print()
@@ -345,27 +339,17 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         print()
 
 
-_DEFAULT_LOG_FILE = (
-    Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
-    / "vet"
-    / "vet.log"
-)
+_DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "vet" / "vet.log"
 
 
 def configure_logging(verbose: int, log_file: Path | None) -> None:
     if log_file is None:
-        log_file = (
-            Path(os.environ["VET_LOG_FILE"])
-            if "VET_LOG_FILE" in os.environ
-            else _DEFAULT_LOG_FILE
-        )
+        log_file = Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else _DEFAULT_LOG_FILE
     logger.remove()
     if verbose == 1:
         logger.add(sys.stderr, level="DEBUG", format="{level}: {message}")
     elif verbose >= 2:
-        logger.add(
-            sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}"
-        )
+        logger.add(sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}")
 
     try:
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -378,14 +362,10 @@ def configure_logging(verbose: int, log_file: Path | None) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
-    from vet.imbue_tools.get_conversation_history.get_conversation_history import (
-        parse_conversation_history,
-    )
+    from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
 
     logger.debug("Running history loader command: {}", command)
-    result = subprocess.run(
-        command, shell=True, capture_output=True, text=True, cwd=cwd
-    )
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
     if result.returncode != 0:
         print(
             f"vet: warning: history loader command failed (exit {result.returncode}): {result.stderr.strip()}",
@@ -393,9 +373,7 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
         )
         return ()
     if not result.stdout.strip():
-        logger.debug(
-            "History loader command returned empty output, no conversation history loaded"
-        )
+        logger.debug("History loader command returned empty output, no conversation history loaded")
         return ()
     messages = parse_conversation_history(result.stdout)
     logger.debug(
@@ -405,9 +383,7 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     return messages
 
 
-def apply_config_preset(
-    args: argparse.Namespace, preset: CliConfigPreset
-) -> argparse.Namespace:
+def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> argparse.Namespace:
     preset_dict = preset.model_dump(exclude_none=True)
 
     for field, preset_value in preset_dict.items():
@@ -559,13 +535,9 @@ def main(argv: list[str] | None = None) -> int:
 
     conversation_history = None
     if args.history_loader is not None:
-        conversation_history = load_conversation_from_command(
-            args.history_loader, repo_path
-        )
+        conversation_history = load_conversation_from_command(args.history_loader, repo_path)
     else:
-        logger.debug(
-            "No history loader provided, skipping conversation history loading"
-        )
+        logger.debug("No history loader provided, skipping conversation history loading")
     extra_context = None
     if args.extra_context:
         extra_context_parts = []
@@ -582,12 +554,8 @@ def main(argv: list[str] | None = None) -> int:
 
     enabled_identifiers = ("agentic_issue_identifier",) if args.agentic else None
     disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
-    enabled_issue_codes = (
-        tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
-    )
-    disabled_issue_codes = (
-        tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
-    )
+    enabled_issue_codes = tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+    disabled_issue_codes = tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
 
     if args.agentic:
         # In agentic mode the model string is passed directly to the external CLI
