@@ -34,9 +34,7 @@ class MissingAPIKeyError(Exception):
         )
 
 
-_DEFAULT_REGISTRY_URL = (
-    "https://raw.githubusercontent.com/imbue-ai/vet/main/registry/models.json"
-)
+_DEFAULT_REGISTRY_URL = "https://raw.githubusercontent.com/imbue-ai/vet/main/registry/models.json"
 _REGISTRY_CACHE_TTL_SECONDS = 86400
 _REGISTRY_FETCH_TIMEOUT_SECONDS = 5
 
@@ -69,9 +67,7 @@ def _refresh_remote_registry_cache() -> Path | None:
     url = os.environ.get("VET_REGISTRY_URL", _DEFAULT_REGISTRY_URL)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "vet"})
-        with urllib.request.urlopen(
-            req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS
-        ) as resp:
+        with urllib.request.urlopen(req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS) as resp:
             data = resp.read()
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.write_bytes(data)
@@ -146,9 +142,7 @@ def get_user_defined_model_ids(config: ModelsConfig) -> set[str]:
     return model_ids
 
 
-def get_provider_for_model(
-    model_id: str, config: ModelsConfig
-) -> ProviderConfig | None:
+def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfig | None:
     for provider in config.providers.values():
         if model_id in provider.models:
             return provider
@@ -256,15 +250,10 @@ def get_config_preset(
     if config_name not in cli_configs:
         available = sorted(cli_configs.keys())
         if available:
-            raise ConfigLoadError(
-                f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}"
-            )
+            raise ConfigLoadError(f"Configuration '{config_name}' not found. Available configs: {', '.join(available)}")
         else:
             paths = get_cli_config_file_paths(repo_path)
-            paths_list = "\n".join(
-                f"  - {p} ({'global' if i == 0 else 'project'})"
-                for i, p in enumerate(paths)
-            )
+            paths_list = "\n".join(f"  - {p} ({'global' if i == 0 else 'project'})" for i, p in enumerate(paths))
             raise ConfigLoadError(
                 f"Configuration '{config_name}' not found.\n\n"
                 f"No configuration files found. Create a config at one of these locations:\n{paths_list}"
@@ -290,19 +279,14 @@ def _load_single_guides_file(config_path: Path) -> CustomGuidesConfig:
     for key, value in data.items():
         if key not in all_issue_code_values:
             raise ConfigLoadError(
-                f"Unknown issue code '{key}' in {config_path}. "
-                f"Use --list-issue-codes to see valid codes."
+                f"Unknown issue code '{key}' in {config_path}. " f"Use --list-issue-codes to see valid codes."
             )
         if not isinstance(value, dict):
-            raise ConfigLoadError(
-                f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}"
-            )
+            raise ConfigLoadError(f"Expected a table for '{key}' in {config_path}, got {type(value).__name__}")
         try:
             guides[key] = CustomGuideConfig.model_validate(value)
         except ValidationError as e:
-            raise ConfigLoadError(
-                f"Invalid guide configuration for '{key}' in {config_path}: {e}"
-            ) from e
+            raise ConfigLoadError(f"Invalid guide configuration for '{key}' in {config_path}: {e}") from e
 
     return CustomGuidesConfig(guides=guides)
 

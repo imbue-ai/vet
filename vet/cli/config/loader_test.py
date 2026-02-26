@@ -57,9 +57,7 @@ def test_find_git_repo_root_returns_none_when_not_in_repo(tmp_path: Path) -> Non
 
 
 def test_get_config_file_paths_returns_global_path(tmp_path: Path) -> None:
-    with patch.dict(
-        os.environ, {"XDG_CONFIG_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "0"}
-    ):
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "0"}):
         paths = get_config_file_paths(repo_path=None)
         assert len(paths) == 1
         assert paths[0] == tmp_path / "vet" / "models.json"
@@ -73,9 +71,7 @@ def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     subdir = git_root / "src" / "submodule"
     subdir.mkdir(parents=True)
 
-    with patch.dict(
-        os.environ, {"XDG_CONFIG_HOME": str(xdg_config), "VET_REMOTE_REGISTRY": "0"}
-    ):
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config), "VET_REMOTE_REGISTRY": "0"}):
         paths = get_config_file_paths(repo_path=subdir)
         assert len(paths) == 2
         assert paths[0] == xdg_config / "vet" / "models.json"
@@ -466,17 +462,13 @@ _REMOTE_PROVIDER_JSON = json.dumps(
 
 
 def test_remote_registry_disabled_via_env(tmp_path: Path) -> None:
-    with patch.dict(
-        os.environ, {"VET_REMOTE_REGISTRY": "0", "XDG_CACHE_HOME": str(tmp_path)}
-    ):
+    with patch.dict(os.environ, {"VET_REMOTE_REGISTRY": "0", "XDG_CACHE_HOME": str(tmp_path)}):
         result = _refresh_remote_registry_cache()
     assert result is None
 
 
 def test_remote_registry_disabled_via_false(tmp_path: Path) -> None:
-    with patch.dict(
-        os.environ, {"VET_REMOTE_REGISTRY": "false", "XDG_CACHE_HOME": str(tmp_path)}
-    ):
+    with patch.dict(os.environ, {"VET_REMOTE_REGISTRY": "false", "XDG_CACHE_HOME": str(tmp_path)}):
         result = _refresh_remote_registry_cache()
     assert result is None
 
@@ -511,9 +503,7 @@ def test_remote_registry_fetches_when_no_cache(tmp_path: Path) -> None:
     )()
 
     with patch.dict(os.environ, env):
-        with patch(
-            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
-        ):
+        with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response):
             result = _refresh_remote_registry_cache()
 
     assert result is not None
@@ -542,9 +532,7 @@ def test_remote_registry_fetches_when_cache_stale(tmp_path: Path) -> None:
 
     env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
     with patch.dict(os.environ, env):
-        with patch(
-            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
-        ):
+        with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response):
             result = _refresh_remote_registry_cache()
 
     assert result is not None
@@ -603,9 +591,7 @@ def test_remote_registry_respects_custom_url(tmp_path: Path) -> None:
         "VET_REMOTE_REGISTRY": "1",
     }
     with patch.dict(os.environ, env):
-        with patch(
-            "vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response
-        ) as mock_urlopen:
+        with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response) as mock_urlopen:
             _refresh_remote_registry_cache()
 
     # Verify the custom URL was used
