@@ -235,6 +235,11 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
         log_exception(e, "Agent API call failed")
         return None
 
+    if result_message and result_message.is_error:
+        error_detail = result_message.error or result_message.result or "unknown error"
+        logger.error("Agent CLI returned an error: {error_detail}", error_detail=error_detail)
+        return None
+
     # Try to get response from result message first
     response_text = ""
     if result_message and result_message.result:
