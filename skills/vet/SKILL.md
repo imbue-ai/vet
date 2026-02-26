@@ -96,6 +96,6 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 
 ## Updating
 
-The vet CLI, skill files, and export scripts can become outdated as agent harnesses and APIs change.
+The vet CLI, skill files, and export scripts can become outdated as agent harnesses and LLM APIs change.
 
 If vet or the export scripts fail unexpectedly, try updating them. Run `which vet` to determine how vet was installed and update accordingly. For the skill files, check which skill directories exist on disk and update them with the latest versions from https://github.com/imbue-ai/vet/tree/main/skills/vet.
