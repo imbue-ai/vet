@@ -16,7 +16,7 @@ uv run vet
 
 ### Containerized
 
-You can use the `Dockerfile` in `dev/` at the repo root to create a container that suffices to run Vet for development purposes.
+You can use the `Containerfile` in `dev/` at the repo root to create a container that suffices to run Vet for development purposes.
 
 #### Setup
 
