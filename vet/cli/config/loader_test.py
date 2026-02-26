@@ -12,6 +12,7 @@ from vet.cli.config.loader import ConfigLoadError
 from vet.cli.config.loader import MissingAPIKeyError
 from vet.cli.config.loader import _load_single_config_file
 from vet.cli.config.loader import _refresh_remote_registry_cache
+from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import find_git_repo_root
 from vet.cli.config.loader import get_config_file_paths
 from vet.cli.config.loader import get_models_by_provider_from_config
@@ -19,6 +20,7 @@ from vet.cli.config.loader import get_provider_for_model
 from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.loader import get_xdg_config_home
 from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import load_registry_config
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelConfig
 from vet.cli.config.schema import ModelsConfig
@@ -57,7 +59,7 @@ def test_find_git_repo_root_returns_none_when_not_in_repo(tmp_path: Path) -> Non
 
 
 def test_get_config_file_paths_returns_global_path(tmp_path: Path) -> None:
-    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "0"}):
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(tmp_path)}):
         paths = get_config_file_paths(repo_path=None)
         assert len(paths) == 1
         assert paths[0] == tmp_path / "vet" / "models.json"
@@ -71,7 +73,7 @@ def test_get_config_file_paths_finds_git_root(tmp_path: Path) -> None:
     subdir = git_root / "src" / "submodule"
     subdir.mkdir(parents=True)
 
-    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config), "VET_REMOTE_REGISTRY": "0"}):
+    with patch.dict(os.environ, {"XDG_CONFIG_HOME": str(xdg_config)}):
         paths = get_config_file_paths(repo_path=subdir)
         assert len(paths) == 2
         assert paths[0] == xdg_config / "vet" / "models.json"
@@ -599,9 +601,8 @@ def test_remote_registry_respects_custom_url(tmp_path: Path) -> None:
     assert call_args[0][0].full_url == custom_url
 
 
-def test_load_models_config_remote_overridden_by_local(tmp_path: Path) -> None:
-    """Remote registry providers are overridden by local config with the same key."""
-    # Set up remote cache with a provider
+def test_load_models_config_does_not_include_registry(tmp_path: Path) -> None:
+    """load_models_config only returns user-defined configs, not registry."""
     cache_dir = tmp_path / "cache" / "vet"
     cache_dir.mkdir(parents=True)
     cache_file = cache_dir / "remote_models.json"
@@ -609,50 +610,12 @@ def test_load_models_config_remote_overridden_by_local(tmp_path: Path) -> None:
         json.dumps(
             {
                 "providers": {
-                    "shared": {
-                        "name": "Remote Name",
-                        "base_url": "http://remote:8080/v1",
-                        "api_key_env": "REMOTE_KEY",
-                        "models": {
-                            "shared-model": {
-                                "context_window": 64000,
-                                "max_output_tokens": 8192,
-                                "supports_temperature": True,
-                            }
-                        },
-                    },
                     "remote-only": {
-                        "base_url": "http://remote-only:8080/v1",
+                        "base_url": "http://remote:8080/v1",
                         "models": {
-                            "remote-only-model": {
+                            "remote-model": {
                                 "context_window": 64000,
                                 "max_output_tokens": 8192,
-                                "supports_temperature": True,
-                            }
-                        },
-                    },
-                }
-            }
-        )
-    )
-
-    # Set up local project config that overrides "shared"
-    repo_path = tmp_path / "repo"
-    repo_path.mkdir()
-    vet_dir = repo_path / ".vet"
-    vet_dir.mkdir()
-    (vet_dir / "models.json").write_text(
-        json.dumps(
-            {
-                "providers": {
-                    "shared": {
-                        "name": "Local Name",
-                        "base_url": "http://local:8080/v1",
-                        "api_key_env": "LOCAL_KEY",
-                        "models": {
-                            "local-model": {
-                                "context_window": 128000,
-                                "max_output_tokens": 16384,
                                 "supports_temperature": True,
                             }
                         },
@@ -662,22 +625,104 @@ def test_load_models_config_remote_overridden_by_local(tmp_path: Path) -> None:
         )
     )
 
-    xdg_config = tmp_path / "xdg"
     env = {
         "XDG_CACHE_HOME": str(tmp_path / "cache"),
-        "XDG_CONFIG_HOME": str(xdg_config),
+        "XDG_CONFIG_HOME": str(tmp_path / "nonexistent"),
         "VET_REMOTE_REGISTRY": "1",
     }
     with patch.dict(os.environ, env):
-        # Patch _refresh to just return our pre-made cache file
-        with patch(
-            "vet.cli.config.loader._refresh_remote_registry_cache",
-            return_value=cache_file,
-        ):
-            result = load_models_config(repo_path=repo_path)
+        result = load_models_config(repo_path=None)
 
-    # "shared" should have local values (local overrides remote)
-    assert result.providers["shared"].name == "Local Name"
-    assert result.providers["shared"].base_url == "http://local:8080/v1"
-    # "remote-only" should still be present (not in local config)
-    assert "remote-only" in result.providers
+    # Registry providers should NOT be in load_models_config result
+    assert "remote-only" not in result.providers
+
+
+def test_load_registry_config_returns_registry_providers(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(_REMOTE_PROVIDER_JSON)
+
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "1"}
+    with patch.dict(os.environ, env):
+        result = load_registry_config()
+
+    assert "remote-provider" in result.providers
+
+
+def test_load_registry_config_returns_empty_when_disabled(tmp_path: Path) -> None:
+    env = {"XDG_CACHE_HOME": str(tmp_path), "VET_REMOTE_REGISTRY": "0"}
+    with patch.dict(os.environ, env):
+        result = load_registry_config()
+
+    assert result.providers == {}
+
+
+# --- Precedence tests ---
+
+
+def _make_provider(base_url: str, model_id: str, api_key_env: str | None = None) -> ProviderConfig:
+    return ProviderConfig(
+        base_url=base_url,
+        api_key_env=api_key_env,
+        models={
+            model_id: ModelConfig(
+                context_window=128000,
+                max_output_tokens=16384,
+                supports_temperature=True,
+            )
+        },
+    )
+
+
+def test_build_config_user_defined_wins_over_builtin_and_registry() -> None:
+    """User-defined model with a built-in ID should use user config (highest priority)."""
+    from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+    from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+
+    builtin_id = AnthropicModelName.CLAUDE_4_6_OPUS.value
+    user_config = ModelsConfig(providers={"custom": _make_provider("http://custom:8080/v1", builtin_id)})
+    registry_config = ModelsConfig(providers={"registry": _make_provider("http://registry:8080/v1", builtin_id)})
+
+    result = build_language_model_config(builtin_id, user_config, registry_config)
+    assert isinstance(result, OpenAICompatibleModelConfig)
+    assert result.custom_base_url == "http://custom:8080/v1"
+
+
+def test_build_config_builtin_wins_over_registry() -> None:
+    """A built-in model ID in the registry should NOT shadow the built-in."""
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+    from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+
+    builtin_id = AnthropicModelName.CLAUDE_4_6_OPUS.value
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(providers={"registry": _make_provider("http://registry:8080/v1", builtin_id)})
+
+    result = build_language_model_config(builtin_id, user_config, registry_config)
+    # Should use native built-in path, not the registry's OpenAI-compatible path
+    assert isinstance(result, LanguageModelGenerationConfig)
+    assert result.model_name == builtin_id
+
+
+def test_build_config_registry_used_for_unknown_model() -> None:
+    """A registry-only model (not built-in, not user-defined) should use registry."""
+    from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={"registry": _make_provider("http://registry:8080/v1", "registry-only-model")}
+    )
+
+    result = build_language_model_config("registry-only-model", user_config, registry_config)
+    assert isinstance(result, OpenAICompatibleModelConfig)
+    assert result.custom_base_url == "http://registry:8080/v1"
+
+
+def test_build_config_no_registry_falls_through() -> None:
+    """Without registry, an unknown non-built-in model falls through to native path."""
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+
+    user_config = ModelsConfig(providers={})
+    result = build_language_model_config("totally-unknown", user_config)
+    assert isinstance(result, LanguageModelGenerationConfig)
+    assert result.model_name == "totally-unknown"

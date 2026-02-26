@@ -193,3 +193,91 @@ def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name()
     providers = get_models_by_provider(user_config)
 
     assert providers["anthropic"] == ["custom-model"]
+
+
+SAMPLE_REGISTRY_CONFIG = ModelsConfig(
+    providers={
+        "registry-provider": ProviderConfig(
+            name="Registry Provider",
+            base_url="http://registry:8080/v1",
+            api_key_env="REGISTRY_KEY",
+            models={
+                "registry-model": ModelConfig(
+                    context_window=128000,
+                    max_output_tokens=16384,
+                    supports_temperature=True,
+                ),
+            },
+        )
+    }
+)
+
+
+def test_get_all_model_ids_includes_registry_models() -> None:
+    all_ids = get_all_model_ids(
+        user_config=SAMPLE_USER_CONFIG,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+
+    # User-defined
+    assert "my-custom-model" in all_ids
+    # Built-in
+    assert DEFAULT_MODEL_ID in all_ids
+    # Registry
+    assert "registry-model" in all_ids
+
+
+def test_validate_model_id_accepts_registry_model() -> None:
+    result = validate_model_id(
+        "registry-model",
+        user_config=None,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+    assert result == "registry-model"
+
+
+def test_validate_model_id_rejects_unknown_even_with_registry() -> None:
+    with pytest.raises(ValueError):
+        validate_model_id(
+            "totally-unknown",
+            user_config=SAMPLE_USER_CONFIG,
+            registry_config=SAMPLE_REGISTRY_CONFIG,
+        )
+
+
+def test_get_models_by_provider_includes_registry_providers() -> None:
+    providers = get_models_by_provider(
+        user_config=None,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+
+    assert "Registry Provider" in providers
+    assert "registry-model" in providers["Registry Provider"]
+    # Built-ins still present
+    assert "anthropic" in providers
+    assert "openai" in providers
+
+
+def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> None:
+    """If a registry provider has the same display name as a built-in, built-in wins."""
+    registry_config = ModelsConfig(
+        providers={
+            "anthropic-override": ProviderConfig(
+                name="anthropic",
+                base_url="http://registry:8080/v1",
+                models={
+                    "registry-claude": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    providers = get_models_by_provider(user_config=None, registry_config=registry_config)
+
+    # Built-in "anthropic" should override registry's "anthropic"
+    assert "registry-claude" not in providers.get("anthropic", [])
+    assert DEFAULT_MODEL_ID in providers["anthropic"]

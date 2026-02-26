@@ -20,6 +20,7 @@ from vet.cli.config.loader import get_config_preset
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import load_registry_config
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
 from vet.formatters import OUTPUT_FIELDS
@@ -276,6 +277,7 @@ _HARNESS_ISSUE_URLS: dict[AgentHarnessType, str] = {
 def list_models(
     user_config: ModelsConfig | None = None,
     *,
+    registry_config: ModelsConfig | None = None,
     agentic: bool = False,
     agent_harness: AgentHarnessType | None = None,
 ) -> None:
@@ -301,7 +303,7 @@ def list_models(
         print("Available models:")
         print()
 
-    models_by_provider = get_models_by_provider(user_config)
+    models_by_provider = get_models_by_provider(user_config, registry_config)
     for provider, model_ids in sorted(models_by_provider.items()):
         print(f"  {provider}:")
         for model_id in sorted(model_ids):
@@ -436,6 +438,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"vet: could not load model configuration: {e}", file=sys.stderr)
         return 2
 
+    registry_config = load_registry_config()
+
     try:
         custom_guides_config = load_custom_guides_config(repo_path)
     except ConfigLoadError as e:
@@ -449,6 +453,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.list_models:
         list_models(
             user_config,
+            registry_config=registry_config,
             agentic=args.agentic,
             agent_harness=args.agent_harness if args.agentic else None,
         )
@@ -584,20 +589,20 @@ def main(argv: list[str] | None = None) -> int:
         model_id = args.model or DEFAULT_MODEL_ID
 
         try:
-            model_id = validate_model_id(model_id, user_config)
+            model_id = validate_model_id(model_id, user_config, registry_config)
         except ValueError as e:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
         try:
-            validate_api_key_for_model(model_id, user_config)
+            validate_api_key_for_model(model_id, user_config, registry_config)
         except Exception as e:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
         # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
-        language_model_config = build_language_model_config(model_id, user_config)
-        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
+        language_model_config = build_language_model_config(model_id, user_config, registry_config)
+        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config, registry_config)
 
         config = VetConfig(
             enabled_identifiers=enabled_identifiers,

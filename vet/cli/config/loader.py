@@ -104,14 +104,7 @@ def _get_config_file_paths(
 
 
 def get_config_file_paths(repo_path: Path | None = None) -> list[Path]:
-    paths: list[Path] = []
-
-    remote_cache = _refresh_remote_registry_cache()
-    if remote_cache is not None:
-        paths.append(remote_cache)
-
-    paths.extend(_get_config_file_paths("vet", "models.json", "models.json", repo_path))
-    return paths
+    return _get_config_file_paths("vet", "models.json", "models.json", repo_path)
 
 
 def _load_single_config_file(config_path: Path) -> ModelsConfig:
@@ -135,6 +128,13 @@ def load_models_config(repo_path: Path | None = None) -> ModelsConfig:
     return ModelsConfig(providers=merged_providers)
 
 
+def load_registry_config() -> ModelsConfig:
+    cache = _refresh_remote_registry_cache()
+    if cache is not None and cache.exists():
+        return _load_single_config_file(cache)
+    return ModelsConfig(providers={})
+
+
 def get_user_defined_model_ids(config: ModelsConfig) -> set[str]:
     model_ids: set[str] = set()
     for provider in config.providers.values():
@@ -149,8 +149,38 @@ def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfi
     return None
 
 
-def validate_api_key_for_model(model_id: str, config: ModelsConfig) -> None:
-    provider = get_provider_for_model(model_id, config)
+def _is_builtin_model(model_id: str) -> bool:
+    from vet.imbue_core.agents.llm_apis.common import get_all_model_names
+
+    return model_id in {str(n) for n in get_all_model_names()}
+
+
+def _resolve_provider(
+    model_id: str,
+    user_config: ModelsConfig,
+    registry_config: ModelsConfig | None = None,
+) -> ProviderConfig | None:
+    """Resolve provider by precedence: user-defined > built-in > registry."""
+    provider = get_provider_for_model(model_id, user_config)
+    if provider is not None:
+        return provider
+
+    if _is_builtin_model(model_id):
+        return None
+
+    if registry_config is not None:
+        return get_provider_for_model(model_id, registry_config)
+
+    return None
+
+
+def validate_api_key_for_model(
+    model_id: str,
+    config: ModelsConfig,
+    registry_config: ModelsConfig | None = None,
+) -> None:
+    provider = _resolve_provider(model_id, config, registry_config)
+
     if provider is None:
         return
 
@@ -176,8 +206,12 @@ def get_models_by_provider_from_config(config: ModelsConfig) -> dict[str, list[s
     return result
 
 
-def get_max_output_tokens_for_model(model_id: str, config: ModelsConfig) -> int | None:
-    provider = get_provider_for_model(model_id, config)
+def get_max_output_tokens_for_model(
+    model_id: str,
+    config: ModelsConfig,
+    registry_config: ModelsConfig | None = None,
+) -> int | None:
+    provider = _resolve_provider(model_id, config, registry_config)
     if provider is not None:
         return provider.models[model_id].max_output_tokens
 
@@ -189,11 +223,16 @@ def get_max_output_tokens_for_model(model_id: str, config: ModelsConfig) -> int 
         return None
 
 
-def build_language_model_config(model_id: str, user_config: ModelsConfig):
+def build_language_model_config(
+    model_id: str,
+    user_config: ModelsConfig,
+    registry_config: ModelsConfig | None = None,
+):
     from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
     from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
 
-    provider = get_provider_for_model(model_id, user_config)
+    provider = _resolve_provider(model_id, user_config, registry_config)
+
     if provider is None:
         return LanguageModelGenerationConfig(model_name=model_id)
 
