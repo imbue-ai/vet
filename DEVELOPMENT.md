@@ -24,10 +24,10 @@ Create a `.env` file at the repo root that contains your API keys you'd like to 
 
 #### Running Vet in a Container
 
-There are two wrapper scripts that handle building the image and passing all arguments through to vet:
+Two wrapper scripts handle building the image and passing all CLI arguments through to vet:
 
-- `dev/vet.sh` — uses the base `vet` image
-- `dev/vet-claude.sh` — uses the `vet-claude` image (which includes Claude Code)
+- `dev/vet.sh` — uses the base `vet` image (includes Codex)
+- `dev/vet-claude.sh` — uses the `vet-claude` image (adds Claude Code)
 
 ```bash
 ./dev/vet.sh --list-models
@@ -36,45 +36,18 @@ There are two wrapper scripts that handle building the image and passing all arg
 ./dev/vet-claude.sh --base-commit main --agentic --agent-harness claude
 ```
 
-All vet CLI arguments are passed through directly. The image is built automatically on each run. Docker/podman layer caching makes this near-instant when nothing has changed. On first run or after Containerfile changes, there will be a brief pause while the image builds.
+Images are built automatically on each run; layer caching makes this near-instant when nothing has changed. To build images without running vet, use `./dev/build.sh` (both images) or `./dev/build.sh claude` (claude image only).
 
 #### Interactive Development
 
 To start an interactive shell in a container (e.g. for running opencode or editing code):
 
 ```bash
-./dev/run.sh
-./dev/run.sh claude
+./dev/run.sh            # base image
+./dev/run.sh claude     # claude image — run `claude` inside to authenticate
 ```
 
-The repo is bind-mounted into the container at `/app`. Running `uv run vet` inside the container will be slower the first time as `uv` sets up the virtual environment, but subsequent runs are fast.
-
-#### Building Images Manually
-
-Images are built automatically by `vet.sh`, `vet-claude.sh`, and `run.sh`, but you can also build them directly:
-
-```bash
-./dev/build.sh          # builds both vet and vet-claude images
-./dev/build.sh claude   # builds only the vet-claude image
-```
-
-#### Agentic Verifier
-
-The agentic verifier calls out to Claude Code or Codex. Codex is part of both images by default.
-
-Since Claude Code is proprietary, it is only installed in the `vet-claude` image. To use the agentic verifier with Claude Code:
-
-```bash
-./dev/vet-claude.sh --base-commit main --agentic --agent-harness claude
-```
-
-Or interactively:
-
-```bash
-./dev/run.sh claude
-```
-
-Within the interactive container, you can run `claude` to begin interactive authentication to get it setup.
+The repo is bind-mounted at `/app`. The first `uv run vet` inside the container is slower while `uv` sets up the venv; subsequent runs are fast.
 
 ## Formatting Hooks
 
