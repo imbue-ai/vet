@@ -14,7 +14,7 @@ from loguru import logger
 
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
-from vet.imbue_core.agents.agent_api.errors import AgentAPIError
+from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgenticPhase
 from vet.imbue_core.data_types import IssueCode
@@ -270,7 +270,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
-                    except AgentAPIError:
+                    except AgentCLINotFoundError:
                         raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
