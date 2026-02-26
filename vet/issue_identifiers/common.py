@@ -21,7 +21,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
+from vet.imbue_core.agents.agent_api.errors import AgentAPIError
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.async_monkey_patches import log_exception
@@ -229,7 +229,7 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
                     assistant_messages.append(message)
                 elif isinstance(message, AgentResultMessage):
                     result_message = message
-    except AgentCLINotFoundError:
+    except AgentAPIError:
         raise
     except Exception as e:
         log_exception(e, "Agent API call failed")

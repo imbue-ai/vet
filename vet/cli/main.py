@@ -25,6 +25,7 @@ from vet.cli.config.schema import ModelsConfig
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
 from vet.formatters import validate_output_fields
+from vet.imbue_core.agents.agent_api.errors import AgentAPIError
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import IssueCode
@@ -632,6 +633,9 @@ def main(argv: list[str] | None = None) -> int:
     except AgentCLINotFoundError as e:
         print(f"vet: {e}", file=sys.stderr)
         return 2
+    except AgentAPIError as e:
+        print(f"vet: agent CLI failed: {e}", file=sys.stderr)
+        return 1
     # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.
     except (PromptTooLongError, BadAPIRequestError) as e:
         if _is_context_overflow(e):
