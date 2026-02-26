@@ -265,12 +265,40 @@ def list_issue_codes() -> None:
         print(f"  {code}")
 
 
-def list_models(user_config: ModelsConfig | None = None) -> None:
+_HARNESS_ISSUE_URLS: dict[AgentHarnessType, str] = {
+    AgentHarnessType.CLAUDE: "https://github.com/anthropics/claude-code/issues",
+    AgentHarnessType.CODEX: "https://github.com/openai/codex/issues",
+}
+
+
+def list_models(
+    user_config: ModelsConfig | None = None,
+    *,
+    agentic: bool = False,
+    agent_harness: AgentHarnessType | None = None,
+) -> None:
     from vet.cli.models import DEFAULT_MODEL_ID
     from vet.cli.models import get_models_by_provider
 
-    print("Available models:")
-    print()
+    if agentic and agent_harness is not None:
+        harness_name = agent_harness.value
+        print(f"Model listing for agentic mode ({harness_name} harness):")
+        print()
+        print(f"  In agentic mode, --model is passed directly to the agent harness CLI.")
+        print(f"  vet does not know which models the current harness supports. Some")
+        print(f"  models listed below may not work, and the harness may accept models")
+        print(f"  not listed here. If --model is omitted, the harness uses its own default.")
+        print()
+        issue_url = _HARNESS_ISSUE_URLS.get(agent_harness)
+        if issue_url:
+            print(f"  If better model listing support would be useful, consider requesting")
+            print(f"  a model listing feature from the {harness_name} CLI maintainers:")
+            print(f"    {issue_url}")
+            print()
+    else:
+        print("Available models:")
+        print()
+
     models_by_provider = get_models_by_provider(user_config)
     for provider, model_ids in sorted(models_by_provider.items()):
         print(f"  {provider}:")
@@ -416,7 +444,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.list_models:
-        list_models(user_config)
+        list_models(
+            user_config,
+            agentic=args.agentic,
+            agent_harness=args.agent_harness if args.agentic else None,
+        )
         return 0
 
     if args.list_fields:
@@ -519,44 +551,67 @@ def main(argv: list[str] | None = None) -> int:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
-    model_id = args.model or DEFAULT_MODEL_ID
-
-    try:
-        model_id = validate_model_id(model_id, user_config)
-    except ValueError as e:
-        print(f"vet: {e}", file=sys.stderr)
-        return 2
-
-    try:
-        validate_api_key_for_model(model_id, user_config)
-    except Exception as e:
-        print(f"vet: {e}", file=sys.stderr)
-        return 2
-
-    # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
-    language_model_config = build_language_model_config(model_id, user_config)
-    max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
-
     enabled_identifiers = ("agentic_issue_identifier",) if args.agentic else None
     disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
+    enabled_issue_codes = tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+    disabled_issue_codes = tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
 
-    config = VetConfig(
-        enabled_identifiers=enabled_identifiers,
-        disabled_identifiers=disabled_identifiers,
-        language_model_generation_config=language_model_config,
-        enabled_issue_codes=(tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None),
-        disabled_issue_codes=(tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None),
-        temperature=args.temperature,
-        filter_issues_below_confidence=args.confidence_threshold,
-        max_identify_workers=args.max_workers,
-        max_output_tokens=max_output_tokens or 20000,
-        max_identifier_spend_dollars=args.max_spend,
-        custom_guides_config=custom_guides_config,
-        agent_harness_type=args.agent_harness,
-        # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
-        filter_issues_through_llm_evaluator=not args.agentic,
-        enable_deduplication=not args.agentic,
-    )
+    if args.agentic:
+        # In agentic mode the model string is passed directly to the external CLI
+        # (e.g. Claude Code, Codex).  We skip vet's own model validation because
+        # the CLI is the authority on which models it supports.  When the user
+        # doesn't specify --model, we pass None so the CLI uses its own default.
+        config = VetConfig(
+            enabled_identifiers=enabled_identifiers,
+            disabled_identifiers=disabled_identifiers,
+            agent_model_name=args.model,
+            enabled_issue_codes=enabled_issue_codes,
+            disabled_issue_codes=disabled_issue_codes,
+            temperature=args.temperature,
+            filter_issues_below_confidence=args.confidence_threshold,
+            max_identify_workers=args.max_workers,
+            max_identifier_spend_dollars=args.max_spend,
+            custom_guides_config=custom_guides_config,
+            agent_harness_type=args.agent_harness,
+            filter_issues_through_llm_evaluator=False,
+            enable_deduplication=False,
+        )
+    else:
+        model_id = args.model or DEFAULT_MODEL_ID
+
+        try:
+            model_id = validate_model_id(model_id, user_config)
+        except ValueError as e:
+            print(f"vet: {e}", file=sys.stderr)
+            return 2
+
+        try:
+            validate_api_key_for_model(model_id, user_config)
+        except Exception as e:
+            print(f"vet: {e}", file=sys.stderr)
+            return 2
+
+        # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
+        language_model_config = build_language_model_config(model_id, user_config)
+        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
+
+        config = VetConfig(
+            enabled_identifiers=enabled_identifiers,
+            disabled_identifiers=disabled_identifiers,
+            language_model_generation_config=language_model_config,
+            enabled_issue_codes=enabled_issue_codes,
+            disabled_issue_codes=disabled_issue_codes,
+            temperature=args.temperature,
+            filter_issues_below_confidence=args.confidence_threshold,
+            max_identify_workers=args.max_workers,
+            max_output_tokens=max_output_tokens or 20000,
+            max_identifier_spend_dollars=args.max_spend,
+            custom_guides_config=custom_guides_config,
+            agent_harness_type=args.agent_harness,
+            # TODO: Evaluate if routing filtration/dedup through the agent harness is worth the tradeoff.
+            filter_issues_through_llm_evaluator=True,
+            enable_deduplication=True,
+        )
 
     if not args.quiet:
         print(

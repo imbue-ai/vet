@@ -21,10 +21,8 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
-from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
-from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import ConfidenceScore
@@ -194,42 +192,22 @@ def convert_to_issue_identifier_result(
     return generator_with_capture.return_value
 
 
-_ANTHROPIC_MODEL_NAMES = {m.value for m in AnthropicModelName}
-_OPENAI_MODEL_NAMES = {m.value for m in OpenAIModelName}
-_DEFAULT_CODEX_MODEL = "gpt-5.2-codex"
-_DEFAULT_CLAUDE_MODEL = AnthropicModelName.CLAUDE_4_6_OPUS
+def get_agent_options(cwd: Path | None, model_name: str | None, agent_harness_type: AgentHarnessType) -> AgentOptions:
+    """Build agent options for the given harness type.
 
-
-def get_agent_options(cwd: Path | None, model_name: str, agent_harness_type: AgentHarnessType) -> AgentOptions:
+    *model_name* is passed through to the underlying CLI as-is.  When ``None``,
+    the CLI will use whatever default the user has configured.  We intentionally
+    do **not** validate or remap the model here — the external CLI is the
+    authority on which models it supports.
+    """
     # NOTE: This if/else is intentionally simple. We're unlikely to support many harness types,
     # but if we do, this should be refactored into a registry or factory pattern.
     if agent_harness_type == AgentHarnessType.CODEX:
-        if model_name in _ANTHROPIC_MODEL_NAMES:
-            logger.debug(
-                "Config model_name {config_model_name} is an Anthropic model, using default Codex model ({model_name}).",
-                config_model_name=model_name,
-                model_name=_DEFAULT_CODEX_MODEL,
-            )
-            model_name = _DEFAULT_CODEX_MODEL
         return CodexOptions(
             cwd=cwd,
             model=model_name,
             sandbox_mode="read-only",
         )
-    if model_name in _OPENAI_MODEL_NAMES:
-        logger.debug(
-            "Config model_name {config_model_name} is an OpenAI model, using default Claude model ({model_name}).",
-            config_model_name=model_name,
-            model_name=_DEFAULT_CLAUDE_MODEL,
-        )
-        model_name = _DEFAULT_CLAUDE_MODEL
-    elif model_name not in _ANTHROPIC_MODEL_NAMES:
-        logger.warning(
-            "Config model_name {config_model_name} is not a valid Anthropic model, using default ({model_name}).",
-            config_model_name=model_name,
-            model_name=_DEFAULT_CLAUDE_MODEL,
-        )
-        model_name = _DEFAULT_CLAUDE_MODEL
     return ClaudeCodeOptions(
         cwd=cwd,
         permission_mode="dontAsk",

@@ -147,7 +147,7 @@ def collate_issues_with_agent(
 
     options = get_agent_options(
         cwd=project_context.repo_path,
-        model_name=config.language_model_generation_config.model_name,
+        model_name=config.agent_model_name,
         agent_harness_type=config.agent_harness_type,
     )
     combined_issues_string = _convert_parsed_issues_to_combined_string(all_issues)
