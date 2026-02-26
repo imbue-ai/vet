@@ -1,25 +1,28 @@
 #!/bin/bash
 
-INSTALL_CLAUDE=false
-IMAGE_NAME="vet"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
+
+build_image() {
+    local install_claude="$1"
+    local image_name="$2"
+
+    $RUNTIME build \
+        --build-arg INSTALL_CLAUDE="$install_claude" \
+        -f dev/Containerfile \
+        -t "$image_name" \
+        dev/.
+
+    echo "Built '$image_name' image using $RUNTIME."
+}
 
 if [ "$1" = "claude" ]; then
-    INSTALL_CLAUDE=true
-    IMAGE_NAME="vet-claude"
-fi
-
-if command -v podman &> /dev/null; then
-    RUNTIME="podman"
-elif command -v docker &> /dev/null; then
-    RUNTIME="docker"
-else
-    echo "No containerization program detected. Please install podman (preferred) or docker."
+    build_image true vet-claude
+elif [ -n "$1" ]; then
+    echo "Unknown argument: $1"
+    echo "Usage: ./dev/build.sh [claude]"
     exit 1
+else
+    build_image false vet
+    build_image true vet-claude
 fi
-
-$RUNTIME build \
-    --build-arg INSTALL_CLAUDE=$INSTALL_CLAUDE \
-    -t $IMAGE_NAME \
-    dev/.
-
-echo "Built '$IMAGE_NAME' image using $RUNTIME."

@@ -1,21 +1,19 @@
 #!/bin/bash
 
-IMAGE_NAME="vet"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 
-if command -v podman &> /dev/null; then
-    RUNTIME="podman"
-elif command -v docker &> /dev/null; then
-    RUNTIME="docker"
-else
-    echo "No containerization program detected. Please install podman (preferred) or docker."
-    exit 1
-fi
+require_env_file
+
+IMAGE_NAME="vet"
+BUILD_ARG=""
 
 if [ "$1" = "claude" ]; then
     IMAGE_NAME="vet-claude"
+    BUILD_ARG="claude"
 fi
 
-[ -f .env ] || { echo '.env file not found, please create one before proceeding'; exit 1; }
+ensure_image "$BUILD_ARG"
 
 $RUNTIME run --rm -it \
     --mount type=bind,source="$(pwd)",target=/app \
