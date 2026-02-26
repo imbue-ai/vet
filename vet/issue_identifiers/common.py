@@ -22,6 +22,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
+from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
 from vet.imbue_core.async_monkey_patches import log_exception
@@ -217,7 +218,7 @@ def get_agent_options(cwd: Path | None, model_name: str | None, agent_harness_ty
     )
 
 
-def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[str, list[AgentMessage]] | None:
+def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[str, list[AgentMessage]]:
     messages = []
     assistant_messages = []
     result_message = None
@@ -231,14 +232,19 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
                     result_message = message
     except AgentCLINotFoundError:
         raise
+    except AgentProcessError:
+        # If the agent reported an error before the process failed, use that detail instead —
+        # it typically contains a more specific message (e.g. "ran out of room in context window").
+        if result_message and result_message.is_error:
+            error_detail = result_message.error or result_message.result or "unknown error"
+            raise AgentProcessError(f"Agent CLI returned an error: {error_detail}") from None
+        raise
     except Exception as e:
-        log_exception(e, "Agent API call failed")
-        return None
+        raise AgentProcessError(f"Agent CLI call failed: {e}") from e
 
     if result_message and result_message.is_error:
         error_detail = result_message.error or result_message.result or "unknown error"
-        logger.error("Agent CLI returned an error: {error_detail}", error_detail=error_detail)
-        return None
+        raise AgentProcessError(f"Agent CLI returned an error: {error_detail}")
 
     # Try to get response from result message first
     response_text = ""
