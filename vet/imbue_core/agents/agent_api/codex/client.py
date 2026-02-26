@@ -96,29 +96,9 @@ class CodexClient(RealAgentClient[CodexOptions]):
         npm_installed = shutil.which("npm") is not None
 
         if not node_installed or not npm_installed:
-            raise AgentCLINotFoundError(
-                "\n".join(
-                    [
-                        "Codex CLI requires Node.js and npm, which may not be installed.",
-                        "Install Node.js from: https://nodejs.org/",
-                        "\nAfter installing Node.js, install Codex CLI:",
-                        "  npm install -g @openai/codex",
-                    ]
-                )
-            )
+            raise AgentCLINotFoundError("Codex CLI not found. Node.js and npm are required but may not be installed.")
 
-        raise AgentCLINotFoundError(
-            "\n".join(
-                [
-                    "Codex CLI not found. Install with:",
-                    "  npm install -g @openai/codex",
-                    "\nOr via Homebrew:",
-                    "  brew install codex",
-                    "\nIf already installed locally, try:",
-                    '  export PATH="$HOME/node_modules/.bin:$PATH"',
-                ]
-            )
-        )
+        raise AgentCLINotFoundError("Codex CLI not found. Ensure it is installed and available on your PATH.")
 
     @classmethod
     def _build_cli_cmd(cls, options: CodexOptions) -> list[str]:

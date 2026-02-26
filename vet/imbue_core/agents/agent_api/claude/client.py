@@ -114,27 +114,9 @@ class ClaudeCodeClient(RealAgentClient[ClaudeCodeOptions]):
         node_installed = shutil.which("node") is not None
 
         if not node_installed:
-            raise AgentCLINotFoundError(
-                "\n".join(
-                    [
-                        "Claude Code requires Node.js, which is not installed.",
-                        "Install Node.js from: https://nodejs.org/",
-                        "\nAfter installing Node.js, install Claude Code:",
-                        "  npm install -g @anthropic-ai/claude-code",
-                    ]
-                )
-            )
+            raise AgentCLINotFoundError("Claude Code CLI not found. Node.js is required but not installed.")
 
-        raise AgentCLINotFoundError(
-            "\n".join(
-                [
-                    "Claude Code not found. Install with:",
-                    "  npm install -g @anthropic-ai/claude-code",
-                    "\nIf already installed locally, try:",
-                    '  export PATH="$HOME/node_modules/.bin:$PATH"',
-                ]
-            )
-        )
+        raise AgentCLINotFoundError("Claude Code CLI not found. Ensure it is installed and available on your PATH.")
 
     @classmethod
     def _build_cli_cmd(cls, options: ClaudeCodeOptions) -> list[str]:
