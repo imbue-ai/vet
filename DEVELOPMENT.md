@@ -20,51 +20,34 @@ You can use the `Containerfile` in `dev/` at the repo root to create a container
 
 #### Setup
 
-##### Basic Setup
+Create a `.env` file at the repo root with your API keys. The recommended keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
 
-Create a `.env` file at the repo that contains your API keys you'd like to use with Vet. The recommended API keys are `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and `CODEX_API_KEY`.
+To include Claude Code in the image add:
 
-NOTE: Claude Code is **not** installed into the image by default. See the agentic verifier section for an explanation.
-
-Run the following command to build the image:
-
-```bash
-./dev/build.sh
+```
+I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
 ```
 
-Run the following command to start a container based on the image:
+Without this Claude Code will not be installed in the image.
+
+#### Running Vet in a Container
+
+```bash
+./dev/vet.sh --list-models
+./dev/vet.sh "check for bugs" --base-commit main
+./dev/vet.sh --base-commit main --agentic --agent-harness codex
+./dev/vet.sh --base-commit main --agentic --agent-harness claude  # requires I_CHOOSE_CONVENIENCE_OVER_FREEDOM=true
+```
+
+The image is built automatically on each run. This process should be fast due to layer caching.
+
+#### Interactive Development
 
 ```bash
 ./dev/run.sh
 ```
 
-You can then run Vet with:
-
-```bash
-uv run vet
-```
-
-This will be slower the first time you run it because `uv` has to set up your virtual environment, but since the Vet repo is bind mounted into the container, subsequent runs should be fast.
-
-##### Agentic Verifier
-
-The agentic verifier calls out to Claude Code or Codex. Codex is part of the image by default, and if you have your `CODEX_API_KEY` set in your `.env` it will be used. As such, no further actions are required to run the agentic verifier with Codex unless you would like to use another auth approach which requires signing into Codex interactively (oauth and such).
-
-Since Claude Code is proprietary, it is not installed by default. If you wish to have it installed as part of your image, run
-
-```bash
-./dev/build.sh claude
-```
-
-Then, to start a container based on this image run:
-
-```bash
-./dev/run.sh claude
-```
-
-NOTE: Without passing `claude` into `build.sh` it will default to the image without Claude Code installed.
-
-Within the container, you can run `claude` to begin interactive authentication to get it setup.
+Starts an interactive shell in the container. The repo is bind-mounted at `/app`.
 
 ## Formatting Hooks
 
