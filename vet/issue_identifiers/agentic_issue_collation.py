@@ -161,7 +161,8 @@ def collate_issues_with_agent(
     agent_response = generate_response_from_agent(collation_prompt, options)
     if agent_response is None:
         raise RuntimeError(
-            "Agentic issue collation failed: no response received from agent CLI. See log file for details."
+            "Agentic issue collation failed: no response received from agent CLI."
+            " Check the log file for details (default: ~/.local/state/vet/vet.log)."
         )
     response_text, collation_messages = agent_response
     collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
