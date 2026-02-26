@@ -304,7 +304,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             if agent_response is None:
                 raise RuntimeError(
                     "Agentic issue identification failed: no response received from agent CLI."
-                    " Check the log file for details (default: ~/.local/state/vet/vet.log)."
+                    " Re-run with --verbose for details."
                 )
             response_text, messages = agent_response
 
