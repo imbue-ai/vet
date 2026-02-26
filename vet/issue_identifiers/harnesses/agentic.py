@@ -265,6 +265,8 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                     for issue_code, prompt in issue_prompts
                 ]
 
+                num_succeeded = 0
+                last_error: Exception | None = None
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
@@ -272,8 +274,10 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                         raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
+                        last_error = e
                         continue
 
+                    num_succeeded += 1
                     issue_code, issue_type_response_text, messages = result
 
                     yield from generate_issues_from_response_texts(response_texts=(issue_type_response_text,))
@@ -291,6 +295,10 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                             invocation_info=invocation_info,
                         )
                     )
+
+                # If every task failed, re-raise the last error so it propagates to main().
+                if num_succeeded == 0 and last_error is not None:
+                    raise last_error
 
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
         else:

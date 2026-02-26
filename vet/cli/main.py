@@ -532,6 +532,7 @@ def main(argv: list[str] | None = None) -> int:
     from vet.formatters import format_issue_text
     from vet.formatters import issue_to_dict
     from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
+    from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
     from vet.imbue_core.agents.llm_apis.errors import PromptTooLongError
     from vet.imbue_tools.types.vet_config import VetConfig
 
@@ -644,6 +645,9 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print(f"vet: {e}", file=sys.stderr)
         return 1
+    except MissingAPIKeyError as e:
+        print(f"vet: {e}", file=sys.stderr)
+        return 2
     # TODO: This should be refactored so we only need to handle prompt too long errors when context is overfilled.
     except (PromptTooLongError, BadAPIRequestError) as e:
         if _is_context_overflow(e):
