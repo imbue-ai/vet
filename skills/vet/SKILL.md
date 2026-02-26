@@ -88,7 +88,9 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 ## Common Options
 
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
-- `--model MODEL`: LLM model to use (default: claude-opus-4-6)
+- `--model MODEL`: LLM to use (default: claude-opus-4-6)
+- `--list-models`: list all models that are supported by vet
+    - Run `vet --help` and look at the vet repo's readme for details about defining custom OpenAI-compatible models.
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
@@ -96,8 +98,15 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--agent-harness`: The two options for this are `codex` and `claude`. Claude Code is the default.
 - `--help`: Show comprehensive list of options
 
+
 ## Updating
 
 The vet CLI, skill files, and export scripts can become outdated as agent harnesses and LLM APIs change.
 
-If vet or the export scripts fail unexpectedly, try updating them. Run `which vet` to determine how vet was installed and update accordingly. For the skill files, check which skill directories exist on disk and update them with the latest versions from https://github.com/imbue-ai/vet/tree/main/skills/vet.
+If this happens, try updating them. Run `which vet` to determine how vet was installed and update accordingly. For the skill files, check which skill directories exist on disk and update them with the latest versions from https://github.com/imbue-ai/vet/tree/main/skills/vet.
+
+## Additional Information
+
+Additional information can be found in the vet repo:
+
+https://github.com/imbue-ai/vet
