@@ -50,7 +50,8 @@ def get_formatted_model_name(model_name: str) -> str:
 
         Some examples:
 
-        - `models/gemini-1.5-flash-001` -> `gemini-1.5-flash-001`
+    - 'models/gemini-2.5-flash' -> 'gemini-2.5-flash'
+    - 'groq/llama-3.3-70b-versatile' -> 'groq-llama-3.3-70b-versatile'
     - 'claude-opus-4-6' -> 'claude-opus-4-6'
 
     """
