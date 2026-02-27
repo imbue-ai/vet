@@ -38,12 +38,6 @@ def is_valid_model_id(
     return model_id in get_all_model_ids(user_config, registry_config)
 
 
-def is_user_defined_model(model_id: str, user_config: ModelsConfig | None = None) -> bool:
-    if user_config is None:
-        return False
-    return model_id in get_model_ids_from_config(user_config)
-
-
 def validate_model_id(
     model_id: str,
     user_config: ModelsConfig | None = None,
@@ -73,8 +67,6 @@ def get_models_by_provider(
     providers.update(get_builtin_models_by_provider())
 
     if user_config:
-        user_providers = get_models_by_provider_from_config(user_config)
-        for provider_name, model_ids in user_providers.items():
-            providers[provider_name] = model_ids
+        providers.update(get_models_by_provider_from_config(user_config))
 
     return providers

@@ -475,10 +475,11 @@ def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None
     env = {"XDG_CACHE_HOME": str(tmp_path)}
     with patch.dict(os.environ, env):
         with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response):
-            result = update_remote_registry_cache()
+            cache_path, config = update_remote_registry_cache()
 
-    assert result.exists()
-    assert json.loads(result.read_text())["providers"]["remote-provider"]
+    assert cache_path.exists()
+    assert json.loads(cache_path.read_text())["providers"]["remote-provider"]
+    assert "remote-provider" in config.providers
 
 
 def test_update_remote_registry_cache_respects_custom_url(tmp_path: Path) -> None:

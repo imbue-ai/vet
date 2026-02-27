@@ -10,7 +10,6 @@ from vet.cli.models import get_all_model_ids
 from vet.cli.models import get_builtin_model_ids
 from vet.cli.models import get_builtin_models_by_provider
 from vet.cli.models import get_models_by_provider
-from vet.cli.models import is_user_defined_model
 from vet.cli.models import is_valid_model_id
 from vet.cli.models import validate_model_id
 
@@ -69,18 +68,6 @@ def test_get_all_model_ids_includes_user_defined_models() -> None:
 )
 def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
     assert is_valid_model_id(model_id, user_config) is expected
-
-
-@pytest.mark.parametrize(
-    ("model_id", "user_config", "expected"),
-    [
-        ("any-model", None, False),
-        ("my-custom-model", SAMPLE_USER_CONFIG, True),
-        (DEFAULT_MODEL_ID, SAMPLE_USER_CONFIG, False),
-    ],
-)
-def test_is_user_defined_model(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
-    assert is_user_defined_model(model_id, user_config) is expected
 
 
 def test_validate_model_id_returns_model_id_when_valid() -> None:

@@ -5,8 +5,6 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
-
 from vet.cli.main import main
 
 _REMOTE_PROVIDER_JSON = json.dumps(

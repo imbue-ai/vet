@@ -160,7 +160,6 @@ def create_parser() -> argparse.ArgumentParser:
     model_group.add_argument(
         "--update-models",
         action="store_true",
-        default=False,
         help=argparse.SUPPRESS,
     )
     model_group.add_argument(
@@ -435,6 +434,28 @@ def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
 
+    # Handle subcommands that don't need config loading.
+    if args.update_models:
+        try:
+            cache_path, updated_config = update_remote_registry_cache()
+            model_count = sum(len(p.models) for p in updated_config.providers.values())
+            provider_count = len(updated_config.providers)
+            print(f"Updated model registry ({model_count} models from {provider_count} providers).")
+            print(f"Cache written to {cache_path}")
+        except Exception as e:
+            print(f"vet: failed to update model registry: {e}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.list_issue_codes:
+        list_issue_codes()
+        return 0
+
+    if args.list_fields:
+        list_fields()
+        return 0
+
+    # Load configs needed by the remaining commands.
     goal = args.goal or ""
 
     repo_path = args.repo
@@ -457,23 +478,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"vet: could not load custom guides: {e}", file=sys.stderr)
         return 2
 
-    if args.update_models:
-        try:
-            cache_path = update_remote_registry_cache()
-            updated_config = load_registry_config()
-            model_count = sum(len(p.models) for p in updated_config.providers.values())
-            provider_count = len(updated_config.providers)
-            print(f"Updated model registry ({model_count} models from {provider_count} providers).")
-            print(f"Cache written to {cache_path}")
-        except Exception as e:
-            print(f"vet: failed to update model registry: {e}", file=sys.stderr)
-            return 1
-        return 0
-
-    if args.list_issue_codes:
-        list_issue_codes()
-        return 0
-
     if args.list_models:
         list_models(
             user_config,
@@ -481,10 +485,6 @@ def main(argv: list[str] | None = None) -> int:
             agentic=args.agentic,
             agent_harness=args.agent_harness if args.agentic else None,
         )
-        return 0
-
-    if args.list_fields:
-        list_fields()
         return 0
 
     try:

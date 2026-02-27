@@ -54,19 +54,19 @@ def _get_registry_cache_path() -> Path:
     return _get_xdg_cache_home() / "vet" / "remote_models.json"
 
 
-def update_remote_registry_cache() -> Path:
+def update_remote_registry_cache() -> tuple[Path, ModelsConfig]:
     url = os.environ.get("VET_REGISTRY_URL", _DEFAULT_REGISTRY_URL)
     req = urllib.request.Request(url, headers={"User-Agent": "vet"})
     with urllib.request.urlopen(req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS) as resp:
         data = resp.read()
     try:
-        ModelsConfig.model_validate_json(data)
+        config = ModelsConfig.model_validate_json(data)
     except ValidationError as e:
         raise ConfigLoadError(f"Remote registry at {url} returned invalid data: {e}") from e
     cache_path = _get_registry_cache_path()
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_bytes(data)
-    return cache_path
+    return cache_path, config
 
 
 def find_git_repo_root(start_path: Path) -> Path | None:
@@ -129,10 +129,7 @@ def load_registry_config() -> ModelsConfig:
 
 
 def get_model_ids_from_config(config: ModelsConfig) -> set[str]:
-    model_ids: set[str] = set()
-    for provider in config.providers.values():
-        model_ids.update(provider.models.keys())
-    return model_ids
+    return {mid for provider in config.providers.values() for mid in provider.models}
 
 
 def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfig | None:
