@@ -3,7 +3,7 @@ confidence_threshold = 0.9
 max_workers = 4
 quiet = true
 base_commit = "main"
-model = "nemotron-30b-free"
+model = "opus"
 
 [security]
 enabled_issue_codes = ["hardcoded_secret", "insecure_code", "race_condition", "resource_leakage"]
