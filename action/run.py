@@ -114,8 +114,9 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
             response = client.post(review_url, json=review_json, headers=headers)
             if response.status_code in (200, 201):
                 return
-        except httpx.HTTPError:
-            pass
+            print(f"::warning::Review POST failed: {response.status_code} {response.text}")
+        except httpx.HTTPError as e:
+            print(f"::warning::Review POST failed: {e}")
 
         # Fallback to comment
         body_parts = [review_json.get("body", "")]
@@ -135,8 +136,9 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
             )
             if fallback_response.status_code in (200, 201):
                 return
-        except httpx.HTTPError:
-            pass
+            print(f"::warning::Fallback comment POST failed: {fallback_response.status_code} {fallback_response.text}")
+        except httpx.HTTPError as e:
+            print(f"::warning::Fallback comment POST failed: {e}")
 
     # both failing results in workflow failure
     print("::error::Failed to post GitHub review and fallback comment")
