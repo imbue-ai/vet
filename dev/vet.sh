@@ -8,7 +8,7 @@ if ! build_output=$("$SCRIPT_DIR/build.sh" 2>&1); then
     exit 1
 fi
 
-$RUNTIME run --rm -it \
+$RUNTIME run --rm \
     --mount type=bind,source="$(pwd)",target=/app \
     --env-file "$REPO_ROOT/.env" \
-    "$IMAGE_NAME" bash
+    "$IMAGE_NAME" /root/.local/bin/uv run vet "$@"
