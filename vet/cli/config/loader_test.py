@@ -15,9 +15,10 @@ from vet.cli.config.loader import _refresh_remote_registry_cache
 from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import find_git_repo_root
 from vet.cli.config.loader import get_config_file_paths
+from vet.cli.config.loader import get_max_output_tokens_for_model
+from vet.cli.config.loader import get_model_ids_from_config
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_provider_for_model
-from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.loader import get_xdg_config_home
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import load_registry_config
@@ -250,7 +251,7 @@ def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
     assert result.providers["shared-provider"].base_url == "http://project:8080/v1"
 
 
-def test_get_user_defined_model_ids_extracts_all_ids() -> None:
+def test_get_model_ids_from_config_extracts_all_ids() -> None:
     config = ModelsConfig(
         providers={
             "provider1": ProviderConfig(
@@ -283,7 +284,7 @@ def test_get_user_defined_model_ids_extracts_all_ids() -> None:
         }
     )
 
-    result = get_user_defined_model_ids(config)
+    result = get_model_ids_from_config(config)
 
     assert result == {"model-a", "model-b", "model-c"}
 
@@ -726,3 +727,120 @@ def test_build_config_no_registry_falls_through() -> None:
     result = build_language_model_config("totally-unknown", user_config)
     assert isinstance(result, LanguageModelGenerationConfig)
     assert result.model_name == "totally-unknown"
+
+
+# --- validate_api_key_for_model with registry_config tests ---
+
+
+def test_validate_api_key_for_registry_model_passes_when_key_is_set() -> None:
+    """API key validation works for registry-only models when the key is set."""
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                name="Registry",
+                base_url="http://registry:8080/v1",
+                api_key_env="REGISTRY_API_KEY",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    with patch.dict(os.environ, {"REGISTRY_API_KEY": "secret"}):
+        # Should not raise
+        validate_api_key_for_model("registry-model", user_config, registry_config)
+
+
+def test_validate_api_key_for_registry_model_raises_when_key_missing() -> None:
+    """API key validation raises MissingAPIKeyError for registry-only models with missing key."""
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                name="Registry",
+                base_url="http://registry:8080/v1",
+                api_key_env="MISSING_REGISTRY_KEY",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    with patch.dict(os.environ, {}, clear=True):
+        os.environ.pop("MISSING_REGISTRY_KEY", None)
+        with pytest.raises(MissingAPIKeyError) as exc_info:
+            validate_api_key_for_model("registry-model", user_config, registry_config)
+
+        assert exc_info.value.env_var == "MISSING_REGISTRY_KEY"
+        assert exc_info.value.model_id == "registry-model"
+
+
+# --- get_max_output_tokens_for_model with registry_config tests ---
+
+
+def test_get_max_output_tokens_for_registry_model() -> None:
+    """max_output_tokens is returned for a registry-only model."""
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                base_url="http://registry:8080/v1",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=32768,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    result = get_max_output_tokens_for_model("registry-model", user_config, registry_config)
+    assert result == 32768
+
+
+def test_get_max_output_tokens_user_config_wins_over_registry() -> None:
+    """User-defined max_output_tokens takes precedence over registry."""
+    user_config = ModelsConfig(
+        providers={
+            "user": ProviderConfig(
+                base_url="http://user:8080/v1",
+                models={
+                    "shared-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=65536,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                base_url="http://registry:8080/v1",
+                models={
+                    "shared-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    result = get_max_output_tokens_for_model("shared-model", user_config, registry_config)
+    assert result == 65536

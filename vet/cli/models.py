@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from vet.cli.config.loader import get_model_ids_from_config
 from vet.cli.config.loader import get_models_by_provider_from_config
-from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.schema import ModelsConfig
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
 from vet.imbue_core.agents.llm_apis.common import get_all_model_names
@@ -22,10 +22,10 @@ def get_all_model_ids(
     model_ids = get_builtin_model_ids()
 
     if user_config:
-        model_ids.update(get_user_defined_model_ids(user_config))
+        model_ids.update(get_model_ids_from_config(user_config))
 
     if registry_config:
-        model_ids.update(get_user_defined_model_ids(registry_config))
+        model_ids.update(get_model_ids_from_config(registry_config))
 
     return model_ids
 
@@ -41,7 +41,7 @@ def is_valid_model_id(
 def is_user_defined_model(model_id: str, user_config: ModelsConfig | None = None) -> bool:
     if user_config is None:
         return False
-    return model_id in get_user_defined_model_ids(user_config)
+    return model_id in get_model_ids_from_config(user_config)
 
 
 def validate_model_id(

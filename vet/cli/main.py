@@ -438,7 +438,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"vet: could not load model configuration: {e}", file=sys.stderr)
         return 2
 
-    registry_config = load_registry_config()
+    try:
+        registry_config = load_registry_config()
+    except ConfigLoadError as e:
+        logger.debug("Could not load remote registry: {}", e)
+        registry_config = ModelsConfig(providers={})
 
     try:
         custom_guides_config = load_custom_guides_config(repo_path)

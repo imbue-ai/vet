@@ -3,10 +3,10 @@ from __future__ import annotations
 import os
 import time
 import tomllib
-import urllib.error
 import urllib.request
 from pathlib import Path
 
+from loguru import logger
 from pydantic import ValidationError
 
 from vet.cli.config.cli_config_schema import CliConfigPreset
@@ -72,7 +72,8 @@ def _refresh_remote_registry_cache() -> Path | None:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         cache_path.write_bytes(data)
         return cache_path
-    except Exception:
+    except Exception as e:
+        logger.debug("Failed to fetch remote registry from {}: {}", url, e)
         return cache_path if cache_path.exists() else None
 
 
@@ -135,7 +136,7 @@ def load_registry_config() -> ModelsConfig:
     return ModelsConfig(providers={})
 
 
-def get_user_defined_model_ids(config: ModelsConfig) -> set[str]:
+def get_model_ids_from_config(config: ModelsConfig) -> set[str]:
     model_ids: set[str] = set()
     for provider in config.providers.values():
         model_ids.update(provider.models.keys())
@@ -150,9 +151,9 @@ def get_provider_for_model(model_id: str, config: ModelsConfig) -> ProviderConfi
 
 
 def _is_builtin_model(model_id: str) -> bool:
-    from vet.imbue_core.agents.llm_apis.common import get_all_model_names
+    from vet.cli.models import get_builtin_model_ids
 
-    return model_id in {str(n) for n in get_all_model_names()}
+    return model_id in get_builtin_model_ids()
 
 
 def _resolve_provider(
