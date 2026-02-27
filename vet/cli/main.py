@@ -21,6 +21,7 @@ from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import load_registry_config
+from vet.cli.config.loader import update_remote_registry_cache
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
 from vet.formatters import OUTPUT_FIELDS
@@ -155,6 +156,12 @@ def create_parser() -> argparse.ArgumentParser:
         "--list-models",
         action="store_true",
         help="List all available models",
+    )
+    model_group.add_argument(
+        "--update-models",
+        action="store_true",
+        default=False,
+        help=argparse.SUPPRESS,
     )
     model_group.add_argument(
         "--temperature",
@@ -449,6 +456,19 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigLoadError as e:
         print(f"vet: could not load custom guides: {e}", file=sys.stderr)
         return 2
+
+    if args.update_models:
+        try:
+            cache_path = update_remote_registry_cache()
+            updated_config = load_registry_config()
+            model_count = sum(len(p.models) for p in updated_config.providers.values())
+            provider_count = len(updated_config.providers)
+            print(f"Updated model registry ({model_count} models from {provider_count} providers).")
+            print(f"Cache written to {cache_path}")
+        except Exception as e:
+            print(f"vet: failed to update model registry: {e}", file=sys.stderr)
+            return 1
+        return 0
 
     if args.list_issue_codes:
         list_issue_codes()

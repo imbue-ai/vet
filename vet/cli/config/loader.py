@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import os
-import time
 import tomllib
 import urllib.request
 from pathlib import Path
 
-from loguru import logger
 from pydantic import ValidationError
 
 from vet.cli.config.cli_config_schema import CliConfigPreset
@@ -35,7 +33,6 @@ class MissingAPIKeyError(Exception):
 
 
 _DEFAULT_REGISTRY_URL = "https://raw.githubusercontent.com/imbue-ai/vet/main/registry/models.json"
-_REGISTRY_CACHE_TTL_SECONDS = 86400
 _REGISTRY_FETCH_TIMEOUT_SECONDS = 5
 
 
@@ -53,28 +50,23 @@ def _get_xdg_cache_home() -> Path:
     return Path.home() / ".cache"
 
 
-def _refresh_remote_registry_cache() -> Path | None:
-    if os.environ.get("VET_REMOTE_REGISTRY", "1").lower() in ("0", "false", "no"):
-        return None
+def _get_registry_cache_path() -> Path:
+    return _get_xdg_cache_home() / "vet" / "remote_models.json"
 
-    cache_path = _get_xdg_cache_home() / "vet" / "remote_models.json"
 
-    if cache_path.exists():
-        age = time.time() - cache_path.stat().st_mtime
-        if age < _REGISTRY_CACHE_TTL_SECONDS:
-            return cache_path
-
+def update_remote_registry_cache() -> Path:
     url = os.environ.get("VET_REGISTRY_URL", _DEFAULT_REGISTRY_URL)
+    req = urllib.request.Request(url, headers={"User-Agent": "vet"})
+    with urllib.request.urlopen(req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS) as resp:
+        data = resp.read()
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "vet"})
-        with urllib.request.urlopen(req, timeout=_REGISTRY_FETCH_TIMEOUT_SECONDS) as resp:
-            data = resp.read()
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        cache_path.write_bytes(data)
-        return cache_path
-    except Exception as e:
-        logger.debug("Failed to fetch remote registry from {}: {}", url, e)
-        return cache_path if cache_path.exists() else None
+        ModelsConfig.model_validate_json(data)
+    except ValidationError as e:
+        raise ConfigLoadError(f"Remote registry at {url} returned invalid data: {e}") from e
+    cache_path = _get_registry_cache_path()
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_bytes(data)
+    return cache_path
 
 
 def find_git_repo_root(start_path: Path) -> Path | None:
@@ -130,9 +122,9 @@ def load_models_config(repo_path: Path | None = None) -> ModelsConfig:
 
 
 def load_registry_config() -> ModelsConfig:
-    cache = _refresh_remote_registry_cache()
-    if cache is not None and cache.exists():
-        return _load_single_config_file(cache)
+    cache_path = _get_registry_cache_path()
+    if cache_path.exists():
+        return _load_single_config_file(cache_path)
     return ModelsConfig(providers={})
 
 
@@ -161,7 +153,6 @@ def _resolve_provider(
     user_config: ModelsConfig,
     registry_config: ModelsConfig | None = None,
 ) -> ProviderConfig | None:
-    """Resolve provider by precedence: user-defined > built-in > registry."""
     provider = get_provider_for_model(model_id, user_config)
     if provider is not None:
         return provider

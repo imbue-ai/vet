@@ -219,11 +219,8 @@ def test_get_all_model_ids_includes_registry_models() -> None:
         registry_config=SAMPLE_REGISTRY_CONFIG,
     )
 
-    # User-defined
     assert "my-custom-model" in all_ids
-    # Built-in
     assert DEFAULT_MODEL_ID in all_ids
-    # Registry
     assert "registry-model" in all_ids
 
 
@@ -253,13 +250,11 @@ def test_get_models_by_provider_includes_registry_providers() -> None:
 
     assert "Registry Provider" in providers
     assert "registry-model" in providers["Registry Provider"]
-    # Built-ins still present
     assert "anthropic" in providers
     assert "openai" in providers
 
 
 def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> None:
-    """If a registry provider has the same display name as a built-in, built-in wins."""
     registry_config = ModelsConfig(
         providers={
             "anthropic-override": ProviderConfig(
@@ -278,6 +273,5 @@ def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> N
 
     providers = get_models_by_provider(user_config=None, registry_config=registry_config)
 
-    # Built-in "anthropic" should override registry's "anthropic"
     assert "registry-claude" not in providers.get("anthropic", [])
     assert DEFAULT_MODEL_ID in providers["anthropic"]
