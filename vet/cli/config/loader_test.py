@@ -10,13 +10,17 @@ import pytest
 from vet.cli.config.loader import ConfigLoadError
 from vet.cli.config.loader import MissingAPIKeyError
 from vet.cli.config.loader import _load_single_config_file
+from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import find_git_repo_root
 from vet.cli.config.loader import get_config_file_paths
+from vet.cli.config.loader import get_max_output_tokens_for_model
+from vet.cli.config.loader import get_model_ids_from_config
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_provider_for_model
-from vet.cli.config.loader import get_user_defined_model_ids
 from vet.cli.config.loader import get_xdg_config_home
 from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import load_registry_config
+from vet.cli.config.loader import update_remote_registry_cache
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelConfig
 from vet.cli.config.schema import ModelsConfig
@@ -246,7 +250,7 @@ def test_load_models_config_project_overrides_global(tmp_path: Path) -> None:
     assert result.providers["shared-provider"].base_url == "http://project:8080/v1"
 
 
-def test_get_user_defined_model_ids_extracts_all_ids() -> None:
+def test_get_model_ids_from_config_extracts_all_ids() -> None:
     config = ModelsConfig(
         providers={
             "provider1": ProviderConfig(
@@ -279,7 +283,7 @@ def test_get_user_defined_model_ids_extracts_all_ids() -> None:
         }
     )
 
-    result = get_user_defined_model_ids(config)
+    result = get_model_ids_from_config(config)
 
     assert result == {"model-a", "model-b", "model-c"}
 
@@ -436,3 +440,327 @@ def test_get_models_by_provider_groups_models() -> None:
 
     assert "openrouter" in result
     assert result["openrouter"] == ["anthropic/claude-3"]
+
+
+_REMOTE_PROVIDER_JSON = json.dumps(
+    {
+        "providers": {
+            "remote-provider": {
+                "base_url": "http://remote:8080/v1",
+                "api_key_env": "REMOTE_KEY",
+                "models": {
+                    "remote-model": {
+                        "context_window": 128000,
+                        "max_output_tokens": 16384,
+                        "supports_temperature": True,
+                    }
+                },
+            }
+        }
+    }
+)
+
+
+def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None:
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response):
+            cache_path, config = update_remote_registry_cache()
+
+    assert cache_path.exists()
+    assert json.loads(cache_path.read_text())["providers"]["remote-provider"]
+    assert "remote-provider" in config.providers
+
+
+def test_update_remote_registry_cache_respects_custom_url(tmp_path: Path) -> None:
+    custom_url = "https://example.com/custom/models.json"
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    env = {
+        "XDG_CACHE_HOME": str(tmp_path),
+        "VET_REGISTRY_URL": custom_url,
+    }
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen",
+            return_value=mock_response,
+        ) as mock_urlopen:
+            update_remote_registry_cache()
+
+    call_args = mock_urlopen.call_args
+    assert call_args[0][0].full_url == custom_url
+
+
+def test_update_remote_registry_cache_raises_on_network_error(tmp_path: Path) -> None:
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen",
+            side_effect=OSError("no network"),
+        ):
+            with pytest.raises(OSError):
+                update_remote_registry_cache()
+
+
+def test_update_remote_registry_cache_rejects_invalid_json(tmp_path: Path) -> None:
+    mock_response = type(
+        "Response",
+        (),
+        {
+            "read": lambda self: b"<html>Not Found</html>",
+            "__enter__": lambda self: self,
+            "__exit__": lambda *a: None,
+        },
+    )()
+
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        with patch(
+            "vet.cli.config.loader.urllib.request.urlopen",
+            return_value=mock_response,
+        ):
+            with pytest.raises(ConfigLoadError, match="invalid data"):
+                update_remote_registry_cache()
+
+    cache_file = tmp_path / "vet" / "remote_models.json"
+    assert not cache_file.exists()
+
+
+def test_load_models_config_does_not_include_registry(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "cache" / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(
+        json.dumps(
+            {
+                "providers": {
+                    "remote-only": {
+                        "base_url": "http://remote:8080/v1",
+                        "models": {
+                            "remote-model": {
+                                "context_window": 64000,
+                                "max_output_tokens": 8192,
+                                "supports_temperature": True,
+                            }
+                        },
+                    }
+                }
+            }
+        )
+    )
+
+    env = {
+        "XDG_CACHE_HOME": str(tmp_path / "cache"),
+        "XDG_CONFIG_HOME": str(tmp_path / "nonexistent"),
+    }
+    with patch.dict(os.environ, env):
+        result = load_models_config(repo_path=None)
+
+    assert "remote-only" not in result.providers
+
+
+def test_load_registry_config_returns_registry_providers(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text(_REMOTE_PROVIDER_JSON)
+
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        result = load_registry_config()
+
+    assert "remote-provider" in result.providers
+
+
+def test_load_registry_config_returns_empty_when_no_cache(tmp_path: Path) -> None:
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        result = load_registry_config()
+
+    assert result.providers == {}
+
+
+def _make_provider(base_url: str, model_id: str, api_key_env: str | None = None) -> ProviderConfig:
+    return ProviderConfig(
+        base_url=base_url,
+        api_key_env=api_key_env,
+        models={
+            model_id: ModelConfig(
+                context_window=128000,
+                max_output_tokens=16384,
+                supports_temperature=True,
+            )
+        },
+    )
+
+
+def test_build_config_user_defined_wins_over_builtin_and_registry() -> None:
+    from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+    from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+
+    builtin_id = AnthropicModelName.CLAUDE_4_6_OPUS.value
+    user_config = ModelsConfig(providers={"custom": _make_provider("http://custom:8080/v1", builtin_id)})
+    registry_config = ModelsConfig(providers={"registry": _make_provider("http://registry:8080/v1", builtin_id)})
+
+    result = build_language_model_config(builtin_id, user_config, registry_config)
+    assert isinstance(result, OpenAICompatibleModelConfig)
+    assert result.custom_base_url == "http://custom:8080/v1"
+
+
+def test_build_config_builtin_wins_over_registry() -> None:
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+    from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+
+    builtin_id = AnthropicModelName.CLAUDE_4_6_OPUS.value
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(providers={"registry": _make_provider("http://registry:8080/v1", builtin_id)})
+
+    result = build_language_model_config(builtin_id, user_config, registry_config)
+    assert isinstance(result, LanguageModelGenerationConfig)
+    assert result.model_name == builtin_id
+
+
+def test_build_config_registry_used_for_unknown_model() -> None:
+    from vet.imbue_core.agents.configs import OpenAICompatibleModelConfig
+
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={"registry": _make_provider("http://registry:8080/v1", "registry-only-model")}
+    )
+
+    result = build_language_model_config("registry-only-model", user_config, registry_config)
+    assert isinstance(result, OpenAICompatibleModelConfig)
+    assert result.custom_base_url == "http://registry:8080/v1"
+
+
+def test_build_config_no_registry_falls_through() -> None:
+    from vet.imbue_core.agents.configs import LanguageModelGenerationConfig
+
+    user_config = ModelsConfig(providers={})
+    result = build_language_model_config("totally-unknown", user_config)
+    assert isinstance(result, LanguageModelGenerationConfig)
+    assert result.model_name == "totally-unknown"
+
+
+def test_validate_api_key_for_registry_model_passes_when_key_is_set() -> None:
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                name="Registry",
+                base_url="http://registry:8080/v1",
+                api_key_env="REGISTRY_API_KEY",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    with patch.dict(os.environ, {"REGISTRY_API_KEY": "secret"}):
+        validate_api_key_for_model("registry-model", user_config, registry_config)
+
+
+def test_validate_api_key_for_registry_model_raises_when_key_missing() -> None:
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                name="Registry",
+                base_url="http://registry:8080/v1",
+                api_key_env="MISSING_REGISTRY_KEY",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    with patch.dict(os.environ, {}, clear=True):
+        os.environ.pop("MISSING_REGISTRY_KEY", None)
+        with pytest.raises(MissingAPIKeyError) as exc_info:
+            validate_api_key_for_model("registry-model", user_config, registry_config)
+
+        assert exc_info.value.env_var == "MISSING_REGISTRY_KEY"
+        assert exc_info.value.model_id == "registry-model"
+
+
+def test_get_max_output_tokens_for_registry_model() -> None:
+    user_config = ModelsConfig(providers={})
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                base_url="http://registry:8080/v1",
+                models={
+                    "registry-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=32768,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    result = get_max_output_tokens_for_model("registry-model", user_config, registry_config)
+    assert result == 32768
+
+
+def test_get_max_output_tokens_user_config_wins_over_registry() -> None:
+    user_config = ModelsConfig(
+        providers={
+            "user": ProviderConfig(
+                base_url="http://user:8080/v1",
+                models={
+                    "shared-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=65536,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+    registry_config = ModelsConfig(
+        providers={
+            "registry": ProviderConfig(
+                base_url="http://registry:8080/v1",
+                models={
+                    "shared-model": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    result = get_max_output_tokens_for_model("shared-model", user_config, registry_config)
+    assert result == 65536

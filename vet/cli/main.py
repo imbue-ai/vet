@@ -20,6 +20,8 @@ from vet.cli.config.loader import get_config_preset
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
+from vet.cli.config.loader import load_registry_config
+from vet.cli.config.loader import update_remote_registry_cache
 from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
 from vet.formatters import OUTPUT_FIELDS
@@ -156,6 +158,11 @@ def create_parser() -> argparse.ArgumentParser:
         help="List all available models",
     )
     model_group.add_argument(
+        "--update-models",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    model_group.add_argument(
         "--temperature",
         type=float,
         default=CLI_DEFAULTS.temperature,
@@ -276,6 +283,7 @@ _HARNESS_ISSUE_URLS: dict[AgentHarnessType, str] = {
 def list_models(
     user_config: ModelsConfig | None = None,
     *,
+    registry_config: ModelsConfig | None = None,
     agentic: bool = False,
     agent_harness: AgentHarnessType | None = None,
 ) -> None:
@@ -301,7 +309,7 @@ def list_models(
         print("Available models:")
         print()
 
-    models_by_provider = get_models_by_provider(user_config)
+    models_by_provider = get_models_by_provider(user_config, registry_config)
     for provider, model_ids in sorted(models_by_provider.items()):
         print(f"  {provider}:")
         for model_id in sorted(model_ids):
@@ -426,6 +434,28 @@ def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
 
+    # Handle subcommands that don't need config loading.
+    if args.update_models:
+        try:
+            cache_path, updated_config = update_remote_registry_cache()
+            model_count = sum(len(p.models) for p in updated_config.providers.values())
+            provider_count = len(updated_config.providers)
+            print(f"Updated model registry ({model_count} models from {provider_count} providers).")
+            print(f"Cache written to {cache_path}")
+        except Exception as e:
+            print(f"vet: failed to update model registry: {e}", file=sys.stderr)
+            return 1
+        return 0
+
+    if args.list_issue_codes:
+        list_issue_codes()
+        return 0
+
+    if args.list_fields:
+        list_fields()
+        return 0
+
+    # Load configs needed by the remaining commands.
     goal = args.goal or ""
 
     repo_path = args.repo
@@ -437,25 +467,24 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
+        registry_config = load_registry_config()
+    except ConfigLoadError as e:
+        logger.debug("Could not load remote registry: {}", e)
+        registry_config = ModelsConfig(providers={})
+
+    try:
         custom_guides_config = load_custom_guides_config(repo_path)
     except ConfigLoadError as e:
         print(f"vet: could not load custom guides: {e}", file=sys.stderr)
         return 2
 
-    if args.list_issue_codes:
-        list_issue_codes()
-        return 0
-
     if args.list_models:
         list_models(
             user_config,
+            registry_config=registry_config,
             agentic=args.agentic,
             agent_harness=args.agent_harness if args.agentic else None,
         )
-        return 0
-
-    if args.list_fields:
-        list_fields()
         return 0
 
     try:
@@ -584,20 +613,20 @@ def main(argv: list[str] | None = None) -> int:
         model_id = args.model or DEFAULT_MODEL_ID
 
         try:
-            model_id = validate_model_id(model_id, user_config)
+            model_id = validate_model_id(model_id, user_config, registry_config)
         except ValueError as e:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
         try:
-            validate_api_key_for_model(model_id, user_config)
+            validate_api_key_for_model(model_id, user_config, registry_config)
         except Exception as e:
             print(f"vet: {e}", file=sys.stderr)
             return 2
 
         # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
-        language_model_config = build_language_model_config(model_id, user_config)
-        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config)
+        language_model_config = build_language_model_config(model_id, user_config, registry_config)
+        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config, registry_config)
 
         config = VetConfig(
             enabled_identifiers=enabled_identifiers,

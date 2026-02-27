@@ -10,7 +10,6 @@ from vet.cli.models import get_all_model_ids
 from vet.cli.models import get_builtin_model_ids
 from vet.cli.models import get_builtin_models_by_provider
 from vet.cli.models import get_models_by_provider
-from vet.cli.models import is_user_defined_model
 from vet.cli.models import is_valid_model_id
 from vet.cli.models import validate_model_id
 
@@ -69,18 +68,6 @@ def test_get_all_model_ids_includes_user_defined_models() -> None:
 )
 def test_is_valid_model_id(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
     assert is_valid_model_id(model_id, user_config) is expected
-
-
-@pytest.mark.parametrize(
-    ("model_id", "user_config", "expected"),
-    [
-        ("any-model", None, False),
-        ("my-custom-model", SAMPLE_USER_CONFIG, True),
-        (DEFAULT_MODEL_ID, SAMPLE_USER_CONFIG, False),
-    ],
-)
-def test_is_user_defined_model(model_id: str, user_config: ModelsConfig | None, expected: bool) -> None:
-    assert is_user_defined_model(model_id, user_config) is expected
 
 
 def test_validate_model_id_returns_model_id_when_valid() -> None:
@@ -193,3 +180,85 @@ def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name()
     providers = get_models_by_provider(user_config)
 
     assert providers["anthropic"] == ["custom-model"]
+
+
+SAMPLE_REGISTRY_CONFIG = ModelsConfig(
+    providers={
+        "registry-provider": ProviderConfig(
+            name="Registry Provider",
+            base_url="http://registry:8080/v1",
+            api_key_env="REGISTRY_KEY",
+            models={
+                "registry-model": ModelConfig(
+                    context_window=128000,
+                    max_output_tokens=16384,
+                    supports_temperature=True,
+                ),
+            },
+        )
+    }
+)
+
+
+def test_get_all_model_ids_includes_registry_models() -> None:
+    all_ids = get_all_model_ids(
+        user_config=SAMPLE_USER_CONFIG,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+
+    assert "my-custom-model" in all_ids
+    assert DEFAULT_MODEL_ID in all_ids
+    assert "registry-model" in all_ids
+
+
+def test_validate_model_id_accepts_registry_model() -> None:
+    result = validate_model_id(
+        "registry-model",
+        user_config=None,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+    assert result == "registry-model"
+
+
+def test_validate_model_id_rejects_unknown_even_with_registry() -> None:
+    with pytest.raises(ValueError):
+        validate_model_id(
+            "totally-unknown",
+            user_config=SAMPLE_USER_CONFIG,
+            registry_config=SAMPLE_REGISTRY_CONFIG,
+        )
+
+
+def test_get_models_by_provider_includes_registry_providers() -> None:
+    providers = get_models_by_provider(
+        user_config=None,
+        registry_config=SAMPLE_REGISTRY_CONFIG,
+    )
+
+    assert "Registry Provider" in providers
+    assert "registry-model" in providers["Registry Provider"]
+    assert "anthropic" in providers
+    assert "openai" in providers
+
+
+def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> None:
+    registry_config = ModelsConfig(
+        providers={
+            "anthropic-override": ProviderConfig(
+                name="anthropic",
+                base_url="http://registry:8080/v1",
+                models={
+                    "registry-claude": ModelConfig(
+                        context_window=128000,
+                        max_output_tokens=16384,
+                        supports_temperature=True,
+                    )
+                },
+            )
+        }
+    )
+
+    providers = get_models_by_provider(user_config=None, registry_config=registry_config)
+
+    assert "registry-claude" not in providers.get("anthropic", [])
+    assert DEFAULT_MODEL_ID in providers["anthropic"]
