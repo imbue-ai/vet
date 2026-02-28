@@ -274,7 +274,6 @@ async def async_main(args: argparse.Namespace) -> int:
         codex_model=args.codex_model,
         standard_model=args.standard_model,
     )
-
     if not specs:
         print(
             "[super_vet] Error: no runs configured. Use --runs or --claude-runs etc.",
