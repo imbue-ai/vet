@@ -121,7 +121,7 @@ model configuration:
 vet options (passed through):
   --base-commit REF       Git ref for diff base
   --history-loader CMD    Shell command to load conversation history
-  --confidence-threshold  Minimum confidence threshold
+  --confidence-threshold N  Minimum confidence threshold (default: 0.0)
   --repo, -r PATH         Path to the repository
 
 parallelism:
@@ -150,7 +150,7 @@ Super vet outputs JSON to stdout with the following structure:
     }
   ],
   "runs": [
-    {"label": "agentic-claude/claude-opus-4-6#0", "mode": "agentic-claude", "model": "claude-opus-4-6", "issues_found": 3, "duration_seconds": 45.2, "returncode": 10, "error": null}
+    {"label": "agentic-claude/claude-opus-4-6#0", "mode": "agentic-claude", "model": "claude-opus-4-6", "run_index": 0, "issues_found": 3, "duration_seconds": 45.2, "returncode": 10, "error": null}
   ],
   "summary": {
     "total_unique_issues": 7,
