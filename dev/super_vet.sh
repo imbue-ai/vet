@@ -32,4 +32,5 @@ After it completes, interpret the JSON results: summarize the issues found, high
 $RUNTIME run --rm -it \
     --mount type=bind,source="$(pwd)",target=/app \
     --env-file "$REPO_ROOT/.env" \
-    "$IMAGE_NAME" opencode run --model anthropic/claude-opus-4-6 "$PROMPT"
+    -e OPENCODE_PERMISSION="$OPENCODE_PERMISSION" \
+    "$IMAGE_NAME" bash -c "opencode run --model anthropic/claude-opus-4-6 \"$PROMPT\""
