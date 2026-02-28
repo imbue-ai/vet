@@ -11,5 +11,4 @@ fi
 $RUNTIME run --rm -it \
     --mount type=bind,source="$(pwd)",target=/app \
     --env-file "$REPO_ROOT/.env" \
-    -e OPENCODE_PERMISSION="$OPENCODE_PERMISSION" \
     "$IMAGE_NAME" bash
