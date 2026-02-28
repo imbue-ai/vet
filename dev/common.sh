@@ -17,11 +17,6 @@ set -a; source "$REPO_ROOT/.env"; set +a
 
 IMAGE_NAME="vet"
 INSTALL_CLAUDE="false"
-
-# Everything in dev/ runs inside ephemeral containers, so grant OpenCode full
-# permissions (no interactive prompts). Without this, non-interactive
-# `opencode run` auto-rejects any "ask" permission (e.g. external_directory).
-OPENCODE_PERMISSION='{"*":"allow","external_directory":{"*":"allow"}}'
 if [ "${I_CHOOSE_CONVENIENCE_OVER_FREEDOM:-}" = "true" ]; then
     IMAGE_NAME="vet-nonfree"
     INSTALL_CLAUDE="true"
