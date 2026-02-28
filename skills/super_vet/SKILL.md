@@ -119,7 +119,7 @@ model configuration:
   --standard-model MODEL  Model for standard runs
 
 vet options (passed through):
-  --base-commit REF       Git ref for diff base
+  --base-commit REF       Git ref for diff base (in general, run against main)
   --history-loader CMD    Shell command to load conversation history
   --confidence-threshold N  Minimum confidence threshold (default: 0.0)
   --repo, -r PATH         Path to the repository

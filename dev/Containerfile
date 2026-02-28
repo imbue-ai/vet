@@ -12,6 +12,7 @@ RUN apt-get update \
 
 WORKDIR /app
 RUN git config --global --add safe.directory /app
+RUN /root/.local/bin/uv tool install verify-everything
 
 RUN if [ "$INSTALL_CLAUDE" = "true" ]; then \
       npm install -g @anthropic-ai/claude-code; \

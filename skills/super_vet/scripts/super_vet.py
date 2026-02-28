@@ -69,7 +69,9 @@ def build_vet_command(
     return cmd
 
 
-def _error_result(spec: RunSpec, duration: float, error: str, returncode: int = 1) -> RunResult:
+def _error_result(
+    spec: RunSpec, duration: float, error: str, returncode: int = 1
+) -> RunResult:
     return RunResult(
         spec=spec,
         issues=[],
@@ -95,7 +97,9 @@ async def run_vet(
     confidence_threshold: float | None,
     repo: str | None,
 ) -> RunResult:
-    cmd = build_vet_command(spec, goal, base_commit, history_loader, confidence_threshold)
+    cmd = build_vet_command(
+        spec, goal, base_commit, history_loader, confidence_threshold
+    )
     if repo:
         cmd.extend(["--repo", repo])
 
@@ -192,7 +196,9 @@ def build_run_specs(
 
 
 def _issue_fingerprint(issue: dict) -> str:
-    return "|".join(str(issue.get(k, "")) for k in ("issue_code", "file_path", "line_number", "description"))
+    return "|".join(
+        str(issue.get(k, "")) for k in ("issue_code", "file_path", "line_number")
+    )
 
 
 def aggregate_results(results: list[RunResult]) -> dict:
@@ -316,6 +322,8 @@ async def async_main(args: argparse.Namespace) -> int:
     json.dump(output, sys.stdout, indent=2)
     print()
 
+    if output["summary"]["successful_runs"] == 0:
+        return 2  # all runs failed
     return 10 if output["issues"] else 0
 
 
@@ -341,7 +349,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     vet_group = parser.add_argument_group("vet options (passed through)")
     vet_group.add_argument("--base-commit", default=None)
     vet_group.add_argument("--history-loader", default=None)
-    vet_group.add_argument("--confidence-threshold", type=float, default=0.0)
+    vet_group.add_argument("--confidence-threshold", type=float, default=None)
     vet_group.add_argument("--repo", "-r", default=None)
 
     parser.add_argument("--max-parallel", type=int, default=6)
@@ -355,6 +363,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         args.codex_runs = default_runs
     if args.standard_runs is None:
         args.standard_runs = default_runs
+
+    if args.max_parallel < 1:
+        parser.error("--max-parallel must be at least 1")
 
     if args.claude_model is None:
         args.claude_model = args.model
