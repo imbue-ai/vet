@@ -1,0 +1,18 @@
+{
+  "providers": {
+    "groq": {
+      "name": "Groq",
+      "api_type": "openai_compatible",
+      "base_url": "https://api.groq.com/openai/v1",
+      "api_key_env": "GROQ_API_KEY",
+      "models": {
+        "kimi-k2": {
+          "model_id": "moonshotai/kimi-k2-instruct-0905",
+          "context_window": 262144,
+          "max_output_tokens": 16384,
+          "supports_temperature": true
+        }
+      }
+    }
+  }
+}
