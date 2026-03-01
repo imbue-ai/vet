@@ -22,8 +22,8 @@ from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import load_registry_config
 from vet.cli.config.loader import update_remote_registry_cache
-from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelsConfig
+from vet.cli.models import validate_api_key_for_model
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
 from vet.formatters import validate_output_fields
@@ -553,9 +553,9 @@ def main(argv: list[str] | None = None) -> int:
     configure_logging(args.verbose, args.log_file)
 
     from vet.api import find_issues
-    from vet.cli.config.loader import build_language_model_config
-    from vet.cli.config.loader import get_max_output_tokens_for_model
     from vet.cli.models import DEFAULT_MODEL_ID
+    from vet.cli.models import build_language_model_config
+    from vet.cli.models import get_max_output_tokens_for_model
     from vet.cli.models import validate_model_id
     from vet.formatters import format_github_review
     from vet.formatters import format_issue_text

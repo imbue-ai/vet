@@ -104,6 +104,10 @@ Based on your needs, instead of the above, you can also extend one of the existi
 In that case you would simply expand the rubric in the prompt. That is actually the preferred way to catch issues at the moment due to efficiency.
 Refer to the source code for more details.
 
+### Model registry
+
+The `registry/models.json` file contains community-shared model definitions distributed via `--update-models`. See [`registry/CONTRIBUTING.md`](registry/CONTRIBUTING.md) for the standards that models must meet before being added.
+
 ## CI / CD
 
 ### GitHub Actions naming conventions

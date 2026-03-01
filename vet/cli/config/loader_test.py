@@ -8,12 +8,9 @@ from unittest.mock import patch
 import pytest
 
 from vet.cli.config.loader import ConfigLoadError
-from vet.cli.config.loader import MissingAPIKeyError
 from vet.cli.config.loader import _load_single_config_file
-from vet.cli.config.loader import build_language_model_config
 from vet.cli.config.loader import find_git_repo_root
 from vet.cli.config.loader import get_config_file_paths
-from vet.cli.config.loader import get_max_output_tokens_for_model
 from vet.cli.config.loader import get_model_ids_from_config
 from vet.cli.config.loader import get_models_by_provider_from_config
 from vet.cli.config.loader import get_provider_for_model
@@ -21,10 +18,13 @@ from vet.cli.config.loader import get_xdg_config_home
 from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import load_registry_config
 from vet.cli.config.loader import update_remote_registry_cache
-from vet.cli.config.loader import validate_api_key_for_model
 from vet.cli.config.schema import ModelConfig
 from vet.cli.config.schema import ModelsConfig
 from vet.cli.config.schema import ProviderConfig
+from vet.cli.models import MissingAPIKeyError
+from vet.cli.models import build_language_model_config
+from vet.cli.models import get_max_output_tokens_for_model
+from vet.cli.models import validate_api_key_for_model
 
 
 def test_get_xdg_config_home_uses_env_var(tmp_path: Path) -> None:
@@ -461,16 +461,21 @@ _REMOTE_PROVIDER_JSON = json.dumps(
 )
 
 
-def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None:
-    mock_response = type(
+def _make_mock_response(data: bytes):
+    """Create a mock urllib response object."""
+    return type(
         "Response",
         (),
         {
-            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
+            "read": lambda self: data,
             "__enter__": lambda self: self,
             "__exit__": lambda *a: None,
         },
     )()
+
+
+def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None:
+    mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
 
     env = {"XDG_CACHE_HOME": str(tmp_path)}
     with patch.dict(os.environ, env):
@@ -484,15 +489,7 @@ def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None
 
 def test_update_remote_registry_cache_respects_custom_url(tmp_path: Path) -> None:
     custom_url = "https://example.com/custom/models.json"
-    mock_response = type(
-        "Response",
-        (),
-        {
-            "read": lambda self: _REMOTE_PROVIDER_JSON.encode(),
-            "__enter__": lambda self: self,
-            "__exit__": lambda *a: None,
-        },
-    )()
+    mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
 
     env = {
         "XDG_CACHE_HOME": str(tmp_path),
@@ -521,15 +518,7 @@ def test_update_remote_registry_cache_raises_on_network_error(tmp_path: Path) ->
 
 
 def test_update_remote_registry_cache_rejects_invalid_json(tmp_path: Path) -> None:
-    mock_response = type(
-        "Response",
-        (),
-        {
-            "read": lambda self: b"<html>Not Found</html>",
-            "__enter__": lambda self: self,
-            "__exit__": lambda *a: None,
-        },
-    )()
+    mock_response = _make_mock_response(b"<html>Not Found</html>")
 
     env = {"XDG_CACHE_HOME": str(tmp_path)}
     with patch.dict(os.environ, env):
@@ -596,6 +585,18 @@ def test_load_registry_config_returns_empty_when_no_cache(tmp_path: Path) -> Non
         result = load_registry_config()
 
     assert result.providers == {}
+
+
+def test_load_registry_config_raises_on_corrupt_cache(tmp_path: Path) -> None:
+    cache_dir = tmp_path / "vet"
+    cache_dir.mkdir(parents=True)
+    cache_file = cache_dir / "remote_models.json"
+    cache_file.write_text("not valid json at all")
+
+    env = {"XDG_CACHE_HOME": str(tmp_path)}
+    with patch.dict(os.environ, env):
+        with pytest.raises(ConfigLoadError):
+            load_registry_config()
 
 
 def _make_provider(base_url: str, model_id: str, api_key_env: str | None = None) -> ProviderConfig:
