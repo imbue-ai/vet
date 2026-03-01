@@ -15,7 +15,7 @@ from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
 
 
-class MissingAPIKeyError(Exception):
+class MissingProviderAPIKeyError(Exception):
     def __init__(self, env_var: str, provider_name: str, model_id: str) -> None:
         self.env_var = env_var
         self.provider_name = provider_name
@@ -76,13 +76,22 @@ def get_models_by_provider(
     registry_config: ModelsConfig | None = None,
 ) -> dict[str, list[str]]:
     providers: dict[str, list[str]] = {}
-    if registry_config:
-        providers.update(get_models_by_provider_from_config(registry_config))
 
-    providers.update(get_builtin_models_by_provider())
+    def _merge(source: dict[str, list[str]]) -> None:
+        for name, models in source.items():
+            if name in providers:
+                seen = set(providers[name])
+                providers[name].extend(m for m in models if m not in seen)
+            else:
+                providers[name] = list(models)
+
+    if registry_config:
+        _merge(get_models_by_provider_from_config(registry_config))
+
+    _merge(get_builtin_models_by_provider())
 
     if user_config:
-        providers.update(get_models_by_provider_from_config(user_config))
+        _merge(get_models_by_provider_from_config(user_config))
 
     return providers
 
@@ -107,10 +116,10 @@ def _resolve_provider(
 
 def validate_api_key_for_model(
     model_id: str,
-    config: ModelsConfig,
+    user_config: ModelsConfig,
     registry_config: ModelsConfig | None = None,
 ) -> None:
-    provider = _resolve_provider(model_id, config, registry_config)
+    provider = _resolve_provider(model_id, user_config, registry_config)
 
     if provider is None:
         return
@@ -122,7 +131,7 @@ def validate_api_key_for_model(
     api_key = os.environ.get(api_key_env, "")
     if not api_key:
         provider_name = provider.name or "unknown provider"
-        raise MissingAPIKeyError(
+        raise MissingProviderAPIKeyError(
             env_var=api_key_env,
             provider_name=provider_name,
             model_id=model_id,
@@ -131,10 +140,10 @@ def validate_api_key_for_model(
 
 def get_max_output_tokens_for_model(
     model_id: str,
-    config: ModelsConfig,
+    user_config: ModelsConfig,
     registry_config: ModelsConfig | None = None,
 ) -> int | None:
-    provider = _resolve_provider(model_id, config, registry_config)
+    provider = _resolve_provider(model_id, user_config, registry_config)
     if provider is not None:
         return provider.models[model_id].max_output_tokens
 

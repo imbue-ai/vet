@@ -159,7 +159,7 @@ def test_get_models_by_provider_includes_user_defined_providers() -> None:
     assert "openai" in providers
 
 
-def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name() -> None:
+def test_get_models_by_provider_user_provider_merges_with_builtin_same_name() -> None:
     user_config = ModelsConfig(
         providers={
             "custom": ProviderConfig(
@@ -179,7 +179,8 @@ def test_get_models_by_provider_user_provider_overrides_builtin_with_same_name()
 
     providers = get_models_by_provider(user_config)
 
-    assert providers["anthropic"] == ["custom-model"]
+    assert "custom-model" in providers["anthropic"]
+    assert DEFAULT_MODEL_ID in providers["anthropic"]
 
 
 SAMPLE_REGISTRY_CONFIG = ModelsConfig(
@@ -241,7 +242,7 @@ def test_get_models_by_provider_includes_registry_providers() -> None:
     assert "openai" in providers
 
 
-def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> None:
+def test_get_models_by_provider_registry_merges_with_builtin_same_name() -> None:
     registry_config = ModelsConfig(
         providers={
             "anthropic-override": ProviderConfig(
@@ -260,5 +261,5 @@ def test_get_models_by_provider_builtin_overrides_registry_with_same_name() -> N
 
     providers = get_models_by_provider(user_config=None, registry_config=registry_config)
 
-    assert "registry-claude" not in providers.get("anthropic", [])
+    assert "registry-claude" in providers["anthropic"]
     assert DEFAULT_MODEL_ID in providers["anthropic"]

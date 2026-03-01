@@ -468,7 +468,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         registry_config = load_registry_config()
     except ConfigLoadError as e:
-        logger.debug("Could not load remote registry: {}", e)
+        logger.warning("Could not load remote registry: {}", e)
         registry_config = ModelsConfig(providers={})
 
     try:

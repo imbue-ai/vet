@@ -31,19 +31,6 @@ _REMOTE_PROVIDER_JSON = json.dumps(
 )
 
 
-def _make_mock_response(data: bytes):
-    """Create a mock urllib response object."""
-    return type(
-        "Response",
-        (),
-        {
-            "read": lambda self: data,
-            "__enter__": lambda self: self,
-            "__exit__": lambda *a: None,
-        },
-    )()
-
-
 def _env_for_isolated_config(tmp_path: Path) -> dict[str, str]:
     """Return env overrides that isolate XDG dirs to tmp_path."""
     return {
@@ -55,8 +42,8 @@ def _env_for_isolated_config(tmp_path: Path) -> dict[str, str]:
 class TestUpdateModels:
     """CLI integration tests for the --update-models flag."""
 
-    def test_update_models_success(self, tmp_path: Path, capsys) -> None:
-        mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
+    def test_update_models_success(self, tmp_path: Path, capsys, make_mock_response) -> None:
+        mock_response = make_mock_response(_REMOTE_PROVIDER_JSON.encode())
         env = _env_for_isolated_config(tmp_path)
 
         with patch.dict(os.environ, env):
@@ -73,8 +60,8 @@ class TestUpdateModels:
         assert "2 models from 1 providers" in captured.out
         assert "Cache written to" in captured.out
 
-    def test_update_models_writes_cache_file(self, tmp_path: Path) -> None:
-        mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
+    def test_update_models_writes_cache_file(self, tmp_path: Path, make_mock_response) -> None:
+        mock_response = make_mock_response(_REMOTE_PROVIDER_JSON.encode())
         env = _env_for_isolated_config(tmp_path)
 
         with patch.dict(os.environ, env):
@@ -105,8 +92,8 @@ class TestUpdateModels:
         assert "failed to update model registry" in captured.err
         assert "connection refused" in captured.err
 
-    def test_update_models_invalid_remote_data_returns_1(self, tmp_path: Path, capsys) -> None:
-        mock_response = _make_mock_response(b"<html>Not Found</html>")
+    def test_update_models_invalid_remote_data_returns_1(self, tmp_path: Path, capsys, make_mock_response) -> None:
+        mock_response = make_mock_response(b"<html>Not Found</html>")
         env = _env_for_isolated_config(tmp_path)
 
         with patch.dict(os.environ, env):
@@ -121,8 +108,8 @@ class TestUpdateModels:
         captured = capsys.readouterr()
         assert "failed to update model registry" in captured.err
 
-    def test_update_models_does_not_write_cache_on_invalid_data(self, tmp_path: Path) -> None:
-        mock_response = _make_mock_response(b"not json at all")
+    def test_update_models_does_not_write_cache_on_invalid_data(self, tmp_path: Path, make_mock_response) -> None:
+        mock_response = make_mock_response(b"not json at all")
         env = _env_for_isolated_config(tmp_path)
 
         with patch.dict(os.environ, env):
@@ -134,3 +121,27 @@ class TestUpdateModels:
 
         cache_file = tmp_path / "cache" / "vet" / "remote_models.json"
         assert not cache_file.exists()
+
+
+class TestListModels:
+    """CLI integration tests for the --list-models flag."""
+
+    def test_list_models_shows_registry_models(self, tmp_path: Path, capsys, make_mock_response) -> None:
+        """Registry models should appear in --list-models output after --update-models."""
+        mock_response = make_mock_response(_REMOTE_PROVIDER_JSON.encode())
+        env = _env_for_isolated_config(tmp_path)
+
+        with patch.dict(os.environ, env):
+            with patch(
+                "vet.cli.config.loader.urllib.request.urlopen",
+                return_value=mock_response,
+            ):
+                main(["--update-models"])
+
+            exit_code = main(["--list-models"])
+
+        assert exit_code == 0
+
+        captured = capsys.readouterr()
+        assert "remote-model-a" in captured.out
+        assert "remote-model-b" in captured.out

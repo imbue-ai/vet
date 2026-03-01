@@ -21,7 +21,7 @@ from vet.cli.config.loader import update_remote_registry_cache
 from vet.cli.config.schema import ModelConfig
 from vet.cli.config.schema import ModelsConfig
 from vet.cli.config.schema import ProviderConfig
-from vet.cli.models import MissingAPIKeyError
+from vet.cli.models import MissingProviderAPIKeyError
 from vet.cli.models import build_language_model_config
 from vet.cli.models import get_max_output_tokens_for_model
 from vet.cli.models import validate_api_key_for_model
@@ -386,7 +386,7 @@ def test_validate_api_key_raises_when_key_not_set() -> None:
 
     with patch.dict(os.environ, {}, clear=True):
         os.environ.pop("MISSING_KEY", None)
-        with pytest.raises(MissingAPIKeyError) as exc_info:
+        with pytest.raises(MissingProviderAPIKeyError) as exc_info:
             validate_api_key_for_model("model-a", config)
 
         assert exc_info.value.env_var == "MISSING_KEY"
@@ -461,21 +461,8 @@ _REMOTE_PROVIDER_JSON = json.dumps(
 )
 
 
-def _make_mock_response(data: bytes):
-    """Create a mock urllib response object."""
-    return type(
-        "Response",
-        (),
-        {
-            "read": lambda self: data,
-            "__enter__": lambda self: self,
-            "__exit__": lambda *a: None,
-        },
-    )()
-
-
-def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None:
-    mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
+def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path, make_mock_response) -> None:
+    mock_response = make_mock_response(_REMOTE_PROVIDER_JSON.encode())
 
     env = {"XDG_CACHE_HOME": str(tmp_path)}
     with patch.dict(os.environ, env):
@@ -487,9 +474,9 @@ def test_update_remote_registry_cache_fetches_and_writes(tmp_path: Path) -> None
     assert "remote-provider" in config.providers
 
 
-def test_update_remote_registry_cache_respects_custom_url(tmp_path: Path) -> None:
+def test_update_remote_registry_cache_respects_custom_url(tmp_path: Path, make_mock_response) -> None:
     custom_url = "https://example.com/custom/models.json"
-    mock_response = _make_mock_response(_REMOTE_PROVIDER_JSON.encode())
+    mock_response = make_mock_response(_REMOTE_PROVIDER_JSON.encode())
 
     env = {
         "XDG_CACHE_HOME": str(tmp_path),
@@ -517,8 +504,8 @@ def test_update_remote_registry_cache_raises_on_network_error(tmp_path: Path) ->
                 update_remote_registry_cache()
 
 
-def test_update_remote_registry_cache_rejects_invalid_json(tmp_path: Path) -> None:
-    mock_response = _make_mock_response(b"<html>Not Found</html>")
+def test_update_remote_registry_cache_rejects_invalid_json(tmp_path: Path, make_mock_response) -> None:
+    mock_response = make_mock_response(b"<html>Not Found</html>")
 
     env = {"XDG_CACHE_HOME": str(tmp_path)}
     with patch.dict(os.environ, env):
@@ -705,7 +692,7 @@ def test_validate_api_key_for_registry_model_raises_when_key_missing() -> None:
 
     with patch.dict(os.environ, {}, clear=True):
         os.environ.pop("MISSING_REGISTRY_KEY", None)
-        with pytest.raises(MissingAPIKeyError) as exc_info:
+        with pytest.raises(MissingProviderAPIKeyError) as exc_info:
             validate_api_key_for_model("registry-model", user_config, registry_config)
 
         assert exc_info.value.env_var == "MISSING_REGISTRY_KEY"
