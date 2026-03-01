@@ -106,7 +106,7 @@ Refer to the source code for more details.
 
 ### Model registry
 
-The `registry/models.json` file contains community-shared model definitions distributed via `--update-models`. See [`registry/CONTRIBUTING.md`](registry/CONTRIBUTING.md) for the standards that models must meet before being added.
+The `registry/models.json` file contains model definitions distributed via the `--update-models` CLI option. See [`registry/CONTRIBUTING.md`](registry/CONTRIBUTING.md) for expectations about what models should be added to the registry.
 
 ## CI / CD
 
