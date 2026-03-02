@@ -7,7 +7,7 @@ description: Use super_vet when you want a higher-confidence review by running m
 
 **Use super_vet when you want a higher-confidence review by running multiple vet instances in parallel across different modes (agentic-claude, agentic-codex, and standard) and aggregating results as a union.**
 
-Super vet is a wrapper around vet that launches N instances of each mode concurrently. It is useful when you want diverse analysis perspectives -- different modes and models catch different issues. The output is a union of all issues with source tracking (which run found each issue).
+Super vet is a wrapper around vet that launches N instances of each mode concurrently. It is useful when you want diverse analysis perspectives. The output is a union of all issues with source tracking.
 
 ## Prerequisites
 
@@ -127,45 +127,6 @@ vet options (passed through):
 parallelism:
   --max-parallel N        Max concurrent vet processes (default: 6)
 ```
-
-## Output Format
-
-Super vet outputs JSON to stdout with the following structure:
-
-```json
-{
-  "issues": [
-    {
-      "issue_code": "logic_error",
-      "confidence": 0.95,
-      "file_path": "src/auth.py",
-      "line_number": 42,
-      "description": "...",
-      "severity": 4.0,
-      "found_by": [
-        {"mode": "agentic-claude", "model": "claude-opus-4-6", "run_index": 0, "label": "agentic-claude/claude-opus-4-6#0"},
-        {"mode": "standard", "model": "claude-opus-4-6", "run_index": 0, "label": "standard/claude-opus-4-6#0"}
-      ],
-      "found_by_count": 2
-    }
-  ],
-  "runs": [
-    {"label": "agentic-claude/claude-opus-4-6#0", "mode": "agentic-claude", "model": "claude-opus-4-6", "run_index": 0, "issues_found": 3, "duration_seconds": 45.2, "returncode": 10, "error": null}
-  ],
-  "summary": {
-    "total_unique_issues": 7,
-    "total_runs": 6,
-    "successful_runs": 6,
-    "failed_runs": 0,
-    "issues_by_mode": {"agentic-claude": 4, "agentic-codex": 3, "standard": 5}
-  },
-  "wall_time_seconds": 48.3
-}
-```
-
-Issues are sorted by `found_by_count` (descending), then by `confidence` (descending). Issues found by more runs are more likely to be real issues.
-
-Status messages are printed to stderr. Only the final JSON is printed to stdout.
 
 ## Interpreting Results
 
