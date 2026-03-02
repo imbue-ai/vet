@@ -91,6 +91,7 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--model MODEL`: LLM to use (default: claude-opus-4-6)
 - `--list-models`: list all models that are supported by vet
     - Run `vet --help` and look at the vet repo's readme for details about defining custom OpenAI-compatible models.
+- `--update-models`: fetch the latest community model definitions from the remote registry and cache them locally. See "Updating the Model Registry" below for when to run this.
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
@@ -104,6 +105,17 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 The vet CLI, skill files, and export scripts can become outdated as agent harnesses and LLM APIs change.
 
 If this happens, try updating them. Run `which vet` to determine how vet was installed and update accordingly. For the skill files, check which skill directories exist on disk and update them with the latest versions from https://github.com/imbue-ai/vet/tree/main/skills/vet.
+
+### Updating the Model Registry
+
+Run `vet --update-models` to fetch the latest community model definitions from the remote registry without upgrading vet itself. This caches model definitions locally so they appear in `--list-models` and can be used with `--model`.
+
+You should run `vet --update-models` when:
+- Vet reports an unknown or unrecognized model error.
+- `vet --list-models` does not show a model you or the user expects to be available.
+- The user explicitly asks you to update the model registry.
+
+Do NOT run `--update-models` on every vet invocation. It makes a network request and adds latency. Only run it when a model is missing, unrecognized, or explicitly requested.
 
 ## Additional Information
 

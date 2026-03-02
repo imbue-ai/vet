@@ -159,7 +159,7 @@ def create_parser() -> argparse.ArgumentParser:
     model_group.add_argument(
         "--update-models",
         action="store_true",
-        help=argparse.SUPPRESS,
+        help="Fetch the latest model definitions from the remote registry and cache them locally.",
     )
     model_group.add_argument(
         "--temperature",

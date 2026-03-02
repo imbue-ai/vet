@@ -203,6 +203,23 @@ Then:
 vet "Harden error handling" --model gpt-5.2
 ```
 
+### Model registry
+
+Vet maintains a remote model registry with community-contributed model definitions. To fetch the latest definitions without upgrading vet:
+
+```bash
+vet --update-models
+```
+
+This downloads model definitions from the [registry](https://github.com/imbue-ai/vet/blob/main/registry/models.json) and caches them locally at `~/.cache/vet/remote_models.json`. Once cached, registry models appear in `vet --list-models` and can be used with `--model` like any other model.
+
+Model resolution priority (highest to lowest):
+1. User config (`.vet/models.json` or `~/.config/vet/models.json`)
+2. Builtin models (Anthropic, OpenAI, Gemini)
+3. Registry models (cached via `--update-models`)
+
+See [`registry/CONTRIBUTING.md`](https://github.com/imbue-ai/vet/blob/main/registry/CONTRIBUTING.md) for information about contributing model definitions to the registry.
+
 ### Configuration profiles (TOML)
 
 Vet supports named profiles so teams can standardize CI usage without long CLI invocations.
