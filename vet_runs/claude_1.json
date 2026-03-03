@@ -1,0 +1,13 @@
+{
+  "issues": [
+    {
+      "issue_code": "test_coverage",
+      "confidence": 0.9,
+      "file_path": "vet/cli/config/loader_test.py",
+      "line_number": 495,
+      "line_number_end": 503,
+      "description": "The core new feature \u2014 successful fallback from the first URL (vet-registry.vet.host.imbue.com) to the second URL (GitHub raw) when the first fails \u2014 is not tested. The existing `test_update_remote_registry_cache_raises_on_network_error` only checks that all URLs failing raises an exception (which was true before this diff too, just for a single URL). There is no test verifying that when the first URL raises a network error but the second URL succeeds, the function completes successfully and the data from the second URL is returned and cached.",
+      "severity": 3.0
+    }
+  ]
+}
