@@ -92,12 +92,6 @@ Or with [uv](https://docs.astral.sh/uv/):
 uv tool install verify-everything
 ```
 
-<p align="center">
-  <a href="https://github.com/imbue-ai/vet">
-    <img alt="Vet: Verify Everything" src="images/vet_example.png" width="100%">
-  </a>
-</p>
-
 ### Usage
 
 Run Vet in the current repo:
@@ -111,6 +105,12 @@ Compare against a base ref/commit:
 ```bash
 vet "Refactor storage layer" --base-commit main
 ```
+
+<p align="center">
+  <a href="https://github.com/imbue-ai/vet">
+    <img alt="Vet: Verify Everything" src="images/vet_example.png" width="100%">
+  </a>
+</p>
 
 ## GitHub PRs (Actions)
 
