@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/imbue-ai/vet">
-    <img alt="Vet: Verify Everything" src="images/Vet.svg" width="30%">
+    <img alt="Vet: Verify Everything" src="images/Vet.svg" width="20%">
   </a>
 </p>
 
@@ -22,7 +22,7 @@
 
 <p align="center">
   <a href="https://github.com/imbue-ai/vet">
-    <img alt="Vet: Verify Everything" src="images/vet_example.png" width="30%">
+    <img alt="Vet: Verify Everything" src="images/vet_example.png" width="100%">
   </a>
 </p>
 
