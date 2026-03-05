@@ -428,6 +428,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
 
+    # Determine whether the user explicitly provided `--base-commit` on the
+    # command line. `CLI_DEFAULTS.base_commit` may be non-empty (e.g. "main")
+    # coming from config or defaults; we must only treat an explicit CLI
+    # `--base-commit` as conflicting with staged mode.
+    raw_argv = argv if argv is not None else sys.argv[1:]
+    base_commit_cli_specified = any(a == "--base-commit" or a.startswith("--base-commit=") for a in raw_argv)
+
     goal = args.goal or ""
 
     repo_path = args.repo
@@ -495,12 +502,27 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 2
 
-    if args.staged and args.base_commit:
+    if args.staged and base_commit_cli_specified:
+        # Only treat --base-commit as conflicting if explicitly provided on the CLI.
+        # Config/default values (e.g. "main") should not trigger an error because
+        # staged mode intentionally ignores base commits.
+        print(
+            "vet: --staged and --base-commit are mutually exclusive",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.staged and args.agentic:
         """
-        This is a sanity check to prevent users from accidentally using --base-commit with --staged,
-        which would lead to confusing results since --base-commit implies comparing against the full commit history
+        This is a sanity check to prevent users from accidentally using --agentic with --staged,
+        which would lead to confusing results since --agentic implies using an agent-based approach
         while --staged implies comparing against only staged changes."""
-        parser.error("Cannot specify both --staged and --base-commit")
+        # parser.error("Cannot specify both --staged and --agentic")
+        print(
+            "vet: --staged and --agentic are mutually exclusive",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.verbose and args.quiet:
         print(
@@ -640,7 +662,7 @@ def main(argv: list[str] | None = None) -> int:
             config=config,
             conversation_history=conversation_history,
             extra_context=extra_context,
-            staged=args.staged,
+            only_staged=args.staged,
         )
     except AgentCLINotFoundError as e:
         print(f"vet: {e}", file=sys.stderr)

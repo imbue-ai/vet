@@ -103,7 +103,7 @@ def find_issues(
     config: VetConfig,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
     extra_context: str | None = None,
-    staged: bool = False,
+    only_staged: bool = False,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
     logger.debug(
         "Finding issues in {repo_path} relative to {relative_to}",
@@ -111,7 +111,7 @@ def find_issues(
         relative_to=relative_to,
     )
 
-    base_commit, diff, diff_no_binary = get_code_to_check(relative_to, repo_path, staged=staged)
+    base_commit, diff, diff_no_binary = get_code_to_check(relative_to, repo_path, only_staged=only_staged)
     if not diff.strip():
         logger.debug(
             "No code changes detected in repo {repo_path} since the specified relative_to commit {relative_to}, skipping issue identification",

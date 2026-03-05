@@ -98,7 +98,7 @@ def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) 
 
 
 def test_get_code_to_check_staged_only(simple_test_git_repo: Path) -> None:
-    """When `staged=True`, only staged changes should be returned (no unstaged/untracked),
+    """When `only_staged=True`, only staged changes should be returned (no unstaged/untracked),
     and resolving a configured `relative_to` (like 'main') should not error.
     """
     repo_path = simple_test_git_repo
@@ -124,7 +124,7 @@ def test_get_code_to_check_staged_only(simple_test_git_repo: Path) -> None:
         f.write("\nunstaged content")
 
     # Use a relative_to that likely doesn't exist (e.g., 'main') to ensure we don't try to resolve it
-    git_hash, diff, diff_no_binary = get_code_to_check("main", repo_path=repo_path, staged=True)
+    git_hash, diff, diff_no_binary = get_code_to_check("main", repo_path=repo_path, only_staged=True)
 
     # In staged mode we return HEAD as the base commit
     assert git_hash == head
