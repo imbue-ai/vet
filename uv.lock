@@ -1494,7 +1494,7 @@ wheels = [
 
 [[package]]
 name = "verify-everything"
-version = "0.2.3"
+version = "0.2.4"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },

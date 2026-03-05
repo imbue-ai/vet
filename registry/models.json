@@ -1,5 +1,23 @@
 {
   "providers": {
+    "openai": {
+      "name": "OpenAI",
+      "api_type": "openai_compatible",
+      "base_url": "https://api.openai.com/v1",
+      "api_key_env": "OPENAI_API_KEY",
+      "models": {
+        "gpt-5.4": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        },
+        "gpt-5.4-pro": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        }
+      }
+    },
     "groq": {
       "name": "Groq",
       "api_type": "openai_compatible",
