@@ -95,3 +95,44 @@ def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) 
     )
     project_context_without_repo_path = chill(project_context_evolver)
     assert project_context_without_repo_path == snapshot
+
+
+def test_get_code_to_check_staged_only(simple_test_git_repo: Path) -> None:
+    """When `only_staged=True`, only staged changes should be returned (no unstaged/untracked),
+    and resolving a configured `relative_to` (like 'main') should not error.
+    """
+    repo_path = simple_test_git_repo
+
+    # Record current HEAD
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_path,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+    # Create an untracked file
+    (repo_path / "untracked.txt").write_text("untracked content")
+
+    # Create a staged change
+    (repo_path / "file1.txt").write_text("staged content\n")
+    subprocess.run(["git", "add", "file1.txt"], cwd=repo_path, check=True)
+
+    # Create an unstaged change
+    with open((repo_path / "file1.txt"), "a+") as f:
+        f.write("\nunstaged content")
+
+    # Use a relative_to that likely doesn't exist (e.g., 'main') to ensure we don't try to resolve it
+    git_hash, diff, diff_no_binary = get_code_to_check("main", repo_path=repo_path, only_staged=True)
+
+    # In staged mode we return HEAD as the base commit
+    assert git_hash == head
+
+    # Staged change should be present
+    assert "staged content" in diff
+    assert "staged content" in diff_no_binary
+
+    # Unstaged and untracked changes should NOT be present
+    assert "unstaged content" not in diff
+    assert "untracked.txt" not in diff

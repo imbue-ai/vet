@@ -26,6 +26,7 @@ class CliConfigPreset(BaseModel):
     goal: str | None = None
     repo: str | None = None
     base_commit: str | None = None
+    staged: bool | None = None
     history_loader: str | None = None
     extra_context: list[str] | None = None
     enabled_issue_codes: list[str] | None = None
@@ -51,6 +52,7 @@ class CliDefaults(BaseModel):
     goal: str | None = None
     repo: str | None = None
     base_commit: str = "HEAD"
+    staged: bool = False
     history_loader: str | None = None
     extra_context: list[str] | None = None
     enabled_issue_codes: list[str] | None = None

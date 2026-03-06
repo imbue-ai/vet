@@ -44,6 +44,7 @@ def create_parser() -> argparse.ArgumentParser:
         prog="vet",
         description="Identify issues in code changes using LLM-based analysis.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,
     )
 
     parser.add_argument(
@@ -96,6 +97,8 @@ def create_parser() -> argparse.ArgumentParser:
         metavar="REF",
         help=f"Git commit, branch, or ref to use as the base for computing the diff (default: {CLI_DEFAULTS.base_commit})",
     )
+    # By default, vet includes all changes (staged, unstaged, and untracked). With --staged, only staged changes are included.
+    diff_group.add_argument("--staged", action="store_true", help="Only analyze staged changes")
 
     context_group = parser.add_argument_group("context options")
     context_group.add_argument(
@@ -347,6 +350,25 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         print()
 
 
+def _validate_staged_related_options(args: argparse.Namespace, base_commit_cli_specified: bool) -> str | None:
+    """Validate options related to staged analysis.
+
+    Returns an error message string when validation fails (caller should print
+    it to stderr and return an exit code of 2), otherwise returns None.
+    """
+    if args.staged and base_commit_cli_specified:
+        # Only treat --base-commit as conflicting if explicitly provided on the CLI.
+        # Config/default values (e.g. "main") should not trigger an error because
+        # staged mode intentionally ignores base commits.
+        return "vet: --staged and --base-commit are mutually exclusive"
+
+    if args.staged and args.agentic:
+        # Sanity check to prevent users from accidentally combining incompatible modes.
+        return "vet: --staged and --agentic are mutually exclusive"
+
+    return None
+
+
 _DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "vet" / "vet.log"
 
 
@@ -432,6 +454,13 @@ def _is_context_overflow(e: Exception) -> bool:
 def main(argv: list[str] | None = None) -> int:
     parser = create_parser()
     args = parser.parse_args(argv)
+
+    # Determine whether the user explicitly provided `--base-commit` on the
+    # command line. `CLI_DEFAULTS.base_commit` may be non-empty (e.g. "main")
+    # coming from config or defaults; we must only treat an explicit CLI
+    # `--base-commit` as conflicting with staged mode.
+    raw_argv = argv if argv is not None else sys.argv[1:]
+    base_commit_cli_specified = any(a == "--base-commit" or a.startswith("--base-commit=") for a in raw_argv)
 
     # Handle subcommands that don't need config loading.
     if args.update_models:
@@ -520,6 +549,11 @@ def main(argv: list[str] | None = None) -> int:
                     file=sys.stderr,
                 )
                 return 2
+
+    staged_err = _validate_staged_related_options(args, base_commit_cli_specified)
+    if staged_err is not None:
+        print(staged_err, file=sys.stderr)
+        return 2
 
     if args.verbose and args.quiet:
         print(
@@ -651,10 +685,16 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     if not args.quiet:
-        print(
-            f"analyzing {repo_path} (relative to {args.base_commit})",
-            file=sys.stderr,
-        )
+        if args.staged:
+            print(
+                f"analyzing {repo_path} (staged changes)",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"analyzing {repo_path} (relative to {args.base_commit})",
+                file=sys.stderr,
+            )
 
     try:
         issues = find_issues(
@@ -664,6 +704,7 @@ def main(argv: list[str] | None = None) -> int:
             config=config,
             conversation_history=conversation_history,
             extra_context=extra_context,
+            only_staged=args.staged,
         )
     except AgentCLINotFoundError as e:
         print(f"vet: {e}", file=sys.stderr)

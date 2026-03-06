@@ -103,21 +103,34 @@ def find_issues(
     config: VetConfig,
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
     extra_context: str | None = None,
+    only_staged: bool = False,
 ) -> tuple[IdentifiedVerifyIssue, ...]:
-    logger.debug(
-        "Finding issues in {repo_path} relative to {relative_to}",
-        repo_path=repo_path,
-        relative_to=relative_to,
-    )
-
-    base_commit, diff, diff_no_binary = get_code_to_check(relative_to, repo_path)
-    if not diff.strip():
+    if only_staged:
         logger.debug(
-            "No code changes detected in repo {repo_path} since the specified relative_to commit {relative_to}, skipping issue identification",
+            "Finding issues in {repo_path} (staged changes)",
+            repo_path=repo_path,
+        )
+    else:
+        logger.debug(
+            "Finding issues in {repo_path} relative to {relative_to}",
             repo_path=repo_path,
             relative_to=relative_to,
         )
-        # No code changes detected since the specified relative_to commit, so no issues to find.
+
+    base_commit, diff, diff_no_binary = get_code_to_check(relative_to, repo_path, only_staged=only_staged)
+    if not diff.strip():
+        if only_staged:
+            logger.debug(
+                "No code changes detected in repo {repo_path} for staged changes, skipping issue identification",
+                repo_path=repo_path,
+            )
+        else:
+            logger.debug(
+                "No code changes detected in repo {repo_path} since the specified relative_to commit {relative_to}, skipping issue identification",
+                repo_path=repo_path,
+                relative_to=relative_to,
+            )
+        # No code changes detected, so no issues to find.
         return tuple()
 
     issues, _, _ = get_issues_with_raw_responses(

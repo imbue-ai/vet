@@ -113,7 +113,7 @@ class SyncLocalGitRepo:
     def get_git_diff(
         self,
         commit_hash: str | None = None,
-        staged: bool = False,
+        only_staged: bool = False,
         is_error_logged: bool = True,
         include_binary: bool = True,
     ) -> str:
@@ -124,7 +124,7 @@ class SyncLocalGitRepo:
             # Without --binary, diffs of binary files will just contain a summary statement such as "Binary files a/file.bin and b/file.bin differ".
             # Such diffs cannot be applied, but are useful for inclusion in LLM prompts.
             command.append("--binary")
-        if staged:
+        if only_staged:
             command.append("--staged")
         if commit_hash:
             command.append(commit_hash)
