@@ -259,6 +259,12 @@
           "context_window": 65536,
           "max_output_tokens": 8192,
           "supports_temperature": true
+        },
+        "gpt-5": {
+          "model_id": "openai/gpt-5",
+          "context_window": 400000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
         }
       }
     }
