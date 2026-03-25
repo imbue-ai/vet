@@ -4,7 +4,9 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Tuple
+
 import httpx
+
 from vet.git import SyncLocalGitRepo
 
 
@@ -21,7 +23,9 @@ def compute_merge_base(base_ref: str, head_sha: str) -> str:
     try:
         return repo.get_merge_base(f"origin/{base_ref}", head_sha)
     except Exception:
-        print(f"::error::Failed to compute merge base between origin/{base_ref} and {head_sha}")
+        print(
+            f"::error::Failed to compute merge base between origin/{base_ref} and {head_sha}"
+        )
         sys.exit(1)
 
 
@@ -111,7 +115,9 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
             response = client.post(review_url, json=review_json, headers=headers)
             if response.status_code in (200, 201):
                 return
-            print(f"::warning::Review POST failed: {response.status_code} {response.text}")
+            print(
+                f"::warning::Review POST failed: {response.status_code} {response.text}"
+            )
         except httpx.HTTPError as e:
             print(f"::warning::Review POST failed: {e}")
 
@@ -133,7 +139,9 @@ def post_review(review_json: dict, repo: str, pr_number: str, token: str):
             )
             if fallback_response.status_code in (200, 201):
                 return
-            print(f"::warning::Fallback comment POST failed: {fallback_response.status_code} {fallback_response.text}")
+            print(
+                f"::warning::Fallback comment POST failed: {fallback_response.status_code} {fallback_response.text}"
+            )
         except httpx.HTTPError as e:
             print(f"::warning::Fallback comment POST failed: {e}")
 
