@@ -235,6 +235,12 @@
           "context_window": 256000,
           "max_output_tokens": 8192,
           "supports_temperature": true
+        },
+        "command-r-plus": {
+          "model_id": "cohere/command-r-plus",
+          "context_window": 128000,
+          "max_output_tokens": 4096,
+          "supports_temperature": true
         }
       }
     }
