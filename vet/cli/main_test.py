@@ -162,27 +162,31 @@ class TestListModels:
 
 
 class TestRunCostOutput:
-    def test_prints_cost_when_positive_spend(self, capsys) -> None:
+    def test_prints_cost_when_positive_spend(self, tmp_path: Path, capsys) -> None:
+        env = _env_for_isolated_config(tmp_path)
         with patch("vet.cli.main.configure_logging"):
-            with patch("vet.api.find_issues", return_value=[]):
-                with patch(
-                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
-                    return_value=SimpleNamespace(dollars_spent=1.23456),
-                ):
-                    exit_code = main(["--agentic"])
+            with patch.dict(os.environ, env):
+                with patch("vet.api.find_issues", return_value=[]):
+                    with patch(
+                        "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                        return_value=SimpleNamespace(dollars_spent=1.23456),
+                    ):
+                        exit_code = main(["--agentic"])
 
         assert exit_code == 0
         captured = capsys.readouterr()
         assert "cost: $1.2346" in captured.err
 
-    def test_quiet_mode_suppresses_cost_output(self, capsys) -> None:
+    def test_quiet_mode_suppresses_cost_output(self, tmp_path: Path, capsys) -> None:
+        env = _env_for_isolated_config(tmp_path)
         with patch("vet.cli.main.configure_logging"):
-            with patch("vet.api.find_issues", return_value=[]):
-                with patch(
-                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
-                    return_value=SimpleNamespace(dollars_spent=9.99),
-                ):
-                    exit_code = main(["--agentic", "--quiet"])
+            with patch.dict(os.environ, env):
+                with patch("vet.api.find_issues", return_value=[]):
+                    with patch(
+                        "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                        return_value=SimpleNamespace(dollars_spent=9.99),
+                    ):
+                        exit_code = main(["--agentic", "--quiet"])
 
         assert exit_code == 0
         captured = capsys.readouterr()
