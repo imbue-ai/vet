@@ -175,6 +175,12 @@
           "context_window": 131072,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "deepseek-chat-v3": {
+          "model_id": "deepseek/deepseek-chat-v3-0324",
+          "context_window": 131072,
+          "max_output_tokens": 16384,
+          "supports_temperature": true
         }
       }
     }
