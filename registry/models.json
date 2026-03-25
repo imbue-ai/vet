@@ -115,6 +115,12 @@
           "context_window": 1048576,
           "max_output_tokens": 8192,
           "supports_temperature": true
+        },
+        "grok-4": {
+          "model_id": "x-ai/grok-4",
+          "context_window": 256000,
+          "max_output_tokens": 8192,
+          "supports_temperature": true
         }
       }
     }
