@@ -211,6 +211,12 @@
           "context_window": 262144,
           "max_output_tokens": 16384,
           "supports_temperature": true
+        },
+        "minimax-m1": {
+          "model_id": "minimax/minimax-m1",
+          "context_window": 1000000,
+          "max_output_tokens": 80000,
+          "supports_temperature": true
         }
       }
     }
