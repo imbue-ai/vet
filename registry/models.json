@@ -49,6 +49,12 @@
           "context_window": 128000,
           "max_output_tokens": 16384,
           "supports_temperature": true
+        },
+        "or-gpt-4-turbo": {
+          "model_id": "openai/gpt-4-turbo",
+          "context_window": 128000,
+          "max_output_tokens": 4096,
+          "supports_temperature": true
         }
       }
     }
