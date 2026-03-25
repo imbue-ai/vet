@@ -219,3 +219,16 @@ class TestRunCostOutput:
         captured = capsys.readouterr()
         assert "vet: bad request" in captured.err
         assert "cost: $2.5000" in captured.err
+
+    def test_does_not_print_cost_when_limits_are_unset(self, capsys) -> None:
+        with patch("vet.cli.main.configure_logging"):
+            with patch("vet.api.find_issues", return_value=[]):
+                with patch(
+                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                    return_value=None,
+                ):
+                    exit_code = main(["--agentic"])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "cost:" not in captured.err

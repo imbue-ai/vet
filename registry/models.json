@@ -83,7 +83,7 @@
         "claude-sonnet-4": {
           "model_id": "anthropic/claude-sonnet-4",
           "context_window": 200000,
-          "max_output_tokens": 32000,
+          "max_output_tokens": 64000,
           "supports_temperature": true
         },
         "claude-3.7-sonnet": {
