@@ -1,9 +1,3 @@
-"""Public API for vet.
-
-This module provides functions to identify issues in code changes. Issue identifiers are pieces of logic capable of finding issues in code.
-By default, vet runs all registered issue identifiers and returns all found issues.
-"""
-
 from pathlib import Path
 
 from loguru import logger

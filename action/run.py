@@ -4,10 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Tuple
-
 import httpx
-
-# reusing SyncLocalGitRepo from vet.git to compute merge base
 from vet.git import SyncLocalGitRepo
 
 
