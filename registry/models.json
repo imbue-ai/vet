@@ -43,6 +43,12 @@
           "context_window": 1047576,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "gpt-4.1-mini": {
+          "model_id": "openai/gpt-4.1-mini",
+          "context_window": 1047576,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
