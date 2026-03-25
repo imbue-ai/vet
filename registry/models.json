@@ -223,6 +223,12 @@
           "context_window": 300000,
           "max_output_tokens": 5000,
           "supports_temperature": true
+        },
+        "nova-lite-v1": {
+          "model_id": "amazon/nova-lite-v1",
+          "context_window": 300000,
+          "max_output_tokens": 5000,
+          "supports_temperature": true
         }
       }
     }
