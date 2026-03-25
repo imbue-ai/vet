@@ -103,6 +103,12 @@
           "context_window": 1048576,
           "max_output_tokens": 65536,
           "supports_temperature": true
+        },
+        "gemini-2.5-flash": {
+          "model_id": "google/gemini-2.5-flash",
+          "context_window": 1048576,
+          "max_output_tokens": 65536,
+          "supports_temperature": true
         }
       }
     }
