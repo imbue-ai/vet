@@ -192,46 +192,58 @@ class TestRunCostOutput:
         captured = capsys.readouterr()
         assert "cost:" not in captured.err
 
-    def test_does_not_print_cost_when_spend_is_zero(self, capsys) -> None:
+    def test_does_not_print_cost_when_spend_is_zero(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        env = _env_for_isolated_config(tmp_path)
         with patch("vet.cli.main.configure_logging"):
-            with patch("vet.api.find_issues", return_value=[]):
-                with patch(
-                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
-                    return_value=SimpleNamespace(dollars_spent=0),
-                ):
-                    exit_code = main(["--agentic"])
+            with patch.dict(os.environ, env):
+                with patch("vet.api.find_issues", return_value=[]):
+                    with patch(
+                        "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                        return_value=SimpleNamespace(dollars_spent=0),
+                    ):
+                        exit_code = main(["--agentic"])
 
         assert exit_code == 0
         captured = capsys.readouterr()
         assert "cost:" not in captured.err
 
-    def test_prints_cost_even_when_analysis_errors(self, capsys) -> None:
+    def test_prints_cost_even_when_analysis_errors(
+        self, tmp_path: Path, capsys
+    ) -> None:
         bad_request_error = BadAPIRequestError("bad request")
+        env = _env_for_isolated_config(tmp_path)
 
         with patch("vet.cli.main.configure_logging"):
-            with patch(
-                "vet.api.find_issues",
-                side_effect=bad_request_error,
-            ):
+            with patch.dict(os.environ, env):
                 with patch(
-                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
-                    return_value=SimpleNamespace(dollars_spent=2.5),
+                    "vet.api.find_issues",
+                    side_effect=bad_request_error,
                 ):
-                    exit_code = main(["--agentic"])
+                    with patch(
+                        "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                        return_value=SimpleNamespace(dollars_spent=2.5),
+                    ):
+                        exit_code = main(["--agentic"])
 
         assert exit_code == 1
         captured = capsys.readouterr()
         assert "vet: bad request" in captured.err
         assert "cost: $2.5000" in captured.err
 
-    def test_does_not_print_cost_when_limits_are_unset(self, capsys) -> None:
+    def test_does_not_print_cost_when_limits_are_unset(
+        self, tmp_path: Path, capsys
+    ) -> None:
+        env = _env_for_isolated_config(tmp_path)
         with patch("vet.cli.main.configure_logging"):
-            with patch("vet.api.find_issues", return_value=[]):
-                with patch(
-                    "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
-                    return_value=None,
-                ):
-                    exit_code = main(["--agentic"])
+            with patch.dict(os.environ, env):
+                with patch("vet.api.find_issues", return_value=[]):
+                    with patch(
+                        "vet.imbue_core.agents.primitives.resource_limits.get_global_resource_limits",
+                        return_value=None,
+                    ):
+                        exit_code = main(["--agentic"])
 
         assert exit_code == 0
         captured = capsys.readouterr()
