@@ -157,6 +157,12 @@
           "context_window": 131072,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "mistral-small-3.1": {
+          "model_id": "mistralai/mistral-small-3.1-24b-instruct",
+          "context_window": 131072,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
