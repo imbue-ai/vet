@@ -98,7 +98,9 @@ def create_parser() -> argparse.ArgumentParser:
         help=f"Git commit, branch, or ref to use as the base for computing the diff (default: {CLI_DEFAULTS.base_commit})",
     )
     # By default, vet includes all changes (staged, unstaged, and untracked). With --staged, only staged changes are included.
-    diff_group.add_argument("--staged", action="store_true", help="Only analyze staged changes")
+    diff_group.add_argument(
+        "--staged", action="store_true", help="Only analyze staged changes"
+    )
 
     context_group = parser.add_argument_group("context options")
     context_group.add_argument(
@@ -297,14 +299,20 @@ def list_models(
         harness_name = agent_harness.value
         print(f"Model listing for agentic mode ({harness_name} harness):")
         print()
-        print(f"  In agentic mode, --model is passed directly to the agent harness CLI.")
+        print(
+            f"  In agentic mode, --model is passed directly to the agent harness CLI."
+        )
         print(f"  vet does not know which models the current harness supports. Some")
         print(f"  models listed below may not work, and the harness may accept models")
-        print(f"  not listed here. If --model is omitted, the harness uses its own default.")
+        print(
+            f"  not listed here. If --model is omitted, the harness uses its own default."
+        )
         print()
         issue_url = _HARNESS_ISSUE_URLS.get(agent_harness)
         if issue_url:
-            print(f"  If better model listing support would be useful, consider requesting")
+            print(
+                f"  If better model listing support would be useful, consider requesting"
+            )
             print(f"  a model listing feature from the {harness_name} CLI maintainers:")
             print(f"    {issue_url}")
             print()
@@ -351,7 +359,9 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         print()
 
 
-def _validate_staged_related_options(args: argparse.Namespace, base_commit_cli_specified: bool) -> str | None:
+def _validate_staged_related_options(
+    args: argparse.Namespace, base_commit_cli_specified: bool
+) -> str | None:
     """Validate options related to staged analysis.
 
     Returns an error message string when validation fails (caller should print
@@ -370,17 +380,27 @@ def _validate_staged_related_options(args: argparse.Namespace, base_commit_cli_s
     return None
 
 
-_DEFAULT_LOG_FILE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state")) / "vet" / "vet.log"
+_DEFAULT_LOG_FILE = (
+    Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+    / "vet"
+    / "vet.log"
+)
 
 
 def configure_logging(verbose: int, log_file: Path | None) -> None:
     if log_file is None:
-        log_file = Path(os.environ["VET_LOG_FILE"]) if "VET_LOG_FILE" in os.environ else _DEFAULT_LOG_FILE
+        log_file = (
+            Path(os.environ["VET_LOG_FILE"])
+            if "VET_LOG_FILE" in os.environ
+            else _DEFAULT_LOG_FILE
+        )
     logger.remove()
     if verbose == 1:
         logger.add(sys.stderr, level="DEBUG", format="{level}: {message}")
     elif verbose >= 2:
-        logger.add(sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}")
+        logger.add(
+            sys.stderr, level="TRACE", format="{level} | {name}:{line} | {message}"
+        )
 
     try:
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -393,10 +413,14 @@ def configure_logging(verbose: int, log_file: Path | None) -> None:
 
 
 def load_conversation_from_command(command: str, cwd: Path) -> tuple:
-    from vet.imbue_tools.get_conversation_history.get_conversation_history import parse_conversation_history
+    from vet.imbue_tools.get_conversation_history.get_conversation_history import (
+        parse_conversation_history,
+    )
 
     logger.debug("Running history loader command: {}", command)
-    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
+    result = subprocess.run(
+        command, shell=True, capture_output=True, text=True, cwd=cwd
+    )
     if result.returncode != 0:
         print(
             f"vet: warning: history loader command failed (exit {result.returncode}): {result.stderr.strip()}",
@@ -404,7 +428,9 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
         )
         return ()
     if not result.stdout.strip():
-        logger.debug("History loader command returned empty output, no conversation history loaded")
+        logger.debug(
+            "History loader command returned empty output, no conversation history loaded"
+        )
         return ()
     messages = parse_conversation_history(result.stdout)
     logger.debug(
@@ -414,7 +440,9 @@ def load_conversation_from_command(command: str, cwd: Path) -> tuple:
     return messages
 
 
-def apply_config_preset(args: argparse.Namespace, preset: CliConfigPreset) -> argparse.Namespace:
+def apply_config_preset(
+    args: argparse.Namespace, preset: CliConfigPreset
+) -> argparse.Namespace:
     preset_dict = preset.model_dump(exclude_none=True)
 
     for field, preset_value in preset_dict.items():
@@ -461,7 +489,9 @@ def main(argv: list[str] | None = None) -> int:
     # coming from config or defaults; we must only treat an explicit CLI
     # `--base-commit` as conflicting with staged mode.
     raw_argv = argv if argv is not None else sys.argv[1:]
-    base_commit_cli_specified = any(a == "--base-commit" or a.startswith("--base-commit=") for a in raw_argv)
+    base_commit_cli_specified = any(
+        a == "--base-commit" or a.startswith("--base-commit=") for a in raw_argv
+    )
 
     # Handle subcommands that don't need config loading.
     if args.update_models:
@@ -469,7 +499,9 @@ def main(argv: list[str] | None = None) -> int:
             cache_path, updated_config = update_remote_registry_cache()
             model_count = sum(len(p.models) for p in updated_config.providers.values())
             provider_count = len(updated_config.providers)
-            print(f"Updated model registry ({model_count} models from {provider_count} providers).")
+            print(
+                f"Updated model registry ({model_count} models from {provider_count} providers)."
+            )
             print(f"Cache written to {cache_path}")
         except Exception as e:
             print(f"vet: failed to update model registry: {e}", file=sys.stderr)
@@ -606,9 +638,13 @@ def main(argv: list[str] | None = None) -> int:
 
     conversation_history = None
     if args.history_loader is not None:
-        conversation_history = load_conversation_from_command(args.history_loader, repo_path)
+        conversation_history = load_conversation_from_command(
+            args.history_loader, repo_path
+        )
     else:
-        logger.debug("No history loader provided, skipping conversation history loading")
+        logger.debug(
+            "No history loader provided, skipping conversation history loading"
+        )
     extra_context = None
     if args.extra_context:
         extra_context_parts = []
@@ -625,8 +661,12 @@ def main(argv: list[str] | None = None) -> int:
 
     enabled_identifiers = ("agentic_issue_identifier",) if args.agentic else None
     disabled_identifiers = None if args.agentic else ("agentic_issue_identifier",)
-    enabled_issue_codes = tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
-    disabled_issue_codes = tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
+    enabled_issue_codes = (
+        tuple(args.enabled_issue_codes) if args.enabled_issue_codes else None
+    )
+    disabled_issue_codes = (
+        tuple(args.disabled_issue_codes) if args.disabled_issue_codes else None
+    )
 
     if args.agentic:
         # In agentic mode the model string is passed directly to the external CLI
@@ -669,8 +709,12 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
         # TODO: Support OFFLINE, UPDATE_SNAPSHOT, and MOCKED modes.
-        language_model_config = build_language_model_config(model_id, user_config, registry_config)
-        max_output_tokens = get_max_output_tokens_for_model(model_id, user_config, registry_config)
+        language_model_config = build_language_model_config(
+            model_id, user_config, registry_config
+        )
+        max_output_tokens = get_max_output_tokens_for_model(
+            model_id, user_config, registry_config
+        )
 
         config = VetConfig(
             enabled_identifiers=enabled_identifiers,
@@ -746,13 +790,15 @@ def main(argv: list[str] | None = None) -> int:
             print(f"vet: {e.error_message}", file=sys.stderr)
             return 1
         raise
+    finally:
+        if not args.quiet:
+            from vet.imbue_core.agents.primitives.resource_limits import (
+                get_global_resource_limits,
+            )
 
-    if not args.quiet:
-        from vet.imbue_core.agents.primitives.resource_limits import get_global_resource_limits
-
-        limits = get_global_resource_limits()
-        if limits is not None and limits.dollars_spent > 0:
-            print(f"cost: ${limits.dollars_spent:.4f}", file=sys.stderr)
+            limits = get_global_resource_limits()
+            if limits is not None and limits.dollars_spent > 0:
+                print(f"cost: ${limits.dollars_spent:.4f}", file=sys.stderr)
 
     output_fields = args.output_fields if args.output_fields else OUTPUT_FIELDS
 
