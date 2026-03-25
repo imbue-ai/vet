@@ -747,6 +747,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         raise
 
+    if not args.quiet:
+        from vet.imbue_core.agents.primitives.resource_limits import get_global_resource_limits
+
+        limits = get_global_resource_limits()
+        if limits is not None and limits.dollars_spent > 0:
+            print(f"cost: ${limits.dollars_spent:.4f}", file=sys.stderr)
+
     output_fields = args.output_fields if args.output_fields else OUTPUT_FIELDS
 
     output_file = None
