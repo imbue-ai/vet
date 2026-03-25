@@ -217,6 +217,12 @@
           "context_window": 1000000,
           "max_output_tokens": 80000,
           "supports_temperature": true
+        },
+        "nova-pro-v1": {
+          "model_id": "amazon/nova-pro-v1",
+          "context_window": 300000,
+          "max_output_tokens": 5000,
+          "supports_temperature": true
         }
       }
     }
