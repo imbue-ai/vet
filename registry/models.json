@@ -85,6 +85,12 @@
           "context_window": 200000,
           "max_output_tokens": 32000,
           "supports_temperature": true
+        },
+        "claude-3.7-sonnet": {
+          "model_id": "anthropic/claude-3.7-sonnet",
+          "context_window": 200000,
+          "max_output_tokens": 64000,
+          "supports_temperature": true
         }
       }
     }
