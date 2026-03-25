@@ -265,6 +265,12 @@
           "context_window": 400000,
           "max_output_tokens": 128000,
           "supports_temperature": false
+        },
+        "gpt-5-mini": {
+          "model_id": "openai/gpt-5-mini",
+          "context_window": 400000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
         }
       }
     }
