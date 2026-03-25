@@ -73,6 +73,12 @@
           "context_window": 1047576,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "or-o1": {
+          "model_id": "openai/o1",
+          "context_window": 200000,
+          "max_output_tokens": 100000,
+          "supports_temperature": false
         }
       }
     }
