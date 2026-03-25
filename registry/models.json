@@ -31,6 +31,20 @@
           "supports_temperature": true
         }
       }
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "api_type": "openai_compatible",
+      "base_url": "https://openrouter.ai/api/v1",
+      "api_key_env": "OPENROUTER_API_KEY",
+      "models": {
+        "gpt-4.1": {
+          "model_id": "openai/gpt-4.1",
+          "context_window": 1047576,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
+        }
+      }
     }
   }
 }
