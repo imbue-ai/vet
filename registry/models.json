@@ -79,6 +79,12 @@
           "context_window": 200000,
           "max_output_tokens": 100000,
           "supports_temperature": false
+        },
+        "or-o1-mini": {
+          "model_id": "openai/o1-mini",
+          "context_window": 200000,
+          "max_output_tokens": 65536,
+          "supports_temperature": false
         }
       }
     }
