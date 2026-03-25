@@ -169,6 +169,12 @@
           "context_window": 262144,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "devstral-small-2505": {
+          "model_id": "mistralai/devstral-small-2505",
+          "context_window": 131072,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
