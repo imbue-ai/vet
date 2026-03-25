@@ -151,6 +151,12 @@
           "context_window": 131072,
           "max_output_tokens": 8192,
           "supports_temperature": true
+        },
+        "mistral-large-2411": {
+          "model_id": "mistralai/mistral-large-2411",
+          "context_window": 131072,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
