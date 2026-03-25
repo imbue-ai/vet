@@ -127,6 +127,12 @@
           "context_window": 256000,
           "max_output_tokens": 8192,
           "supports_temperature": true
+        },
+        "llama-3.3-70b": {
+          "model_id": "meta-llama/llama-3.3-70b-instruct",
+          "context_window": 131072,
+          "max_output_tokens": 8192,
+          "supports_temperature": true
         }
       }
     }
