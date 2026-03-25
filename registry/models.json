@@ -241,6 +241,12 @@
           "context_window": 128000,
           "max_output_tokens": 4096,
           "supports_temperature": true
+        },
+        "nemotron-ultra-253b": {
+          "model_id": "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+          "context_window": 131072,
+          "max_output_tokens": 8192,
+          "supports_temperature": true
         }
       }
     }
