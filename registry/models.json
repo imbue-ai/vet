@@ -193,6 +193,12 @@
           "context_window": 262144,
           "max_output_tokens": 32768,
           "supports_temperature": true
+        },
+        "qwen3-32b": {
+          "model_id": "qwen/qwen3-32b",
+          "context_window": 131072,
+          "max_output_tokens": 32768,
+          "supports_temperature": true
         }
       }
     }
