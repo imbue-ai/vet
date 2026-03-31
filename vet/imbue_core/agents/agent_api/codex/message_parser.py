@@ -4,6 +4,7 @@ from typing import assert_never
 from pydantic import TypeAdapter
 
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexAgentMessageItem
+from vet.imbue_core.agents.agent_api.codex.data_types import CodexCollabToolCallItem
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexCommandExecutionItem
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexErrorItem
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexFileChangeItem
@@ -175,6 +176,31 @@ def parse_codex_item(
                 AgentToolResultBlock(
                     tool_use_id=codex_item.id,
                     content=[{"server": codex_item.server, "tool": codex_item.tool}],
+                    is_error=codex_item.status == "failed",
+                    exit_code=-1 if codex_item.status == "failed" else 0,
+                )
+            ]
+
+        case CodexCollabToolCallItem():
+            tool_input = {
+                "tool": codex_item.tool,
+                "sender_thread_id": codex_item.sender_thread_id,
+                "receiver_thread_ids": codex_item.receiver_thread_ids,
+                "prompt": codex_item.prompt,
+                "agents_states": codex_item.agents_states,
+            }
+            if codex_item.status == "in_progress":
+                return [
+                    AgentToolUseBlock(
+                        id=codex_item.id,
+                        name=codex_item.tool,
+                        input=tool_input,
+                    )
+                ]
+            return [
+                AgentToolResultBlock(
+                    tool_use_id=codex_item.id,
+                    content=[tool_input],
                     is_error=codex_item.status == "failed",
                     exit_code=-1 if codex_item.status == "failed" else 0,
                 )
