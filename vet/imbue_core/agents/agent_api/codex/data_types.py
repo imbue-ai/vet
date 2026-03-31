@@ -95,6 +95,17 @@ class CodexMcpToolCallItem(SerializableModel):
     status: McpToolCallStatus
 
 
+class CodexCollabToolCallItem(SerializableModel):
+    type: Literal["collab_tool_call"] = "collab_tool_call"
+    id: str
+    tool: str
+    status: McpToolCallStatus
+    sender_thread_id: str | None = None
+    receiver_thread_ids: list[str] = Field(default_factory=list)
+    prompt: str | None = None
+    agents_states: dict[str, Any] = Field(default_factory=dict)
+
+
 class CodexAgentMessageItem(SerializableModel):
     type: Literal["agent_message"] = "agent_message"
     id: str
@@ -138,6 +149,7 @@ CodexThreadItemUnion = Annotated[
         | Annotated[CodexCommandExecutionItem, Tag("command_execution")]
         | Annotated[CodexFileChangeItem, Tag("file_change")]
         | Annotated[CodexMcpToolCallItem, Tag("mcp_tool_call")]
+        | Annotated[CodexCollabToolCallItem, Tag("collab_tool_call")]
         | Annotated[CodexWebSearchItem, Tag("web_search")]
         | Annotated[CodexTodoListItem, Tag("todo_list")]
         | Annotated[CodexErrorItem, Tag("error")]
