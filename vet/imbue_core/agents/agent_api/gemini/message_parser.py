@@ -3,6 +3,7 @@
 from typing import Any
 from typing import assert_never
 
+from loguru import logger
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
@@ -12,6 +13,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentSystemEventType
 from vet.imbue_core.agents.agent_api.data_types import AgentSystemMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentUnknownMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentUsage
 from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiInitEvent
 from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiMessageEvent
@@ -25,9 +27,9 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
     """Parse Gemini stream event into unified message."""
     try:
         gemini_event = TypeAdapter(GeminiStreamEventUnion).validate_python(data)
-    except ValidationError:
-        # Ignore unknown events
-        return None
+    except ValidationError as e:
+        logger.debug("Failed to parse Gemini event: {error}. Data: {data}", error=e, data=data)
+        return AgentUnknownMessage(raw=data, original_message=data)
 
     match gemini_event:
         case GeminiInitEvent():
@@ -44,7 +46,7 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
                     content=[AgentTextBlock(text=gemini_event.content)],
                     original_message=data,
                 )
-            return None
+            return AgentUnknownMessage(raw=data, original_message=data)
 
         case GeminiResultEvent():
             session_id = thread_id or "unknown"
@@ -74,11 +76,11 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
             )
 
         case GeminiToolUseEvent():
-            # Not fully supported in schema yet, but mapping just in case
-            return None
+            # Not fully supported in schema yet, but returning it as unknown for now
+            return AgentUnknownMessage(raw=data, original_message=data)
 
         case GeminiToolResultEvent():
-            return None
+            return AgentUnknownMessage(raw=data, original_message=data)
 
         case _ as unreachable:
             assert_never(unreachable)
