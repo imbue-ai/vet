@@ -23,7 +23,7 @@ from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiToolResultEv
 from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiToolUseEvent
 
 
-def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> AgentMessage | None:
+def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> AgentMessage:
     """Parse Gemini stream event into unified message."""
     try:
         gemini_event = TypeAdapter(GeminiStreamEventUnion).validate_python(data)

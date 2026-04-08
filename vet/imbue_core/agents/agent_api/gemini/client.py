@@ -54,11 +54,10 @@ class GeminiClient(RealAgentClient[GeminiOptions]):
                 )
 
                 message = parse_gemini_event(data, thread_id)
-                if message:
-                    if isinstance(message, AgentSystemMessage) and message.session_id:
-                        thread_id = message.session_id
+                if isinstance(message, AgentSystemMessage) and message.session_id:
+                    thread_id = message.session_id
 
-                    yield message
+                yield message
 
         logger.trace(
             "{client_name}: finished calling agent",
