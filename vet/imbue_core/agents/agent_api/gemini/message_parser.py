@@ -83,7 +83,7 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
                     AgentToolUseBlock(
                         id=gemini_event.tool_id,
                         name=gemini_event.tool_name,
-                        input=gemini_event.input,
+                        input=gemini_event.parameters,
                     )
                 ],
                 original_message=data,
@@ -94,12 +94,16 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
             if content is not None and not isinstance(content, (str, list)):
                 content = str(content)
 
+            is_error = gemini_event.is_error
+            if is_error is None and gemini_event.status is not None:
+                is_error = gemini_event.status == "error"
+
             return AgentAssistantMessage(
                 content=[
                     AgentToolResultBlock(
                         tool_use_id=gemini_event.tool_id,
                         content=content,
-                        is_error=gemini_event.is_error,
+                        is_error=is_error,
                     )
                 ],
                 original_message=data,

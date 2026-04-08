@@ -76,7 +76,7 @@ class TestParseGeminiEvent:
             "timestamp": "2026-04-08T19:41:52.092Z",
             "tool_name": "bash",
             "tool_id": "call_123",
-            "input": {"command": "ls"},
+            "parameters": {"command": "ls"},
         }
         message = parse_gemini_event(data)
         assert isinstance(message, AgentAssistantMessage)
@@ -91,10 +91,9 @@ class TestParseGeminiEvent:
         data = {
             "type": "tool_result",
             "timestamp": "2026-04-08T19:41:52.092Z",
-            "tool_name": "bash",
             "tool_id": "call_123",
             "output": "file1.txt\nfile2.txt",
-            "is_error": False,
+            "status": "success",
         }
         message = parse_gemini_event(data)
         assert isinstance(message, AgentAssistantMessage)

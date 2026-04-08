@@ -60,15 +60,16 @@ class GeminiToolUseEvent(SerializableModel):
     timestamp: str
     tool_name: str
     tool_id: str
-    input: dict[str, Any]
+    parameters: dict[str, Any]
 
 
 class GeminiToolResultEvent(SerializableModel):
     type: Literal["tool_result"]
     timestamp: str
-    tool_name: str
+    tool_name: str | None = None
     tool_id: str
     output: Any
+    status: Literal["success", "error"] | None = None
     is_error: bool | None = None
 
 
