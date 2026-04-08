@@ -46,10 +46,16 @@ for msg in messages:
         for tc in tool_calls:
             call_id = tc.get("id")
             name = tc.get("name")
-            args = tc.get("args")
+            tool_args = tc.get("args")
 
             blocks.append(
-                {"object_type": "ToolUseBlock", "type": "tool_use", "id": call_id, "name": name, "input": args}
+                {
+                    "object_type": "ToolUseBlock",
+                    "type": "tool_use",
+                    "id": call_id,
+                    "name": name,
+                    "input": tool_args,
+                }
             )
 
             # Process tool results
@@ -74,7 +80,7 @@ for msg in messages:
                         "type": "tool_result",
                         "tool_use_id": call_id,
                         "tool_name": name,
-                        "invocation_string": f"{name}({json.dumps(args)})",
+                        "invocation_string": f"{name}({json.dumps(tool_args)})",
                         "content": {"content_type": "generic", "text": str(output)},
                     }
                 )
