@@ -4,12 +4,8 @@ import json
 import sys
 from pathlib import Path
 
-parser = argparse.ArgumentParser(
-    description="Export Gemini CLI session history for vet"
-)
-parser.add_argument(
-    "--session-file", required=True, help="Path to Gemini CLI session .json file"
-)
+parser = argparse.ArgumentParser(description="Export Gemini CLI session history for vet")
+parser.add_argument("--session-file", required=True, help="Path to Gemini CLI session .json file")
 args = parser.parse_args()
 
 SESSION_FILE = Path(args.session_file)
@@ -34,36 +30,28 @@ for msg in messages:
             text = " ".join(c.get("text", "") for c in content if isinstance(c, dict) and "text" in c)
         else:
             text = str(content)
-        
+
         if text:
             print(json.dumps({"object_type": "ChatInputUserMessage", "text": text}))
 
     elif msg_type == "gemini":
         blocks = []
-        
+
         # Add the text content as a TextBlock if it exists
         if content and isinstance(content, str):
-            blocks.append({
-                "object_type": "TextBlock",
-                "type": "text",
-                "text": content
-            })
-        
+            blocks.append({"object_type": "TextBlock", "type": "text", "text": content})
+
         # Process tool calls
         tool_calls = msg.get("toolCalls", [])
         for tc in tool_calls:
             call_id = tc.get("id")
             name = tc.get("name")
             args = tc.get("args")
-            
-            blocks.append({
-                "object_type": "ToolUseBlock",
-                "type": "tool_use",
-                "id": call_id,
-                "name": name,
-                "input": args
-            })
-            
+
+            blocks.append(
+                {"object_type": "ToolUseBlock", "type": "tool_use", "id": call_id, "name": name, "input": args}
+            )
+
             # Process tool results
             results = tc.get("result", [])
             for res in results:
@@ -79,26 +67,29 @@ for msg in messages:
                         output = str(response)
                 else:
                     output = str(res)
-                
-                blocks.append({
-                    "object_type": "ToolResultBlock",
-                    "type": "tool_result",
-                    "tool_use_id": call_id,
-                    "tool_name": name,
-                    "invocation_string": f"{name}({json.dumps(args)})",
-                    "content": {
-                        "content_type": "generic",
-                        "text": str(output)
+
+                blocks.append(
+                    {
+                        "object_type": "ToolResultBlock",
+                        "type": "tool_result",
+                        "tool_use_id": call_id,
+                        "tool_name": name,
+                        "invocation_string": f"{name}({json.dumps(args)})",
+                        "content": {"content_type": "generic", "text": str(output)},
                     }
-                })
+                )
 
         if blocks:
-            print(json.dumps({
-                "object_type": "ResponseBlockAgentMessage",
-                "role": "assistant",
-                "assistant_message_id": msg.get("id"),
-                "content": blocks
-            }))
+            print(
+                json.dumps(
+                    {
+                        "object_type": "ResponseBlockAgentMessage",
+                        "role": "assistant",
+                        "assistant_message_id": msg.get("id"),
+                        "content": blocks,
+                    }
+                )
+            )
 
     elif msg_type == "info":
         # Info messages are usually system notifications, maybe skip or map to something else?
