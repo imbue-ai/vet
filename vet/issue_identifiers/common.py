@@ -18,6 +18,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentAssistantMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
+from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
