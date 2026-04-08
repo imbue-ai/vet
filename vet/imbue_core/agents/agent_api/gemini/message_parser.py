@@ -13,6 +13,8 @@ from vet.imbue_core.agents.agent_api.data_types import AgentResultMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentSystemEventType
 from vet.imbue_core.agents.agent_api.data_types import AgentSystemMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentTextBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentToolResultBlock
+from vet.imbue_core.agents.agent_api.data_types import AgentToolUseBlock
 from vet.imbue_core.agents.agent_api.data_types import AgentUnknownMessage
 from vet.imbue_core.agents.agent_api.data_types import AgentUsage
 from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiInitEvent
@@ -76,11 +78,32 @@ def parse_gemini_event(data: dict[str, Any], thread_id: str | None = None) -> Ag
             )
 
         case GeminiToolUseEvent():
-            # Not fully supported in schema yet, but returning it as unknown for now
-            return AgentUnknownMessage(raw=data, original_message=data)
+            return AgentAssistantMessage(
+                content=[
+                    AgentToolUseBlock(
+                        id=gemini_event.tool_id,
+                        name=gemini_event.tool_name,
+                        input=gemini_event.input,
+                    )
+                ],
+                original_message=data,
+            )
 
         case GeminiToolResultEvent():
-            return AgentUnknownMessage(raw=data, original_message=data)
+            content = gemini_event.output
+            if content is not None and not isinstance(content, (str, list)):
+                content = str(content)
+
+            return AgentAssistantMessage(
+                content=[
+                    AgentToolResultBlock(
+                        tool_use_id=gemini_event.tool_id,
+                        content=content,
+                        is_error=gemini_event.is_error,
+                    )
+                ],
+                original_message=data,
+            )
 
         case _ as unreachable:
             assert_never(unreachable)
