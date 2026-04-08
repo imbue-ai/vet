@@ -68,7 +68,7 @@ class GeminiToolResultEvent(SerializableModel):
     timestamp: str
     tool_name: str | None = None
     tool_id: str
-    output: Any
+    output: Any | None = None
     status: Literal["success", "error"] | None = None
     is_error: bool | None = None
 

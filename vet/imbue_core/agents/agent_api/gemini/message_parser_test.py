@@ -87,12 +87,11 @@ class TestParseGeminiEvent:
         assert tool_use.name == "bash"
         assert tool_use.input == {"command": "ls"}
 
-    def test_parse_tool_result_event(self) -> None:
+    def test_parse_tool_result_event_missing_output(self) -> None:
         data = {
             "type": "tool_result",
             "timestamp": "2026-04-08T19:41:52.092Z",
             "tool_id": "call_123",
-            "output": "file1.txt\nfile2.txt",
             "status": "success",
         }
         message = parse_gemini_event(data)
@@ -101,5 +100,5 @@ class TestParseGeminiEvent:
         tool_result = message.content[0]
         assert isinstance(tool_result, AgentToolResultBlock)
         assert tool_result.tool_use_id == "call_123"
-        assert tool_result.content == "file1.txt\nfile2.txt"
+        assert tool_result.content is None
         assert tool_result.is_error is False
