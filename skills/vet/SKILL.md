@@ -52,6 +52,11 @@ vet "goal" --history-loader "python3 ~/.codex/skills/vet/scripts/export_codex_se
 vet "goal" --history-loader "python3 ~/.claude/skills/vet/scripts/export_claude_code_session.py --session-file <path-to-session.jsonl>"
 ```
 
+**Gemini CLI:**
+```bash
+vet "goal" --history-loader "python3 ~/.gemini/skills/vet/scripts/export_gemini_cli_session.py --session-file <path-to-session.json>"
+```
+
 **Without Conversation History**
 ```bash
 vet "goal"
@@ -76,6 +81,12 @@ You should only search for sessions from your coding harness. If a user requests
 **Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). To find the correct session file:
 1. Find the most unique sentence / question / string in the current conversation.
 2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.claude/projects/` to find the matching session file.
+    - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
+3. Pass the matched file path as `--session-file`.
+
+**Gemini CLI:** Session files are stored in `~/.gemini/tmp/<project-name>/chats/`. To find the correct session file:
+1. Find the most unique sentence / question / string in the current conversation.
+2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.gemini/tmp/` to find the matching session file.
     - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
 3. Pass the matched file path as `--session-file`.
 

@@ -9,6 +9,7 @@ FILES=(
   "scripts/export_opencode_session.py"
   "scripts/export_codex_session.py"
   "scripts/export_claude_code_session.py"
+  "scripts/export_gemini_cli_session.py"
 )
 
 echo ""
