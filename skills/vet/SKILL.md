@@ -78,7 +78,7 @@ You should only search for sessions from your coding harness. If a user requests
     - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
 3. Pass the matched file path as `--session-file`.
 
-**Claude Code:** Session files are stored in `~/.claude/projects/<encoded-path>/`. The encoded path replaces `/` with `-` (e.g. `/home/user/myproject` becomes `-home-user-myproject`). To find the correct session file:
+**Claude Code:** Your current session UUID is `${CLAUDE_SESSION_ID}`. Session files are stored in `~/.claude/projects/<encoded-path>/` as `<session-uuid>.jsonl`. Find the session file matching your UUID and verify it belongs to this conversation. If the UUID above was not replaced with an actual value (e.g. older Claude Code versions), fall back to a manual search:
 1. Find the most unique sentence / question / string in the current conversation.
 2. Run: `grep -rl "UNIQUE_MESSAGE" ~/.claude/projects/` to find the matching session file.
     - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
