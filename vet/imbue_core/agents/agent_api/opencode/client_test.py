@@ -161,6 +161,52 @@ class TestProcessQuery:
         assert messages[0].error == "Rate limit exceeded"
 
 
+class TestTransportOptions:
+    def test_transport_not_passed_cwd(self) -> None:
+        text_event = {
+            "type": "text",
+            "timestamp": 1,
+            "sessionID": "ses_test",
+            "part": {
+                "id": "prt_1",
+                "sessionID": "ses_test",
+                "messageID": "msg_1",
+                "type": "text",
+                "text": "hi",
+            },
+        }
+        result_event = {
+            "type": "step_finish",
+            "timestamp": 2,
+            "sessionID": "ses_test",
+            "part": {
+                "id": "prt_2",
+                "sessionID": "ses_test",
+                "messageID": "msg_1",
+                "type": "step-finish",
+                "reason": "stop",
+            },
+        }
+
+        mock_transport = MagicMock()
+        mock_transport.receive_messages.return_value = iter([text_event, result_event])
+        mock_transport.write_stdin = MagicMock()
+        mock_transport.__enter__ = MagicMock(return_value=mock_transport)
+        mock_transport.__exit__ = MagicMock(return_value=False)
+
+        options = OpenCodeOptions(cli_path=Path("/usr/bin/opencode"), cwd="/my/project")
+
+        with patch(
+            "vet.imbue_core.agents.agent_api.opencode.client.AgentSubprocessCLITransport.build",
+            return_value=mock_transport,
+        ) as mock_build:
+            client = OpenCodeClient(options)
+            list(client.process_query("test"))
+
+        transport_options = mock_build.call_args[0][0]
+        assert transport_options.cwd is None
+
+
 class TestBuildContextManager:
     def test_build_yields_client(self) -> None:
         options = OpenCodeOptions(cli_path=Path("/usr/bin/opencode"))

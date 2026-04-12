@@ -34,9 +34,7 @@ class OpenCodeClient(RealAgentClient[OpenCodeOptions]):
         )
 
         cmd = self._build_cli_cmd(self._options)
-        with AgentSubprocessCLITransport.build(
-            AgentSubprocessCLITransportOptions(cmd=cmd, cwd=self._options.cwd)
-        ) as transport:
+        with AgentSubprocessCLITransport.build(AgentSubprocessCLITransportOptions(cmd=cmd)) as transport:
             transport.write_stdin(prompt)
 
             for data in transport.receive_messages():
