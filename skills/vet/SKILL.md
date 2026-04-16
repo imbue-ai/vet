@@ -99,7 +99,7 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 ## Common Options
 
 - `--base-commit REF`: Git ref for diff base (default: HEAD)
-- `--model MODEL`: LLM to use (default: claude-opus-4-6)
+- `--model MODEL`: LLM to use (default: claude-opus-4-7)
 - `--list-models`: list all models that are supported by vet
     - Run `vet --help` and look at the vet repo's readme for details about defining custom OpenAI-compatible models.
 - `--update-models`: fetch the latest community model definitions from the remote registry and cache them locally. See "Updating the Model Registry" below for when to run this.

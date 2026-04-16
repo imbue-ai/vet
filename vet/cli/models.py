@@ -12,7 +12,7 @@ from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 
-DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
+DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_7_OPUS.value
 
 
 class MissingProviderAPIKeyError(Exception):
