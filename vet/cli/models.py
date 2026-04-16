@@ -12,7 +12,7 @@ from vet.imbue_core.agents.llm_apis.common import get_all_model_names
 from vet.imbue_core.agents.llm_apis.gemini_api import GeminiModelName
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 
-DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_6_OPUS.value
+DEFAULT_MODEL_ID = AnthropicModelName.CLAUDE_4_7_OPUS.value
 
 
 class MissingProviderAPIKeyError(Exception):
@@ -59,7 +59,9 @@ def validate_model_id(
     registry_config: ModelsConfig | None = None,
 ) -> str:
     if not is_valid_model_id(model_id, user_config, registry_config):
-        raise ValueError(f"Unknown model: {model_id}. Use --list-models to see available models.")
+        raise ValueError(
+            f"Unknown model: {model_id}. Use --list-models to see available models."
+        )
     return model_id
 
 

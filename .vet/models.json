@@ -51,7 +51,7 @@
           "supports_temperature": true
         },
         "opus": {
-          "model_id": "claude-opus-4-6",
+          "model_id": "claude-opus-4-7",
           "context_window": 200000,
           "max_output_tokens": 16384,
           "supports_temperature": true

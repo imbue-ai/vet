@@ -59,6 +59,7 @@ class AnthropicModelName(enum.StrEnum):
     CLAUDE_4_1_OPUS = "claude-opus-4-1"
     CLAUDE_4_5_OPUS = "claude-opus-4-5"
     CLAUDE_4_6_OPUS = "claude-opus-4-6"
+    CLAUDE_4_7_OPUS = "claude-opus-4-7"
     CLAUDE_4_SONNET = "claude-sonnet-4-0"
     CLAUDE_4_5_SONNET = "claude-sonnet-4-5"
     CLAUDE_4_6_SONNET = "claude-sonnet-4-6"
@@ -69,6 +70,7 @@ class AnthropicModelName(enum.StrEnum):
     CLAUDE_4_SONNET_LONG = "claude-sonnet-4-0-long"
     CLAUDE_4_5_SONNET_LONG = "claude-sonnet-4-5-long"
     CLAUDE_4_6_OPUS_LONG = "claude-opus-4-6-long"
+    CLAUDE_4_7_OPUS_LONG = "claude-opus-4-7-long"
 
 
 # Basic info is available at https://docs.anthropic.com/claude/reference/models
@@ -125,6 +127,21 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
         ),
         AnthropicModelName.CLAUDE_4_6_OPUS: ModelInfo(
             model_name=AnthropicModelName.CLAUDE_4_6_OPUS,
+            cost_per_input_token=5.00 / 1_000_000,
+            cost_per_output_token=25.00 / 1_000_000,
+            max_input_tokens=200_000,
+            max_output_tokens=128_000,
+            rate_limit_req=4000 / 60,
+            rate_limit_tok=2_000_000 / 60,
+            rate_limit_output_tok=400_000 / 60,
+            provider_specific_info=AnthropicModelInfo(
+                cost_per_5m_cache_write_token=6.25 / 1_000_000,
+                cost_per_1h_cache_write_token=10 / 1_000_000,
+                cost_per_cache_read_token=0.50 / 1_000_000,
+            ),
+        ),
+        AnthropicModelName.CLAUDE_4_7_OPUS: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_7_OPUS,
             cost_per_input_token=5.00 / 1_000_000,
             cost_per_output_token=25.00 / 1_000_000,
             max_input_tokens=200_000,
@@ -229,6 +246,17 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
             # the first 200_000 input tokens use the rate 5.0 / 1_000_000, and the next up to 800_000 use the rate 10.0 / 1_000_000.
             # thus the maximum average cost per input token is (5.0 * 200_000 + 10.0 * 800_000) / 1_000_000 = 9.0 per 1_000_000.
             # (all output tokens may be past 200_000 input tokens, so the max average cost there is just the cost for tokens after 200_000)
+            cost_per_input_token=9.00 / 1_000_000,
+            cost_per_output_token=37.50 / 1_000_000,
+            max_input_tokens=1_000_000,
+            max_output_tokens=128_000,
+            rate_limit_req=None,  # Currently no limit set in our dashboard
+            rate_limit_tok=1_000_000 / 60,
+            rate_limit_output_tok=200_000 / 60,
+        ),
+        AnthropicModelName.CLAUDE_4_7_OPUS_LONG: ModelInfo(
+            model_name=AnthropicModelName.CLAUDE_4_7_OPUS_LONG,
+            # Opus 4.7 has a native 1M context window. Pricing tiers match 4.6 long-context.
             cost_per_input_token=9.00 / 1_000_000,
             cost_per_output_token=37.50 / 1_000_000,
             max_input_tokens=1_000_000,
@@ -462,21 +490,17 @@ class AnthropicAPI(LanguageModelAPI):
                     params = chill(param_with_max_tokens_evolver)
                 assert params.max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
-                if self.model_name in (
-                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG,
-                    AnthropicModelName.CLAUDE_4_SONNET_LONG,
-                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
-                ):
+                _LONG_TO_STANDARD = {
+                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG: AnthropicModelName.CLAUDE_4_5_SONNET,
+                    AnthropicModelName.CLAUDE_4_SONNET_LONG: AnthropicModelName.CLAUDE_4_SONNET,
+                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG: AnthropicModelName.CLAUDE_4_6_OPUS,
+                    AnthropicModelName.CLAUDE_4_7_OPUS_LONG: AnthropicModelName.CLAUDE_4_7_OPUS,
+                }
+
+                if self.model_name in _LONG_TO_STANDARD:
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_SONNET
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_6_OPUS
-                    else:
-                        assert False, "unreachable"
+                    model_name = _LONG_TO_STANDARD[self.model_name]
                     api_result = await client.beta.messages.create(
                         messages=non_system_messages,
                         stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
@@ -547,21 +571,17 @@ class AnthropicAPI(LanguageModelAPI):
                 max_tokens = params.max_tokens if params.max_tokens is not None else self.model_info.max_output_tokens
                 assert max_tokens is not None, "max_tokens must be provided for Anthropic API"
 
-                if self.model_name in (
-                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG,
-                    AnthropicModelName.CLAUDE_4_SONNET_LONG,
-                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG,
-                ):
+                _LONG_TO_STANDARD_STREAM = {
+                    AnthropicModelName.CLAUDE_4_5_SONNET_LONG: AnthropicModelName.CLAUDE_4_5_SONNET,
+                    AnthropicModelName.CLAUDE_4_SONNET_LONG: AnthropicModelName.CLAUDE_4_SONNET,
+                    AnthropicModelName.CLAUDE_4_6_OPUS_LONG: AnthropicModelName.CLAUDE_4_6_OPUS,
+                    AnthropicModelName.CLAUDE_4_7_OPUS_LONG: AnthropicModelName.CLAUDE_4_7_OPUS,
+                }
+
+                if self.model_name in _LONG_TO_STANDARD_STREAM:
                     # FIXME: Fix this once this is no longer beta or as this becomes required for more models
                     # Map the name back to the actual model name for the API call
-                    if self.model_name == AnthropicModelName.CLAUDE_4_5_SONNET_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_5_SONNET
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_SONNET_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_SONNET
-                    elif self.model_name == AnthropicModelName.CLAUDE_4_6_OPUS_LONG:
-                        model_name = AnthropicModelName.CLAUDE_4_6_OPUS
-                    else:
-                        assert False, "unreachable"
+                    model_name = _LONG_TO_STANDARD_STREAM[self.model_name]
                     stream_fn = lambda **kwargs: client.beta.messages.stream(**kwargs, betas=["context-1m-2025-08-07"])
                     cache_info_maker = lambda api_result: AnthropicCachingInfo(
                         written_5m=api_result.usage.cache_creation.ephemeral_5m_input_tokens,
