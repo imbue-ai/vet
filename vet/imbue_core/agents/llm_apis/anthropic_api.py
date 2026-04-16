@@ -269,6 +269,15 @@ ANTHROPIC_MODEL_INFO_BY_NAME: FrozenMapping[AnthropicModelName, ModelInfo] = Fro
 )
 
 
+# Opus 4.7+ does not support temperature, top_p, or top_k parameters.
+# Passing any non-default value returns a 400 error.
+_MODELS_WITHOUT_TEMPERATURE: frozenset[AnthropicModelName] = frozenset(
+    {
+        AnthropicModelName.CLAUDE_4_7_OPUS,
+        AnthropicModelName.CLAUDE_4_7_OPUS_LONG,
+    }
+)
+
 _ROLE_TO_ANTHROPIC_ROLE: Final[FrozenMapping[str, str]] = FrozenDict(
     {
         "HUMAN": "user",
@@ -505,7 +514,7 @@ class AnthropicAPI(LanguageModelAPI):
                         messages=non_system_messages,
                         stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                         model=model_name,
-                        temperature=params.temperature,
+                        temperature=NOT_GIVEN if self.model_name in _MODELS_WITHOUT_TEMPERATURE else params.temperature,
                         system=prepend_claude_code_system_prompt(system_messages),
                         max_tokens=params.max_tokens,
                         betas=["context-1m-2025-08-07"],
@@ -519,7 +528,7 @@ class AnthropicAPI(LanguageModelAPI):
                         messages=non_system_messages,
                         stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                         model=self.model_name,
-                        temperature=params.temperature,
+                        temperature=NOT_GIVEN if self.model_name in _MODELS_WITHOUT_TEMPERATURE else params.temperature,
                         system=prepend_claude_code_system_prompt(system_messages),
                         max_tokens=params.max_tokens,
                     )
@@ -600,7 +609,7 @@ class AnthropicAPI(LanguageModelAPI):
                     model=model_name,
                     stop_sequences=([params.stop] if params.stop is not None else NOT_GIVEN),
                     system=system_messages or NOT_GIVEN,
-                    temperature=params.temperature,
+                    temperature=NOT_GIVEN if self.model_name in _MODELS_WITHOUT_TEMPERATURE else params.temperature,
                 ) as stream:
                     async for text_delta in stream.text_stream:
                         yield LanguageModelStreamDeltaEvent(delta=text_delta)
