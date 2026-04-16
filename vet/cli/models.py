@@ -59,9 +59,7 @@ def validate_model_id(
     registry_config: ModelsConfig | None = None,
 ) -> str:
     if not is_valid_model_id(model_id, user_config, registry_config):
-        raise ValueError(
-            f"Unknown model: {model_id}. Use --list-models to see available models."
-        )
+        raise ValueError(f"Unknown model: {model_id}. Use --list-models to see available models.")
     return model_id
 
 
