@@ -50,13 +50,13 @@
           "max_output_tokens": 64000,
           "supports_temperature": true
         },
-        "opus": {
+        "opus-4.6": {
           "model_id": "claude-opus-4-6",
           "context_window": 200000,
           "max_output_tokens": 128000,
           "supports_temperature": true
         },
-        "opus-4.7": {
+        "opus": {
           "model_id": "claude-opus-4-7",
           "context_window": 200000,
           "max_output_tokens": 128000,
