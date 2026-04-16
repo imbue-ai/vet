@@ -22,7 +22,6 @@ class ConfigLoadError(Exception):
 
 
 _REGISTRY_URLS = [
-    "https://vet-registry.vet.host.imbue.com/models",
     "https://raw.githubusercontent.com/imbue-ai/vet/main/registry/models.json",
 ]
 _REGISTRY_FETCH_TIMEOUT_SECONDS = 5
