@@ -270,6 +270,8 @@ Section keys must be valid issue codes (`vet --list-issue-codes`). Each section 
 
 ## Community
 
+New to Vet? [Read the launch post](https://imbue.com/product/vet/) for an intro and 2-minute demo. Vet also runs natively inside [Sculptor](https://github.com/imbue-ai/sculptor), Imbue's parallel agent coding environment, if you're looking for a more integrated setup.
+
 Join the [Imbue Discord](https://discord.gg/sBAVvHPUTE) for discussion, questions, and support. For bug reports and feature requests, please use [GitHub Issues](https://github.com/imbue-ai/vet/issues).
 
 ## License
