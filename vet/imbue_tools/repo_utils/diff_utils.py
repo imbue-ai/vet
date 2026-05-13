@@ -70,6 +70,7 @@ async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: s
                     continue
 
             if not applied:
+                logger.debug("git apply failed, using fallback diff parser")
                 _fallback_apply(diff_string, temp_repo_dir, file_contents)
 
         try:
@@ -109,38 +110,103 @@ def _fallback_apply(diff_string: str, temp_dir: str, base_contents: InMemoryFile
             continue
 
         is_new = bool(re.search(r"^new file mode", section, re.MULTILINE))
-        is_rename = bool(re.search(r"^rename from ", section, re.MULTILINE))
+        is_rename = a_path != b_path
 
-        added_lines = []
-        in_hunk = False
-        for line in section.split("\n"):
-            if line.startswith("@@"):
-                in_hunk = True
-                continue
-            if in_hunk:
-                if line.startswith("+"):
-                    added_lines.append(line[1:])
-                elif line.startswith(" "):
-                    added_lines.append(line[1:])
-                elif line.startswith("-"):
-                    pass
-                elif line.startswith("\\"):
-                    pass
-                else:
-                    in_hunk = False
+        hunks = _parse_hunks(section)
 
-        if is_new or added_lines:
+        if is_new:
+            new_lines: list[str] = []
+            for _, _, additions in hunks:
+                new_lines.extend(additions)
             target = Path(temp_dir) / b_path
             target.parent.mkdir(parents=True, exist_ok=True)
-            if added_lines:
-                target.write_text("\n".join(added_lines) + ("\n" if added_lines else ""))
-            elif is_new:
-                target.touch()
+            target.write_text("\n".join(new_lines) + "\n" if new_lines else "")
+        elif hunks:
+            base_text = _get_base_text(a_path, temp_dir, base_contents)
+            base_lines = base_text.splitlines() if base_text else []
+            result_lines = _apply_hunks_to_lines(base_lines, hunks)
+            target = Path(temp_dir) / b_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("\n".join(result_lines) + "\n" if result_lines else "")
+        elif is_rename:
+            base_bytes = base_contents.get(a_path)
+            target = Path(temp_dir) / b_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if base_bytes is not None and isinstance(base_bytes, bytes):
+                target.write_bytes(base_bytes)
+            elif (Path(temp_dir) / a_path).exists():
+                target.write_bytes((Path(temp_dir) / a_path).read_bytes())
 
         if is_rename:
             old_target = Path(temp_dir) / a_path
             if old_target.exists():
                 old_target.unlink()
+
+
+def _get_base_text(path: str, temp_dir: str, base_contents: InMemoryFileSystem) -> str:
+    base_bytes = base_contents.get(path)
+    if base_bytes is not None and isinstance(base_bytes, bytes):
+        try:
+            return base_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            return ""
+    on_disk = Path(temp_dir) / path
+    if on_disk.exists():
+        return on_disk.read_text()
+    return ""
+
+
+def _parse_hunks(section: str) -> list[tuple[int, int, list[str]]]:
+    hunks: list[tuple[int, int, list[str]]] = []
+    hunk_header_re = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+    current_start = 0
+    current_count = 0
+    new_lines: list[str] = []
+
+    lines = section.split("\n")
+    i = 0
+    while i < len(lines):
+        m = hunk_header_re.match(lines[i])
+        if m:
+            if current_start or new_lines:
+                hunks.append((current_start, current_count, new_lines))
+            current_start = int(m.group(1))
+            current_count = int(m.group(2)) if m.group(2) else 1
+            new_lines = []
+            i += 1
+            while i < len(lines):
+                line = lines[i]
+                if line.startswith("@@") or line.startswith("diff --git"):
+                    break
+                if line.startswith("+"):
+                    new_lines.append(line[1:])
+                elif line.startswith(" "):
+                    new_lines.append(line[1:])
+                elif line.startswith("-"):
+                    pass
+                elif line.startswith("\\"):
+                    pass
+                else:
+                    break
+                i += 1
+            continue
+        i += 1
+
+    if current_start or new_lines:
+        hunks.append((current_start, current_count, new_lines))
+
+    return hunks
+
+
+def _apply_hunks_to_lines(base_lines: list[str], hunks: list[tuple[int, int, list[str]]]) -> list[str]:
+    result = list(base_lines)
+    offset = 0
+    for start, count, new_lines in hunks:
+        idx = start - 1 + offset
+        end_idx = idx + count
+        result[idx:end_idx] = new_lines
+        offset += len(new_lines) - count
+    return result
 
 
 def _parse_deleted_paths(diff_string: str) -> set[str]:
