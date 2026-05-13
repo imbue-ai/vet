@@ -31,7 +31,7 @@ async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: s
     file_pattern = re.compile(r"^diff --git a/(.+?) b/(.+)$", re.MULTILINE)
     matches = file_pattern.findall(diff_string)
 
-    relevant_file_contents_dict = {}
+    relevant_file_contents_dict: dict[str, FileContents] = {}
     for match in matches:
         assert len(match) == 2
         for file_path in match:
@@ -50,18 +50,27 @@ async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: s
             temp_patch_file.flush()
             patch_file_path = temp_patch_file.name
 
-            try:
-                result = subprocess.run(
-                    ("git", "apply", "--verbose", patch_file_path),
-                    cwd=temp_repo_dir,
-                    capture_output=True,
-                    text=True,
-                    timeout=10.0,
-                    check=True,
-                )
-            except Exception as e:
-                logger.trace("Unable to apply patch: {error}", error=e)
-                raise DiffApplicationError from e
+            applied = False
+            for apply_args in [
+                ("git", "apply", "--verbose", patch_file_path),
+                ("git", "apply", "--verbose", "--unidiff-zero", "--reject", patch_file_path),
+            ]:
+                try:
+                    subprocess.run(
+                        apply_args,
+                        cwd=temp_repo_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=10.0,
+                        check=True,
+                    )
+                    applied = True
+                    break
+                except subprocess.CalledProcessError:
+                    continue
+
+            if not applied:
+                _fallback_apply(diff_string, temp_repo_dir, file_contents)
 
         try:
             updated_file_contents = _read_file_contents_from_dir_without_git(temp_repo_dir)
@@ -73,7 +82,75 @@ async def _apply_diff_to_files(file_contents: InMemoryFileSystem, diff_string: s
         if file_path not in relevant_file_contents_dict:
             combined_file_contents_dict[file_path] = contents
 
+    deleted_paths = _parse_deleted_paths(diff_string)
+    renamed_from = {m[0] for m in matches if m[0] != m[1]}
+    for path in deleted_paths | renamed_from:
+        combined_file_contents_dict.pop(path, None)
+
     return InMemoryFileSystem.build(combined_file_contents_dict)
+
+
+def _fallback_apply(diff_string: str, temp_dir: str, base_contents: InMemoryFileSystem) -> None:
+    for section in re.split(r"(?=^diff --git )", diff_string, flags=re.MULTILINE):
+        section = section.strip()
+        if not section:
+            continue
+
+        header_match = re.match(r"^diff --git a/(.+?) b/(.+)$", section, re.MULTILINE)
+        if not header_match:
+            continue
+
+        a_path, b_path = header_match.group(1), header_match.group(2)
+
+        if re.search(r"^deleted file mode", section, re.MULTILINE):
+            target = Path(temp_dir) / b_path
+            if target.exists():
+                target.unlink()
+            continue
+
+        is_new = bool(re.search(r"^new file mode", section, re.MULTILINE))
+        is_rename = bool(re.search(r"^rename from ", section, re.MULTILINE))
+
+        added_lines = []
+        in_hunk = False
+        for line in section.split("\n"):
+            if line.startswith("@@"):
+                in_hunk = True
+                continue
+            if in_hunk:
+                if line.startswith("+"):
+                    added_lines.append(line[1:])
+                elif line.startswith(" "):
+                    added_lines.append(line[1:])
+                elif line.startswith("-"):
+                    pass
+                elif line.startswith("\\"):
+                    pass
+                else:
+                    in_hunk = False
+
+        if is_new or added_lines:
+            target = Path(temp_dir) / b_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if added_lines:
+                target.write_text("\n".join(added_lines) + ("\n" if added_lines else ""))
+            elif is_new:
+                target.touch()
+
+        if is_rename:
+            old_target = Path(temp_dir) / a_path
+            if old_target.exists():
+                old_target.unlink()
+
+
+def _parse_deleted_paths(diff_string: str) -> set[str]:
+    deleted = set()
+    for section in re.split(r"(?=^diff --git )", diff_string, flags=re.MULTILINE):
+        if re.search(r"^deleted file mode", section, re.MULTILINE):
+            header_match = re.match(r"^diff --git a/(.+?) b/(.+)$", section, re.MULTILINE)
+            if header_match:
+                deleted.add(header_match.group(2))
+    return deleted
 
 
 def _read_file_contents_from_dir_without_git(dir_path_str: str) -> InMemoryFileSystem:
