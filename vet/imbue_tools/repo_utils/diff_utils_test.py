@@ -5,7 +5,6 @@ import pytest
 from vet.imbue_tools.repo_utils.diff_utils import _apply_diff_to_files
 from vet.imbue_tools.repo_utils.file_system import InMemoryFileSystem
 
-
 RENAME_DIFF = """\
 diff --git a/old_name.py b/new_name.py
 similarity index 85%
