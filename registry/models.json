@@ -18,6 +18,19 @@
         }
       }
     },
+    "gemini": {
+      "name": "Gemini",
+      "api_type": "openai_compatible",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "api_key_env": "GEMINI_API_KEY",
+      "models": {
+        "gemini-3.5-flash": {
+          "context_window": 1048576,
+          "max_output_tokens": 65536,
+          "supports_temperature": true
+        }
+      }
+    },
     "groq": {
       "name": "Groq",
       "api_type": "openai_compatible",
