@@ -96,8 +96,8 @@ GEMINI_MODEL_INFO_BY_NAME: FrozenMapping[GeminiModelName, ModelInfo] = FrozenDic
         ),
         GeminiModelName.GEMINI_3_5_FLASH: ModelInfo(
             model_name="gemini-3.5-flash",
-            cost_per_input_token=0.15 / 1_000_000,
-            cost_per_output_token=0.60 / 1_000_000,
+            cost_per_input_token=1.50 / 1_000_000,
+            cost_per_output_token=9.0 / 1_000_000,
             max_input_tokens=1_048_576,
             max_output_tokens=65_536,
             rate_limit_req=10_000 / 60,  # 10000 RPM = 166.67 RPS
