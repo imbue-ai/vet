@@ -56,6 +56,7 @@ class GeminiModelName(enum.StrEnum):
     # GA models
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
+    GEMINI_3_5_FLASH = "gemini-3.5-flash"
     # Preview models
     GEMINI_3_FLASH_PREVIEW = "gemini-3-flash-preview"
     GEMINI_3_1_PRO_PREVIEW = "gemini-3.1-pro-preview"
@@ -91,6 +92,16 @@ GEMINI_MODEL_INFO_BY_NAME: FrozenMapping[GeminiModelName, ModelInfo] = FrozenDic
             max_output_tokens=65_535,
             rate_limit_req=10_000 / 60,
             rate_limit_tok=10_000_000 / 60,
+            max_thinking_budget=24_576,
+        ),
+        GeminiModelName.GEMINI_3_5_FLASH: ModelInfo(
+            model_name="gemini-3.5-flash",
+            cost_per_input_token=0.15 / 1_000_000,
+            cost_per_output_token=0.60 / 1_000_000,
+            max_input_tokens=1_048_576,
+            max_output_tokens=65_536,
+            rate_limit_req=10_000 / 60,  # 10000 RPM = 166.67 RPS
+            rate_limit_tok=8_000_000 / 60,  # 8,000,000 TPM = 133,333.33 TPS
             max_thinking_budget=24_576,
         ),
         GeminiModelName.GEMINI_3_FLASH_PREVIEW: ModelInfo(
