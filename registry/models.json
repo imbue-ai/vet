@@ -27,7 +27,8 @@
         "gemini-3.5-flash": {
           "context_window": 1048576,
           "max_output_tokens": 65536,
-          "supports_temperature": true
+          "supports_temperature": true,
+          "supports_seed": false
         }
       }
     },

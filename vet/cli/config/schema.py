@@ -14,6 +14,7 @@ class ModelConfig(BaseModel):
     context_window: int
     max_output_tokens: int
     supports_temperature: bool
+    supports_seed: bool = True
 
 
 class ProviderConfig(BaseModel):
