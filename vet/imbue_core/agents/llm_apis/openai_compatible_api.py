@@ -60,7 +60,6 @@ class OpenAICompatibleAPI(LanguageModelAPI):
     is_conversational: bool = True
     presence_penalty: float = 0.0
     supports_temperature: bool = True
-
     # this shouldn't really ever even be used, but just in case
     stop_token_log_probability: float = math.log(0.9999)
 
@@ -131,8 +130,6 @@ class OpenAICompatibleAPI(LanguageModelAPI):
             client = self._get_client()
 
             temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
-            seed = NOT_GIVEN
-            stop = params.stop if params.stop is not None else NOT_GIVEN
 
             api_result = await client.chat.completions.create(
                 model=self.model_name,
@@ -141,8 +138,8 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                 n=params.count,
                 temperature=temperature,
                 stream=False,
-                seed=seed,
-                stop=stop,
+                seed=params.seed,
+                stop=params.stop,
                 presence_penalty=self.presence_penalty,
             )
             assert isinstance(api_result, ChatCompletion)
@@ -196,8 +193,6 @@ class OpenAICompatibleAPI(LanguageModelAPI):
             client = self._get_client()
 
             temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
-            seed = NOT_GIVEN
-            stop = params.stop if params.stop is not None else NOT_GIVEN
 
             api_result = await client.chat.completions.create(
                 model=self.model_name,
@@ -205,8 +200,8 @@ class OpenAICompatibleAPI(LanguageModelAPI):
                 max_completion_tokens=params.max_tokens,
                 n=1,
                 temperature=temperature,
-                stop=stop,
-                seed=seed,
+                stop=params.stop,
+                seed=params.seed,
                 stream=True,
                 stream_options={"include_usage": True},
                 presence_penalty=self.presence_penalty,
