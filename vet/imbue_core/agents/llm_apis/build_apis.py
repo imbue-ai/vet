@@ -30,7 +30,6 @@ def build_language_model_from_config(
             context_window=config.custom_context_window,
             max_output_tokens=config.custom_max_output_tokens,
             supports_temperature=config.custom_supports_temperature,
-            supports_seed=config.custom_supports_seed,
             cache_path=config.cache_path,
             is_caching_inputs=config.is_caching_inputs,
             is_running_offline=config.is_running_offline,

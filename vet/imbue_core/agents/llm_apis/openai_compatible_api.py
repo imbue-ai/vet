@@ -60,7 +60,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
     is_conversational: bool = True
     presence_penalty: float = 0.0
     supports_temperature: bool = True
-    supports_seed: bool = True
+
     # this shouldn't really ever even be used, but just in case
     stop_token_log_probability: float = math.log(0.9999)
 
@@ -131,7 +131,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
             client = self._get_client()
 
             temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
-            seed: NotGiven | int | None = params.seed if self.supports_seed else NOT_GIVEN
+            seed = NOT_GIVEN  # Not all OpenAI-compatible providers support seed
             stop = params.stop if params.stop is not None else NOT_GIVEN
 
             api_result = await client.chat.completions.create(
@@ -196,7 +196,7 @@ class OpenAICompatibleAPI(LanguageModelAPI):
             client = self._get_client()
 
             temperature: NotGiven | float = params.temperature if self.supports_temperature else NOT_GIVEN
-            seed: NotGiven | int | None = params.seed if self.supports_seed else NOT_GIVEN
+            seed = NOT_GIVEN  # Not all OpenAI-compatible providers support seed
             stop = params.stop if params.stop is not None else NOT_GIVEN
 
             api_result = await client.chat.completions.create(

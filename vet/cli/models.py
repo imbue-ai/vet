@@ -178,5 +178,4 @@ def build_language_model_config(
         custom_context_window=model_config.context_window,
         custom_max_output_tokens=model_config.max_output_tokens,
         custom_supports_temperature=model_config.supports_temperature,
-        custom_supports_seed=model_config.supports_seed,
     )
