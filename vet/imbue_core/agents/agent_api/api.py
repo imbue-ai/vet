@@ -15,6 +15,8 @@ from vet.imbue_core.agents.agent_api.client import CachedAgentClient
 from vet.imbue_core.agents.agent_api.codex.client import CodexClient
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
 from vet.imbue_core.agents.agent_api.data_types import AgentOptions
+from vet.imbue_core.agents.agent_api.gemini.client import GeminiClient
+from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiOptions
 from vet.imbue_core.agents.agent_api.opencode.client import OpenCodeClient
 from vet.imbue_core.agents.agent_api.opencode.data_types import OpenCodeOptions
 
@@ -40,6 +42,11 @@ def _(options: CodexOptions) -> ContextManager[AgentClient[CodexOptions]]:
 @_build_client_from_options.register
 def _(options: OpenCodeOptions) -> ContextManager[AgentClient[OpenCodeOptions]]:
     return OpenCodeClient.build(options)
+
+
+@_build_client_from_options.register
+def _(options: GeminiOptions) -> ContextManager[AgentClient[GeminiOptions]]:
+    return GeminiClient.build(options)
 
 
 @contextmanager

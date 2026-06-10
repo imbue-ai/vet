@@ -56,7 +56,7 @@ From the root of your git repo:
 ```bash
 for dir in .agents .opencode .claude .codex; do
   mkdir -p "$dir/skills/vet/scripts"
-  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py scripts/export_gemini_cli_session.py; do
     curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
       -o "$dir/skills/vet/$file"
   done
@@ -68,7 +68,7 @@ done
 ```bash
 for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
   mkdir -p "$dir/skills/vet/scripts"
-  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py scripts/export_gemini_cli_session.py; do
     curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
       -o "$dir/skills/vet/$file"
   done
@@ -113,7 +113,7 @@ Compare against a base ref/commit:
 vet "Refactor storage layer" --base-commit main
 ```
 
-Use Claude Code, Codex, or OpenCode instead of LLM APIs (`--agent-harness`: `claude`, `codex`, `opencode`):
+Use Claude Code, Codex, OpenCode, or Gemini instead of LLM APIs (`--agent-harness`: `claude`, `codex`, `opencode`, `gemini`):
 
 ```bash
 vet "Implement X without breaking Y" --agentic --agent-harness claude

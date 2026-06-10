@@ -23,6 +23,7 @@ from vet.imbue_core.agents.agent_api.data_types import AgentToolName
 from vet.imbue_core.agents.agent_api.data_types import READ_ONLY_TOOLS
 from vet.imbue_core.agents.agent_api.errors import AgentCLINotFoundError
 from vet.imbue_core.agents.agent_api.errors import AgentProcessError
+from vet.imbue_core.agents.agent_api.gemini.data_types import GeminiOptions
 from vet.imbue_core.agents.agent_api.opencode.data_types import OpenCodeOptions
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
@@ -216,6 +217,11 @@ def get_agent_options(cwd: Path | None, model_name: str | None, agent_harness_ty
             cwd=cwd,
             model=model_name,
         )
+    if agent_harness_type == AgentHarnessType.GEMINI:
+        return GeminiOptions(
+            cwd=cwd,
+            model=model_name,
+        )
     return ClaudeCodeOptions(
         cwd=cwd,
         permission_mode="dontAsk",
@@ -262,7 +268,7 @@ def generate_response_from_agent(prompt: str, options: AgentOptions) -> tuple[st
         for message in assistant_messages:
             for content_block in message.content:
                 if isinstance(content_block, AgentTextBlock):
-                    response_text += content_block.text.strip() + "\n"
+                    response_text += content_block.text
 
     return response_text, messages
 
