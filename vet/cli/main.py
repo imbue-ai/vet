@@ -17,6 +17,7 @@ from vet.cli.config.cli_config_schema import CliConfigPreset
 from vet.cli.config.loader import ConfigLoadError
 from vet.cli.config.loader import get_cli_config_file_paths
 from vet.cli.config.loader import get_config_preset
+from vet.cli.config.loader import get_model_ids_from_config
 from vet.cli.config.loader import load_cli_config
 from vet.cli.config.loader import load_custom_guides_config
 from vet.cli.config.loader import load_models_config
@@ -327,7 +328,12 @@ def list_fields() -> None:
         print(f"  {field}")
 
 
-def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> None:
+def list_configs(
+    cli_configs: dict[str, CliConfigPreset],
+    repo_path: Path,
+    user_config: ModelsConfig | None = None,
+    registry_config: ModelsConfig | None = None,
+) -> None:
     print("Available configurations:")
     print()
 
@@ -345,7 +351,16 @@ def list_configs(cli_configs: dict[str, CliConfigPreset], repo_path: Path) -> No
         preset_dict = preset.model_dump(exclude_none=True)
         if preset_dict:
             for key, value in preset_dict.items():
-                print(f"    {key}: {value}")
+                if key == "model" and user_config is not None:
+                    in_user = value in get_model_ids_from_config(user_config)
+                    in_registry = registry_config is not None and value in get_model_ids_from_config(registry_config)
+                    if not in_user and not in_registry:
+                        suffix = "  ← not in models.json or registry; if this is a built-in model name this is fine, otherwise check for a typo"
+                    else:
+                        suffix = ""
+                    print(f"    {key}: {value}{suffix}")
+                else:
+                    print(f"    {key}: {value}")
         else:
             print("    (uses all defaults)")
         print()
@@ -523,7 +538,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if args.list_configs:
-        list_configs(cli_configs, repo_path)
+        list_configs(cli_configs, repo_path, user_config, registry_config)
         return 0
 
     if args.config is not None:

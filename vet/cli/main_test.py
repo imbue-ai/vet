@@ -147,6 +147,100 @@ class TestListModels:
         assert "remote-model-b" in captured.out
 
 
+class TestListConfigs:
+    """CLI integration tests for the --list-configs flag."""
+
+    def _write_models_json(self, tmp_path: Path, model_id: str) -> None:
+        config_dir = tmp_path / "config" / "vet"
+        config_dir.mkdir(parents=True)
+        (config_dir / "models.json").write_text(
+            json.dumps(
+                {
+                    "providers": {
+                        "local": {
+                            "base_url": "http://localhost:11434/v1",
+                            "models": {
+                                model_id: {
+                                    "context_window": 131072,
+                                    "max_output_tokens": 8192,
+                                    "supports_temperature": True,
+                                }
+                            },
+                        }
+                    }
+                }
+            )
+        )
+
+    def _write_configs_toml(self, tmp_path: Path, model_id: str) -> None:
+        config_dir = tmp_path / "config" / "vet"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        (config_dir / "configs.toml").write_text(f'[mypreset]\nmodel = "{model_id}"\n')
+
+    def test_list_configs_valid_model_no_warning(self, tmp_path: Path, capsys) -> None:
+        self._write_models_json(tmp_path, "my-local-model")
+        self._write_configs_toml(tmp_path, "my-local-model")
+        env = _env_for_isolated_config(tmp_path)
+        repo = tmp_path / "repo"
+        repo.mkdir()
+
+        with patch.dict(os.environ, env):
+            exit_code = main(["--list-configs", "--repo", str(repo)])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "my-local-model" in captured.out
+        assert "check for a typo" not in captured.out
+
+    def test_list_configs_unknown_model_shows_warning(self, tmp_path: Path, capsys) -> None:
+        self._write_models_json(tmp_path, "my-local-model")
+        self._write_configs_toml(tmp_path, "my-local-model-typo")
+        env = _env_for_isolated_config(tmp_path)
+        repo = tmp_path / "repo"
+        repo.mkdir()
+
+        with patch.dict(os.environ, env):
+            exit_code = main(["--list-configs", "--repo", str(repo)])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "my-local-model-typo" in captured.out
+        assert "check for a typo" in captured.out
+
+    def test_list_configs_registry_model_no_warning(self, tmp_path: Path, capsys, make_mock_response) -> None:
+        registry_json = json.dumps(
+            {
+                "providers": {
+                    "remote": {
+                        "base_url": "http://remote:8080/v1",
+                        "models": {
+                            "registry-only-model": {
+                                "context_window": 128000,
+                                "max_output_tokens": 16384,
+                                "supports_temperature": True,
+                            }
+                        },
+                    }
+                }
+            }
+        )
+        mock_response = make_mock_response(registry_json.encode())
+        self._write_configs_toml(tmp_path, "registry-only-model")
+        env = _env_for_isolated_config(tmp_path)
+        repo = tmp_path / "repo"
+        repo.mkdir()
+
+        with patch.dict(os.environ, env):
+            with patch("vet.cli.config.loader.urllib.request.urlopen", return_value=mock_response):
+                main(["--update-models"])
+            exit_code = main(["--list-configs", "--repo", str(repo)])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "registry-only-model" in captured.out
+        assert "check for a typo" not in captured.out
+
+
 class TestModelRefusal:
     """CLI integration tests for surfacing model refusals."""
 
