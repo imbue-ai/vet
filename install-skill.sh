@@ -10,14 +10,15 @@ FILES=(
   "scripts/export_codex_session.py"
   "scripts/export_claude_code_session.py"
   "scripts/export_gemini_cli_session.py"
+  "scripts/export_kiro_session.py"
 )
 
 echo ""
 echo "  Vet Skill Installer"
 echo "  --------------------"
 echo ""
-echo "  [1] Project level  - install into the current repo (.agents/, .opencode/, .claude/, and .codex/)"
-echo "  [2] User level     - install into your home directory (~/.agents/, ~/.opencode/, ~/.claude/, ~/.codex/)"
+echo "  [1] Project level  - install into the current repo (.agents/, .opencode/, .claude/, .codex/, and .kiro/)"
+echo "  [2] User level     - install into your home directory (~/.agents/, ~/.opencode/, ~/.claude/, ~/.codex/, ~/.kiro/)"
 echo ""
 
 printf "  Choose [1/2]: " 
@@ -25,11 +26,11 @@ read -r choice </dev/tty
 
 case "$choice" in
   1)
-    dirs=(".agents" ".opencode" ".claude" ".codex")
+    dirs=(".agents" ".opencode" ".claude" ".codex" ".kiro")
     label="project"
     ;;
   2)
-    dirs=("$HOME/.agents" "$HOME/.opencode" "$HOME/.claude" "$HOME/.codex")
+    dirs=("$HOME/.agents" "$HOME/.opencode" "$HOME/.claude" "$HOME/.codex" "$HOME/.kiro")
     label="user"
     ;;
   *)
