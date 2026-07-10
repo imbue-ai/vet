@@ -1,5 +1,6 @@
 import json
 import os
+import signal
 import subprocess
 import threading
 from abc import ABC
@@ -25,6 +26,31 @@ from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.pydantic_serialization import SerializableModel
 
 TransportOptionsT = TypeVar("TransportOptionsT", bound=SerializableModel)
+
+
+def _terminate_process_group(popen: subprocess.Popen[str]) -> None:
+    """Terminate the process group rooted at popen, then reap the direct child.
+
+    popen is a session/group leader (spawned with start_new_session=True), so killing
+    its process group also reaches any detached helper processes it may have forked
+    that would otherwise keep the stdio pipes open indefinitely.
+    """
+    try:
+        pgid = os.getpgid(popen.pid)
+    except ProcessLookupError:
+        return
+
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+        popen.wait(timeout=5.0)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+            popen.wait(timeout=5.0)
+        except (ProcessLookupError, subprocess.TimeoutExpired):
+            pass
+    except ProcessLookupError:
+        pass
 
 
 class AgentTransport(ABC, Generic[TransportOptionsT]):
@@ -87,6 +113,12 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
                 bufsize=1,
                 text=True,
                 encoding="utf-8",
+                # Run as its own session/process-group leader so that on teardown we can
+                # terminate the whole group, not just this one process. Some agent CLIs
+                # (e.g. kiro-cli) fork a detached helper process that outlives the process
+                # we spawned and keeps holding our stdio pipes open, which would otherwise
+                # hang receive_messages()'s background stderr reader forever on close().
+                start_new_session=True,
             )
         except FileNotFoundError as e:
             raise AgentCLINotFoundError(f"Agent CLI not found for: cmd={options.cmd}") from e
@@ -96,14 +128,7 @@ class AgentSubprocessCLITransport(AgentTransport[AgentSubprocessCLITransportOpti
         try:
             yield cls(popen)
         finally:
-            # Make sure to terminate the process if it is still running, and clean up the streams
-            if popen.poll() is None:
-                try:
-                    popen.terminate()
-                    popen.wait(timeout=5.0)
-                except subprocess.TimeoutExpired:
-                    popen.kill()
-                    popen.wait(timeout=5.0)
+            _terminate_process_group(popen)
             popen.stdout and popen.stdout.close()
             popen.stderr and popen.stderr.close()
             popen.stdin and popen.stdin.close()

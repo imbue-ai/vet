@@ -171,6 +171,7 @@ class AgentHarnessType(StrEnum):
     CLAUDE = "claude"
     CODEX = "codex"
     OPENCODE = "opencode"
+    KIRO = "kiro"
 
 
 class IssueIdentifierType(StrEnum):

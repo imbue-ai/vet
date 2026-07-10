@@ -57,6 +57,11 @@ vet "goal" --history-loader "python3 ~/.claude/skills/vet/scripts/export_claude_
 vet "goal" --history-loader "python3 ~/.gemini/skills/vet/scripts/export_gemini_cli_session.py --session-file <path-to-session.json>"
 ```
 
+**Kiro CLI:**
+```bash
+vet "goal" --history-loader "python3 ~/.kiro/skills/vet/scripts/export_kiro_session.py --session-id <session-uuid>"
+```
+
 **Without Conversation History**
 ```bash
 vet "goal"
@@ -90,6 +95,12 @@ You should only search for sessions from your coding harness. If a user requests
     - IMPORTANT: Verify the conversation you found matches the current conversation and that it is not another conversation with the same search string.
 3. Pass the matched file path as `--session-file`.
 
+**Kiro CLI:** Session transcripts are stored in `~/.kiro/sessions/cli/<session-uuid>.jsonl`. To find the correct session:
+1. Run: `kiro-cli chat --list-sessions --format json` to list recent sessions grouped by working directory, each with a `sessionId`, `title`, and `updatedAt`.
+2. Identify the current session from the group matching the current working directory by matching the title or most recent timestamp.
+    - IMPORTANT: Verify the session you found matches the current conversation. If the title is ambiguous, compare timestamps or check multiple candidates.
+3. Pass the matched `sessionId` as `--session-id`. If `--list-sessions` is unavailable, fall back to a manual search: find the most unique sentence in the current conversation, run `grep -rl "UNIQUE_MESSAGE" ~/.kiro/sessions/cli/` to find the matching `.jsonl` file, and pass its path via `--session-file`.
+
 NOTE: The examples in the standard usage section assume the user installed the vet skill at the user level, not the project level. Prior to trying to run vet, check if it was installed at the project level which should take precedence over the user level. If it is installed at the project level, ensure the history-loader option points to the correct location.
 
 ## Interpreting Results
@@ -106,8 +117,8 @@ Vet analyzes the full git diff from the base commit. This may include changes fr
 - `--confidence-threshold N`: Minimum confidence 0.0-1.0 (default: 0.8)
 - `--output-format FORMAT`: Output as `text`, `json`, or `github`
 - `--quiet`: Suppress status messages and 'No issues found.'
-- `--agentic`: Mode that routes analysis through the locally installed Claude Code, Codex, or OpenCode CLI instead of calling the API directly. Try this if vet fails due to missing API keys. This is slower so it is not the default, but it often results in higher precision issue identification. `--model` is forwarded to the harness but not validated by vet, as vet doesn't know which models each harness supports.
-- `--agent-harness`: The three options for this are `codex`, `claude`, and `opencode`. Claude Code is the default.
+- `--agentic`: Mode that routes analysis through the locally installed Claude Code, Codex, OpenCode, or Kiro CLI instead of calling the API directly. Try this if vet fails due to missing API keys. This is slower so it is not the default, but it often results in higher precision issue identification. `--model` is forwarded to the harness but not validated by vet, as vet doesn't know which models each harness supports.
+- `--agent-harness`: The four options for this are `codex`, `claude`, `opencode`, and `kiro`. Claude Code is the default. For `kiro`, model IDs come from `kiro-cli chat --list-models` (e.g. `claude-haiku-4.5` for a cheaper judge than the default `auto`).
 - `--help`: Show comprehensive list of options
 
 

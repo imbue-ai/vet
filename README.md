@@ -18,7 +18,7 @@
 - **Reviews intent and code**: checks agent conversations for goal adherence and code changes for correctness.
 - **Runs anywhere**: from the terminal, as an agent skill, or in CI.
 - **Bring-your-own-model**: works with any provider using your own API keys.
-- **Works with existing subscriptions**: supports Anthropic and OpenAI subscriptions using [`--agentic`](#usage).
+- **Works with existing subscriptions**: supports Anthropic, OpenAI, and Kiro subscriptions using [`--agentic`](#usage).
 - **Free and open source**: no account, fees, or data collection. Requests go directly to your inference provider. Licensed under the AGPL-3.0.
 
 <p align="center">
@@ -39,8 +39,8 @@ curl -fsSL https://raw.githubusercontent.com/imbue-ai/vet/main/install-skill.sh 
 
 You will be prompted to choose between:
 
-- **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, and `.codex/skills/vet/` at the repo root (run from your repo directory)
-- **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, and `~/.codex/` skill directories, discovered globally by all agents
+- **Project level**: installs into `.agents/skills/vet/`, `.opencode/skills/vet/`, `.claude/skills/vet/`, `.codex/skills/vet/`, and `.kiro/skills/vet/` at the repo root (run from your repo directory)
+- **User level**: installs into `~/.agents/`, `~/.opencode/`, `~/.claude/`, `~/.codex/`, and `~/.kiro/` skill directories, discovered globally by all agents
 
 ### Demo
 
@@ -54,9 +54,9 @@ You will be prompted to choose between:
 From the root of your git repo:
 
 ```bash
-for dir in .agents .opencode .claude .codex; do
+for dir in .agents .opencode .claude .codex .kiro; do
   mkdir -p "$dir/skills/vet/scripts"
-  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py scripts/export_kiro_session.py; do
     curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
       -o "$dir/skills/vet/$file"
   done
@@ -66,9 +66,9 @@ done
 #### User Level
 
 ```bash
-for dir in ~/.agents ~/.opencode ~/.claude ~/.codex; do
+for dir in ~/.agents ~/.opencode ~/.claude ~/.codex ~/.kiro; do
   mkdir -p "$dir/skills/vet/scripts"
-  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py; do
+  for file in SKILL.md scripts/export_opencode_session.py scripts/export_codex_session.py scripts/export_claude_code_session.py scripts/export_kiro_session.py; do
     curl -fsSL "https://raw.githubusercontent.com/imbue-ai/vet/main/skills/vet/$file" \
       -o "$dir/skills/vet/$file"
   done
@@ -113,7 +113,7 @@ Compare against a base ref/commit:
 vet "Refactor storage layer" --base-commit main
 ```
 
-Use Claude Code, Codex, or OpenCode instead of LLM APIs (`--agent-harness`: `claude`, `codex`, `opencode`):
+Use Claude Code, Codex, OpenCode, or Kiro CLI instead of LLM APIs (`--agent-harness`: `claude`, `codex`, `opencode`, `kiro`):
 
 ```bash
 vet "Implement X without breaking Y" --agentic --agent-harness claude
