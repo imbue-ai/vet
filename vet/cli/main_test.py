@@ -180,3 +180,95 @@ class TestModelRefusal:
         captured = capsys.readouterr()
         assert "refused" in captured.err
         assert "try re-running" in captured.err
+
+
+def _git_repo_with_change(tmp_path: Path) -> Path:
+    import subprocess
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init"],
+        cwd=repo,
+        check=True,
+    )
+    (repo / "file.py").write_text("x = 1\n")
+    subprocess.run(["git", "add", "file.py"], cwd=repo, check=True)
+    return repo
+
+
+class TestRunUsageOutput:
+    """CLI tests for run-level cost/token reporting."""
+
+    def test_text_stderr_includes_cost_summary(self, tmp_path: Path, capsys) -> None:
+        from vet.imbue_core.data_types import RunUsage
+
+        repo = _git_repo_with_change(tmp_path)
+        env = _env_for_isolated_config(tmp_path) | {"ANTHROPIC_API_KEY": "test-key"}
+        usage = RunUsage(input_tokens=12400, output_tokens=1820, cost_usd=0.042, llm_calls=2)
+
+        with patch.dict(os.environ, env):
+            with patch("vet.cli.main.configure_logging"):
+                with patch("vet.api.find_issues", return_value=(tuple(), usage)):
+                    exit_code = main(["test goal", "--repo", str(repo)])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "No issues found." in captured.out
+        assert "Cost: $0.042 · 12,400 in / 1,820 out tokens · 2 LLM calls" in captured.err
+
+    def test_json_includes_usage_object(self, tmp_path: Path, capsys) -> None:
+        from vet.imbue_core.data_types import RunUsage
+
+        repo = _git_repo_with_change(tmp_path)
+        env = _env_for_isolated_config(tmp_path) | {"ANTHROPIC_API_KEY": "test-key"}
+        usage = RunUsage(input_tokens=100, output_tokens=20, cost_usd=0.01, llm_calls=1)
+
+        with patch.dict(os.environ, env):
+            with patch("vet.cli.main.configure_logging"):
+                with patch("vet.api.find_issues", return_value=(tuple(), usage)):
+                    exit_code = main(["test goal", "--repo", str(repo), "--output-format", "json", "--quiet"])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        payload = json.loads(captured.out)
+        assert payload["issues"] == []
+        assert payload["usage"]["input_tokens"] == 100
+        assert payload["usage"]["output_tokens"] == 20
+        assert payload["usage"]["cost_usd"] == 0.01
+        assert payload["usage"]["llm_calls"] == 1
+        assert "Cost:" not in captured.err
+
+    def test_quiet_hides_human_cost_summary(self, tmp_path: Path, capsys) -> None:
+        from vet.imbue_core.data_types import RunUsage
+
+        repo = _git_repo_with_change(tmp_path)
+        env = _env_for_isolated_config(tmp_path) | {"ANTHROPIC_API_KEY": "test-key"}
+        usage = RunUsage(input_tokens=50, output_tokens=5, cost_usd=0.001, llm_calls=1)
+
+        with patch.dict(os.environ, env):
+            with patch("vet.cli.main.configure_logging"):
+                with patch("vet.api.find_issues", return_value=(tuple(), usage)):
+                    exit_code = main(["test goal", "--repo", str(repo), "--quiet"])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert "Cost:" not in captured.err
+
+    def test_unknown_cost_printed_when_cost_missing(self, tmp_path: Path, capsys) -> None:
+        from vet.imbue_core.data_types import RunUsage
+
+        repo = _git_repo_with_change(tmp_path)
+        env = _env_for_isolated_config(tmp_path) | {"ANTHROPIC_API_KEY": "test-key"}
+        usage = RunUsage(input_tokens=50, output_tokens=5, cost_usd=None, llm_calls=1)
+
+        with patch.dict(os.environ, env):
+            with patch("vet.cli.main.configure_logging"):
+                with patch("vet.api.find_issues", return_value=(tuple(), usage)):
+                    exit_code = main(["test goal", "--repo", str(repo)])
+
+        assert exit_code == 0
+        captured = capsys.readouterr()
+        assert "Cost: unknown · 50 in / 5 out tokens · 1 LLM call" in captured.err

@@ -167,6 +167,14 @@ Vet snapshots the repo and diff, optionally adds a goal and agent conversation, 
 - Exit code `2`: invalid usage/configuration error
 - Exit code `10`: issues found
 
+After each run, vet prints a cost/token summary to stderr (unless `--quiet`), for example:
+
+```text
+Cost: $0.042 · 12,400 in / 1,820 out tokens · 2 LLM calls
+```
+
+With `--output-format json`, the same totals are included under a top-level `"usage"` object. Models or harnesses that do not report pricing show `Cost: unknown` (and `"cost_usd": null` in JSON). Per-call detail remains available via `-vv` TRACE logs.
+
 Output formats:
 - `text`
 - `json`
