@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
+from vet.imbue_core.data_types import RunUsage
 
 OUTPUT_FORMATS = ["text", "json", "github"]
 
@@ -14,6 +15,37 @@ OUTPUT_FIELDS = [
     "description",
     "severity",
 ]
+
+
+def usage_to_dict(usage: RunUsage) -> dict:
+    return usage.model_dump(mode="json")
+
+
+def _format_usd(amount: float) -> str:
+    formatted = f"{amount:.4f}".rstrip("0").rstrip(".")
+    if "." not in formatted:
+        return f"${formatted}.00"
+    dollars, cents = formatted.split(".", 1)
+    if len(cents) == 1:
+        formatted = f"{dollars}.{cents}0"
+    return f"${formatted}"
+
+
+def format_run_usage(usage: RunUsage) -> str | None:
+    """Format a one-line run usage summary for stderr. Returns None when there were no LLM calls."""
+    if usage.llm_calls == 0:
+        return None
+
+    if usage.cost_usd is None:
+        cost_part = "Cost: unknown"
+    else:
+        cost_part = f"Cost: {_format_usd(usage.cost_usd)}"
+
+    call_noun = "call" if usage.llm_calls == 1 else "calls"
+    return (
+        f"{cost_part} · {usage.input_tokens:,} in / {usage.output_tokens:,} out tokens"
+        f" · {usage.llm_calls} LLM {call_noun}"
+    )
 
 
 class IssueOutput(BaseModel):

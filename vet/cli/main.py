@@ -598,7 +598,9 @@ def main(argv: list[str] | None = None) -> int:
     from vet.cli.models import validate_model_id
     from vet.formatters import format_github_review
     from vet.formatters import format_issue_text
+    from vet.formatters import format_run_usage
     from vet.formatters import issue_to_dict
+    from vet.formatters import usage_to_dict
     from vet.imbue_core.agents.llm_apis.errors import BadAPIRequestError
     from vet.imbue_core.agents.llm_apis.errors import MissingAPIKeyError
     from vet.imbue_core.agents.llm_apis.errors import ModelRefusalError
@@ -704,7 +706,7 @@ def main(argv: list[str] | None = None) -> int:
             )
 
     try:
-        issues = find_issues(
+        issues, usage = find_issues(
             repo_path=repo_path,
             relative_to=args.base_commit,
             goal=goal,
@@ -765,19 +767,25 @@ def main(argv: list[str] | None = None) -> int:
         output_stream = sys.stdout
 
     try:
+        exit_code = 10 if issues else 0
+
         if not issues:
             if args.output_format == "json":
-                print(json.dumps({"issues": []}, indent=2), file=output_stream)
+                print(
+                    json.dumps({"issues": [], "usage": usage_to_dict(usage)}, indent=2),
+                    file=output_stream,
+                )
             elif args.output_format == "github":
                 payload = format_github_review(issues, output_fields)
                 print(json.dumps(payload, indent=2), file=output_stream)
             elif not args.quiet:
                 print("No issues found.", file=output_stream)
-            return 0
-
-        if args.output_format == "json":
+        elif args.output_format == "json":
             issues_list = [issue_to_dict(issue, output_fields) for issue in issues]
-            print(json.dumps({"issues": issues_list}, indent=2), file=output_stream)
+            print(
+                json.dumps({"issues": issues_list, "usage": usage_to_dict(usage)}, indent=2),
+                file=output_stream,
+            )
         elif args.output_format == "github":
             payload = format_github_review(issues, output_fields)
             print(json.dumps(payload, indent=2), file=output_stream)
@@ -786,7 +794,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(format_issue_text(issue, output_fields), file=output_stream)
                 print(file=output_stream)
 
-        return 10
+        if not args.quiet:
+            usage_summary = format_run_usage(usage)
+            if usage_summary is not None:
+                print(usage_summary, file=sys.stderr)
+
+        return exit_code
     finally:
         if output_file is not None:
             output_file.close()
