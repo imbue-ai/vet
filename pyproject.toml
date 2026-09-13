@@ -71,6 +71,7 @@ include = ["vet*"]
 [dependency-groups]
 dev = [
     "black",
+    "hypothesis>=6.168.0",
     "isort",
     "pytest",
     "syrupy",
