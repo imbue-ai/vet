@@ -1,12 +1,22 @@
 import subprocess
+from contextlib import contextmanager
 from pathlib import Path
 
+import pytest
+from hypothesis import HealthCheck
+from hypothesis import given
+from hypothesis import settings
+from hypothesis import strategies as st
 from syrupy.assertion import SnapshotAssertion
 
+from vet.errors import RunCommandError
+from vet.git import SyncLocalGitRepo
 from vet.imbue_core.agents.llm_apis.anthropic_api import AnthropicModelName
+from vet.imbue_core.async_monkey_patches_test import expect_exact_logged_errors
 from vet.imbue_core.nested_evolver import assign
 from vet.imbue_core.nested_evolver import chill
 from vet.imbue_core.nested_evolver import evolver
+from vet.imbue_core.test_repo_utils import make_simple_test_git_repo
 from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
 from vet.repo_utils import get_code_to_check
 from vet.repo_utils import strip_submodule_diffs
@@ -68,6 +78,63 @@ def test_get_code_to_check(simple_test_git_repo: Path) -> None:
     assert "+unstaged written modified content" in diff_no_binary
     assert "+committed modified content" in diff_no_binary
     assert "Binary files /dev/null and b/file1.bin differ" in diff_no_binary
+
+
+@given(
+    link_suffix=st.text(alphabet="abcdefghijklmnopqrstuvwxyz0123456789-_", min_size=1, max_size=12),
+    target_is_directory=st.booleans(),
+)
+@settings(
+    max_examples=20,
+    deadline=None,
+    # The autouse log fixture is observational; repository state is recreated for every example.
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
+def test_get_untracked_file_diff_handles_symlinks(link_suffix: str, target_is_directory: bool) -> None:
+    with contextmanager(make_simple_test_git_repo)() as repo_path:
+        target_name = "file1.txt"
+        if target_is_directory:
+            target_name = "target-dir"
+            target_dir = repo_path / target_name
+            target_dir.mkdir()
+            (target_dir / "tracked.txt").write_text("tracked content")
+            subprocess.run(["git", "add", target_name], cwd=repo_path, check=True)
+            subprocess.run(["git", "commit", "-m", "Add target directory"], cwd=repo_path, check=True)
+
+        link_name = f"link-{link_suffix}"
+        (repo_path / link_name).symlink_to(target_name, target_is_directory=target_is_directory)
+        repo = SyncLocalGitRepo(repo_path)
+
+        if target_is_directory:
+            with pytest.raises(RunCommandError) as exc_info:
+                repo.get_untracked_file_diff(link_name)
+            assert exc_info.value.returncode == 1
+            assert link_name in str(exc_info.value.cmd)
+        else:
+            diff = repo.get_untracked_file_diff(link_name)
+            assert f"diff --git a/{link_name} b/{link_name}" in diff
+            assert "new file mode 120000" in diff
+            assert f"+{target_name}" in diff
+
+
+def test_get_code_to_check_skips_untracked_directory_symlink(simple_test_git_repo: Path) -> None:
+    target_dir = simple_test_git_repo / "target-dir"
+    target_dir.mkdir()
+    (target_dir / "untracked.txt").write_text("untracked content")
+    (simple_test_git_repo / "link-to-dir").symlink_to("target-dir", target_is_directory=True)
+
+    with expect_exact_logged_errors(
+        [
+            "Skipping untracked file we couldn't diff: link-to-dir",
+            "Skipping untracked file we couldn't diff (no binary): link-to-dir",
+        ]
+    ):
+        _, diff, diff_no_binary = get_code_to_check("HEAD", simple_test_git_repo)
+
+    assert "target-dir/untracked.txt" in diff
+    assert "target-dir/untracked.txt" in diff_no_binary
+    assert "link-to-dir" not in diff
+    assert "link-to-dir" not in diff_no_binary
 
 
 def test_build_context(simple_test_git_repo: Path, snapshot: SnapshotAssertion) -> None:

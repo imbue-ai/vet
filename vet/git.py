@@ -154,7 +154,11 @@ class SyncLocalGitRepo:
             is_stripped=False,
         )
         if not untracked_diff:
-            raise RunCommandError(f"Unable to diff untracked file {file_path}")
+            raise RunCommandError(
+                returncode=1,
+                cmd=shlex.join(["git", *command, "/dev/null", str(file_path)]),
+                cwd=self.base_path,
+            )
         return untracked_diff
 
     def is_commit_a_branch(self, commit_hash: str) -> bool:
