@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "verify-everything"
-version = "0.2.15"
+version = "0.2.16"
 description = "LLM-based code review tool that finds issues tests and linters miss"
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -42,7 +42,7 @@ dependencies = [
     "pyhumps",
     "tblib==2.0.0",
     "toml",
-    "typeid-python",
+    "typeid-python<0.3.10",
     "yasoo",
     "anthropic~=0.54",
     "openai>=1.79.0",

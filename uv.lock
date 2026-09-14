@@ -1587,7 +1587,7 @@ wheels = [
 
 [[package]]
 name = "verify-everything"
-version = "0.2.15"
+version = "0.2.16"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
@@ -1645,7 +1645,7 @@ requires-dist = [
     { name = "tblib", specifier = "==2.0.0" },
     { name = "tiktoken" },
     { name = "toml" },
-    { name = "typeid-python" },
+    { name = "typeid-python", specifier = "<0.3.10" },
     { name = "yasoo" },
 ]
 
