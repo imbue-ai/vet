@@ -264,10 +264,6 @@ def is_openai_reasoning_model(model_name: str) -> bool:
     )
 
 
-def _accepts_logprobs_parameter(model_name: str) -> bool:
-    return model_name != OpenAIModelName.GPT_6_ASTRA
-
-
 def is_fine_tuned_openai_model(model_name: OpenAIModelName) -> bool:
     return model_name.value.startswith(FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX) or model_name.value.startswith(
         FINE_TUNED_GPT4O_2024_08_06_PREFIX
@@ -382,9 +378,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 top_logprobs = NOT_GIVEN
 
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
-            logprobs: NotGiven | bool = (
-                self.is_using_logprobs if _accepts_logprobs_parameter(self.model_name) else NOT_GIVEN
-            )
+            logprobs: NotGiven | bool = NOT_GIVEN if is_reasoning_model else self.is_using_logprobs
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -459,7 +453,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
             is_reasoning_model = is_openai_reasoning_model(self.model_name)
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
-            logprobs: NotGiven | bool = False if _accepts_logprobs_parameter(self.model_name) else NOT_GIVEN
+            logprobs: NotGiven | bool = NOT_GIVEN if is_reasoning_model else False
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
