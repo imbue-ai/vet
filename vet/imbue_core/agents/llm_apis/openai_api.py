@@ -65,6 +65,11 @@ class OpenAIModelName(enum.StrEnum):
     GPT_5_2 = "gpt-5.2"
     GPT_5_4 = "gpt-5.4"
     GPT_5_4_PRO = "gpt-5.4-pro"
+    GPT_5_6 = "gpt-5.6"
+    GPT_5_6_SOL = "gpt-5.6-sol"
+    GPT_5_6_TERRA = "gpt-5.6-terra"
+    GPT_5_6_LUNA = "gpt-5.6-luna"
+    GPT_6_ASTRA = "gpt-6-astra"
 
 
 # Using Tier 5 rate limits
@@ -160,6 +165,46 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_output_tokens=128_000,
             rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
         ),
+        OpenAIModelName.GPT_5_6: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6),
+            cost_per_input_token=4 / 1_000_000,
+            cost_per_output_token=20 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+        ),
+        OpenAIModelName.GPT_5_6_SOL: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_SOL),
+            cost_per_input_token=4 / 1_000_000,
+            cost_per_output_token=20 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+        ),
+        OpenAIModelName.GPT_5_6_TERRA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_TERRA),
+            cost_per_input_token=2 / 1_000_000,
+            cost_per_output_token=12 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+        ),
+        OpenAIModelName.GPT_5_6_LUNA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_LUNA),
+            cost_per_input_token=0.2 / 1_000_000,
+            cost_per_output_token=1.2 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
+        ),
+        OpenAIModelName.GPT_6_ASTRA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_6_ASTRA),
+            cost_per_input_token=10 / 1_000_000,
+            cost_per_output_token=50 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+        ),
     }
 )
 
@@ -211,6 +256,11 @@ def is_openai_reasoning_model(model_name: str) -> bool:
         OpenAIModelName.GPT_5_2,
         OpenAIModelName.GPT_5_4,
         OpenAIModelName.GPT_5_4_PRO,
+        OpenAIModelName.GPT_5_6,
+        OpenAIModelName.GPT_5_6_SOL,
+        OpenAIModelName.GPT_5_6_TERRA,
+        OpenAIModelName.GPT_5_6_LUNA,
+        OpenAIModelName.GPT_6_ASTRA,
     )
 
 
@@ -328,6 +378,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 top_logprobs = NOT_GIVEN
 
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            logprobs: NotGiven | bool = NOT_GIVEN if is_reasoning_model else self.is_using_logprobs
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -340,7 +391,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                     seed=params.seed,
                     stop=params.stop,
                     presence_penalty=self.presence_penalty,
-                    logprobs=self.is_using_logprobs,
+                    logprobs=logprobs,
                     top_logprobs=top_logprobs,
                 )
                 assert isinstance(api_result, ChatCompletion)
@@ -402,6 +453,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
             is_reasoning_model = is_openai_reasoning_model(self.model_name)
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            logprobs: NotGiven | bool = NOT_GIVEN if is_reasoning_model else False
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -415,7 +467,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                     stream=True,
                     stream_options={"include_usage": True},
                     presence_penalty=self.presence_penalty,
-                    logprobs=False,  # not used when streaming
+                    logprobs=logprobs,
                     top_logprobs=NOT_GIVEN,  # only allowed when logprobs=True
                 )
             assert isinstance(api_result, AsyncStream)

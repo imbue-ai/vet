@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from vet.cli.config.schema import ModelConfig
@@ -12,6 +14,9 @@ from vet.cli.models import get_builtin_models_by_provider
 from vet.cli.models import get_models_by_provider
 from vet.cli.models import is_valid_model_id
 from vet.cli.models import validate_model_id
+from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
+from vet.imbue_core.agents.llm_apis.openai_api import get_model_info
+from vet.imbue_core.agents.llm_apis.openai_api import is_openai_reasoning_model
 
 SAMPLE_USER_CONFIG = ModelsConfig(
     providers={
@@ -119,6 +124,38 @@ def test_get_builtin_models_by_provider_all_values_are_lists_of_strings() -> Non
     for provider_name, models in providers.items():
         assert isinstance(models, list), f"{provider_name} should have a list of models"
         assert all(isinstance(m, str) for m in models), f"{provider_name} models should all be strings"
+
+
+@pytest.mark.parametrize(
+    ("model_name", "input_cost", "output_cost", "requests_per_minute"),
+    [
+        (OpenAIModelName.GPT_5_6, 4, 20, 15_000),
+        (OpenAIModelName.GPT_5_6_SOL, 4, 20, 15_000),
+        (OpenAIModelName.GPT_5_6_TERRA, 2, 12, 15_000),
+        (OpenAIModelName.GPT_5_6_LUNA, 0.2, 1.2, 30_000),
+        (OpenAIModelName.GPT_6_ASTRA, 10, 50, 15_000),
+    ],
+)
+def test_new_openai_models_are_available_as_builtins_and_registry_models(
+    model_name: OpenAIModelName,
+    input_cost: float,
+    output_cost: float,
+    requests_per_minute: int,
+) -> None:
+    model_info = get_model_info(model_name)
+    registry = ModelsConfig.model_validate_json((Path(__file__).parents[2] / "registry" / "models.json").read_text())
+    registry_model = registry.providers["openai"].models[model_name.value]
+
+    assert model_name.value in get_builtin_models_by_provider()["openai"]
+    assert model_info.model_name == model_name.value
+    assert model_info.cost_per_input_token == input_cost / 1_000_000
+    assert model_info.cost_per_output_token == output_cost / 1_000_000
+    assert model_info.max_input_tokens == registry_model.context_window == 1_050_000
+    assert model_info.max_output_tokens == registry_model.max_output_tokens == 128_000
+    assert model_info.rate_limit_req == requests_per_minute / 60
+    assert registry_model.model_id is None
+    assert registry_model.supports_temperature is False
+    assert is_openai_reasoning_model(model_name.value)
 
 
 def test_get_models_by_provider_returns_builtin_providers_when_no_config() -> None:

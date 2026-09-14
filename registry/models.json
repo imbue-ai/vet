@@ -15,6 +15,31 @@
           "context_window": 1050000,
           "max_output_tokens": 128000,
           "supports_temperature": false
+        },
+        "gpt-5.6": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        },
+        "gpt-5.6-sol": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        },
+        "gpt-5.6-terra": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        },
+        "gpt-5.6-luna": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
+        },
+        "gpt-6-astra": {
+          "context_window": 1050000,
+          "max_output_tokens": 128000,
+          "supports_temperature": false
         }
       }
     },
