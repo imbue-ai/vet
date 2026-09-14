@@ -109,8 +109,7 @@ class CountTokensResponse(Serializable, ModelResponse):
 class CachingInfo(SerializableModel):
     read_from_cache: int
 
-    # this should contain info that's not the same between providers. e.g. anthropic requires explicit cache writes with 5m or 1h duration,
-    # whereas openai does automatic prompt caching at no extra cost; so, we store cache write info here
+    # Provider-specific cache-write details, such as Anthropic's TTL or OpenAI's write-token count.
     provider_specific_data: ProviderSpecificCachingInfoUnion | None = None
 
 

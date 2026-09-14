@@ -40,6 +40,7 @@ from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import OpenAICompatibleAPI
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON
 from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAICachingInfo
+from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAIModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEvent
@@ -51,6 +52,14 @@ from vet.imbue_core.secrets_utils import get_secret
 
 FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX = "ft:gpt-4o-mini-2024-07-18"
 FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"
+
+_NEW_OPENAI_MODEL_INFO = OpenAIModelInfo(
+    cache_write_input_multiplier=1.25,
+    cache_read_input_multiplier=0.1,
+    long_context_threshold=272_000,
+    long_context_input_multiplier=2.0,
+    long_context_output_multiplier=1.5,
+)
 
 
 class OpenAIModelName(enum.StrEnum):
@@ -65,6 +74,11 @@ class OpenAIModelName(enum.StrEnum):
     GPT_5_2 = "gpt-5.2"
     GPT_5_4 = "gpt-5.4"
     GPT_5_4_PRO = "gpt-5.4-pro"
+    GPT_5_6 = "gpt-5.6"
+    GPT_5_6_SOL = "gpt-5.6-sol"
+    GPT_5_6_TERRA = "gpt-5.6-terra"
+    GPT_5_6_LUNA = "gpt-5.6-luna"
+    GPT_6_ASTRA = "gpt-6-astra"
 
 
 # Using Tier 5 rate limits
@@ -160,6 +174,51 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_output_tokens=128_000,
             rate_limit_req=10000 / 60,  # 10000 RPM = 166.67 RPS
         ),
+        OpenAIModelName.GPT_5_6: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6),
+            cost_per_input_token=4 / 1_000_000,
+            cost_per_output_token=20 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
+        ),
+        OpenAIModelName.GPT_5_6_SOL: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_SOL),
+            cost_per_input_token=4 / 1_000_000,
+            cost_per_output_token=20 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
+        ),
+        OpenAIModelName.GPT_5_6_TERRA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_TERRA),
+            cost_per_input_token=2 / 1_000_000,
+            cost_per_output_token=12 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
+        ),
+        OpenAIModelName.GPT_5_6_LUNA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_5_6_LUNA),
+            cost_per_input_token=0.2 / 1_000_000,
+            cost_per_output_token=1.2 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
+            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
+        ),
+        OpenAIModelName.GPT_6_ASTRA: ModelInfo(
+            model_name=str(OpenAIModelName.GPT_6_ASTRA),
+            cost_per_input_token=10 / 1_000_000,
+            cost_per_output_token=50 / 1_000_000,
+            max_input_tokens=1_050_000,
+            max_output_tokens=128_000,
+            rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
+            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
+        ),
     }
 )
 
@@ -211,7 +270,16 @@ def is_openai_reasoning_model(model_name: str) -> bool:
         OpenAIModelName.GPT_5_2,
         OpenAIModelName.GPT_5_4,
         OpenAIModelName.GPT_5_4_PRO,
+        OpenAIModelName.GPT_5_6,
+        OpenAIModelName.GPT_5_6_SOL,
+        OpenAIModelName.GPT_5_6_TERRA,
+        OpenAIModelName.GPT_5_6_LUNA,
+        OpenAIModelName.GPT_6_ASTRA,
     )
+
+
+def _accepts_logprobs_parameter(model_name: str) -> bool:
+    return model_name != OpenAIModelName.GPT_6_ASTRA
 
 
 def is_fine_tuned_openai_model(model_name: OpenAIModelName) -> bool:
@@ -328,6 +396,9 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 top_logprobs = NOT_GIVEN
 
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            logprobs: NotGiven | bool = (
+                self.is_using_logprobs if _accepts_logprobs_parameter(self.model_name) else NOT_GIVEN
+            )
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -340,7 +411,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                     seed=params.seed,
                     stop=params.stop,
                     presence_penalty=self.presence_penalty,
-                    logprobs=self.is_using_logprobs,
+                    logprobs=logprobs,
                     top_logprobs=top_logprobs,
                 )
                 assert isinstance(api_result, ChatCompletion)
@@ -354,7 +425,14 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 ) or 0
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
-                    provider_specific_data=OpenAICachingInfo(),
+                    provider_specific_data=OpenAICachingInfo(
+                        written_to_cache=(
+                            getattr(usage.prompt_tokens_details, "cache_write_tokens", 0)
+                            if usage.prompt_tokens_details is not None
+                            else 0
+                        )
+                        or 0
+                    ),
                 )
             else:
                 completion_tokens = 0
@@ -379,7 +457,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 )
 
             logger.trace("text: {text}", text=results[0].text)
-            dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
+            dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
             logger.trace("dollars used: {dollars_used}", dollars_used=dollars_used)
             return CostedLanguageModelResponse(
                 usage=LanguageModelResponseUsage(
@@ -402,6 +480,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
             is_reasoning_model = is_openai_reasoning_model(self.model_name)
             temperature: NotGiven | float = NOT_GIVEN if is_reasoning_model else params.temperature
+            logprobs: NotGiven | bool = False if _accepts_logprobs_parameter(self.model_name) else NOT_GIVEN
 
             async with _get_capacity_semaphor(self.model_name):
                 api_result = await client.chat.completions.create(
@@ -415,7 +494,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                     stream=True,
                     stream_options={"include_usage": True},
                     presence_penalty=self.presence_penalty,
-                    logprobs=False,  # not used when streaming
+                    logprobs=logprobs,
                     top_logprobs=NOT_GIVEN,  # only allowed when logprobs=True
                 )
             assert isinstance(api_result, AsyncStream)
@@ -448,16 +527,25 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
             if usage is not None:
                 completion_tokens = usage.completion_tokens
                 prompt_tokens = usage.prompt_tokens
-                dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
-                cached_tokens = usage.prompt_tokens_details.cached_tokens
+                cached_tokens = (
+                    usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details is not None else 0
+                ) or 0
                 logger.trace(
                     "Used this many cached read tokens: {cached_tokens}",
                     cached_tokens=cached_tokens,
                 )
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
-                    provider_specific_data=OpenAICachingInfo(),
+                    provider_specific_data=OpenAICachingInfo(
+                        written_to_cache=(
+                            getattr(usage.prompt_tokens_details, "cache_write_tokens", 0)
+                            if usage.prompt_tokens_details is not None
+                            else 0
+                        )
+                        or 0
+                    ),
                 )
+                dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
             else:
                 completion_tokens = -1
                 prompt_tokens = -1
@@ -477,6 +565,50 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
     def count_tokens(self, text: str) -> int:
         return count_openai_tokens(text, self.model_name)
+
+    def estimate_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
+        pricing = self.model_info.provider_specific_info
+        if not isinstance(pricing, OpenAIModelInfo):
+            return self.basic_calculate_cost(prompt_tokens, completion_tokens)
+
+        is_long_context = pricing.long_context_threshold is not None and prompt_tokens > pricing.long_context_threshold
+        input_multiplier = pricing.long_context_input_multiplier if is_long_context else 1.0
+        output_multiplier = pricing.long_context_output_multiplier if is_long_context else 1.0
+        return (
+            prompt_tokens
+            * self.model_info.cost_per_input_token
+            * input_multiplier
+            * pricing.cache_write_input_multiplier
+            + completion_tokens * self.model_info.cost_per_output_token * output_multiplier
+        )
+
+    def calculate_cost(
+        self,
+        prompt_tokens: int,
+        completion_tokens: int,
+        caching_info: CachingInfo | None = None,
+    ) -> float:
+        pricing = self.model_info.provider_specific_info
+        if not isinstance(pricing, OpenAIModelInfo):
+            return self.basic_calculate_cost(prompt_tokens, completion_tokens)
+
+        cache_read_tokens = caching_info.read_from_cache if caching_info is not None else 0
+        cache_write_tokens = 0
+        if caching_info is not None and isinstance(caching_info.provider_specific_data, OpenAICachingInfo):
+            cache_write_tokens = caching_info.provider_specific_data.written_to_cache
+        regular_input_tokens = max(0, prompt_tokens - cache_read_tokens - cache_write_tokens)
+
+        is_long_context = pricing.long_context_threshold is not None and prompt_tokens > pricing.long_context_threshold
+        input_multiplier = pricing.long_context_input_multiplier if is_long_context else 1.0
+        output_multiplier = pricing.long_context_output_multiplier if is_long_context else 1.0
+        input_cost = self.model_info.cost_per_input_token * input_multiplier
+
+        return (
+            regular_input_tokens * input_cost
+            + cache_read_tokens * input_cost * pricing.cache_read_input_multiplier
+            + cache_write_tokens * input_cost * pricing.cache_write_input_multiplier
+            + completion_tokens * self.model_info.cost_per_output_token * output_multiplier
+        )
 
     def _parse_response_without_logprobs(
         self,

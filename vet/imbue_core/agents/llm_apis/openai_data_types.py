@@ -2,12 +2,16 @@ from vet.imbue_core.pydantic_serialization import SerializableModel
 
 
 class OpenAIModelInfo(SerializableModel):
-    """Currently there isn't any model info specific to OpenAI"""
+    cache_write_input_multiplier: float = 1.0
+    cache_read_input_multiplier: float = 1.0
+    long_context_threshold: int | None = None
+    long_context_input_multiplier: float = 1.0
+    long_context_output_multiplier: float = 1.0
 
     object_type: str = "OpenAIModelInfo"
 
 
 class OpenAICachingInfo(SerializableModel):
-    """Currently there isn't any caching info specific to OpenAI"""
+    written_to_cache: int = 0
 
     object_type: str = "OpenAICachingInfo"
