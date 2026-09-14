@@ -7,12 +7,10 @@ from openai.types.chat import ChatCompletion
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 
-from vet.imbue_core.agents.llm_apis.data_types import CachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIChatAPI
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.openai_api import _accepts_logprobs_parameter
-from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAICachingInfo
 
 
 def _make_completion(content: str) -> ChatCompletion:
@@ -48,18 +46,3 @@ async def test_astra_omits_unsupported_parameters(monkeypatch: pytest.MonkeyPatc
     assert create.await_args.kwargs["temperature"] is NOT_GIVEN
     assert create.await_args.kwargs["logprobs"] is NOT_GIVEN
     assert create.await_args.kwargs["top_logprobs"] is NOT_GIVEN
-
-
-def test_new_model_long_context_and_cache_pricing() -> None:
-    api = OpenAIChatAPI(model_name=OpenAIModelName.GPT_5_6_SOL, cache_path=None)
-
-    assert api.estimate_cost(272_000, 1_000) == pytest.approx(272_000 * 5e-6 + 1_000 * 20e-6)
-    assert api.estimate_cost(272_001, 1_000) == pytest.approx(272_001 * 10e-6 + 1_000 * 30e-6)
-
-    caching_info = CachingInfo(
-        read_from_cache=100_000,
-        provider_specific_data=OpenAICachingInfo(written_to_cache=50_000),
-    )
-    assert api.calculate_cost(200_000, 1_000, caching_info) == pytest.approx(
-        50_000 * 4e-6 + 100_000 * 0.4e-6 + 50_000 * 5e-6 + 1_000 * 20e-6
-    )

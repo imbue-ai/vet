@@ -17,7 +17,6 @@ from vet.cli.models import validate_model_id
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.openai_api import get_model_info
 from vet.imbue_core.agents.llm_apis.openai_api import is_openai_reasoning_model
-from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAIModelInfo
 
 SAMPLE_USER_CONFIG = ModelsConfig(
     providers={
@@ -146,7 +145,6 @@ def test_new_openai_models_are_available_as_builtins_and_registry_models(
     model_info = get_model_info(model_name)
     registry = ModelsConfig.model_validate_json((Path(__file__).parents[2] / "registry" / "models.json").read_text())
     registry_model = registry.providers["openai"].models[model_name.value]
-    pricing = model_info.provider_specific_info
 
     assert model_name.value in get_builtin_models_by_provider()["openai"]
     assert model_info.model_name == model_name.value
@@ -155,12 +153,6 @@ def test_new_openai_models_are_available_as_builtins_and_registry_models(
     assert model_info.max_input_tokens == registry_model.context_window == 1_050_000
     assert model_info.max_output_tokens == registry_model.max_output_tokens == 128_000
     assert model_info.rate_limit_req == requests_per_minute / 60
-    assert isinstance(pricing, OpenAIModelInfo)
-    assert pricing.cache_write_input_multiplier == 1.25
-    assert pricing.cache_read_input_multiplier == 0.1
-    assert pricing.long_context_threshold == 272_000
-    assert pricing.long_context_input_multiplier == 2.0
-    assert pricing.long_context_output_multiplier == 1.5
     assert registry_model.model_id is None
     assert registry_model.supports_temperature is False
     assert is_openai_reasoning_model(model_name.value)

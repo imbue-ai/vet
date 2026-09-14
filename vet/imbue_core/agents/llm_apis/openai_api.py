@@ -40,7 +40,6 @@ from vet.imbue_core.agents.llm_apis.models import ModelInfo
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import OpenAICompatibleAPI
 from vet.imbue_core.agents.llm_apis.openai_compatible_api import _OPENAI_COMPATIBLE_STOP_REASON_TO_STOP_REASON
 from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAICachingInfo
-from vet.imbue_core.agents.llm_apis.openai_data_types import OpenAIModelInfo
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamDeltaEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEndEvent
 from vet.imbue_core.agents.llm_apis.stream import LanguageModelStreamEvent
@@ -52,14 +51,6 @@ from vet.imbue_core.secrets_utils import get_secret
 
 FINE_TUNED_GPT4O_MINI_2024_07_18_PREFIX = "ft:gpt-4o-mini-2024-07-18"
 FINE_TUNED_GPT4O_2024_08_06_PREFIX = "ft:gpt-4o-2024-08-06"
-
-_NEW_OPENAI_MODEL_INFO = OpenAIModelInfo(
-    cache_write_input_multiplier=1.25,
-    cache_read_input_multiplier=0.1,
-    long_context_threshold=272_000,
-    long_context_input_multiplier=2.0,
-    long_context_output_multiplier=1.5,
-)
 
 
 class OpenAIModelName(enum.StrEnum):
@@ -181,7 +172,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=1_050_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
-            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
         ),
         OpenAIModelName.GPT_5_6_SOL: ModelInfo(
             model_name=str(OpenAIModelName.GPT_5_6_SOL),
@@ -190,7 +180,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=1_050_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
-            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
         ),
         OpenAIModelName.GPT_5_6_TERRA: ModelInfo(
             model_name=str(OpenAIModelName.GPT_5_6_TERRA),
@@ -199,7 +188,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=1_050_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
-            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
         ),
         OpenAIModelName.GPT_5_6_LUNA: ModelInfo(
             model_name=str(OpenAIModelName.GPT_5_6_LUNA),
@@ -208,7 +196,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=1_050_000,
             max_output_tokens=128_000,
             rate_limit_req=30000 / 60,  # 30000 RPM = 500 RPS
-            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
         ),
         OpenAIModelName.GPT_6_ASTRA: ModelInfo(
             model_name=str(OpenAIModelName.GPT_6_ASTRA),
@@ -217,7 +204,6 @@ OPENAI_MODEL_INFO_BY_NAME: FrozenMapping[OpenAIModelName, ModelInfo] = FrozenDic
             max_input_tokens=1_050_000,
             max_output_tokens=128_000,
             rate_limit_req=15000 / 60,  # 15000 RPM = 250 RPS
-            provider_specific_info=_NEW_OPENAI_MODEL_INFO,
         ),
     }
 )
@@ -425,14 +411,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 ) or 0
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
-                    provider_specific_data=OpenAICachingInfo(
-                        written_to_cache=(
-                            getattr(usage.prompt_tokens_details, "cache_write_tokens", 0)
-                            if usage.prompt_tokens_details is not None
-                            else 0
-                        )
-                        or 0
-                    ),
+                    provider_specific_data=OpenAICachingInfo(),
                 )
             else:
                 completion_tokens = 0
@@ -457,7 +436,7 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
                 )
 
             logger.trace("text: {text}", text=results[0].text)
-            dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
+            dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
             logger.trace("dollars used: {dollars_used}", dollars_used=dollars_used)
             return CostedLanguageModelResponse(
                 usage=LanguageModelResponseUsage(
@@ -527,25 +506,16 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
             if usage is not None:
                 completion_tokens = usage.completion_tokens
                 prompt_tokens = usage.prompt_tokens
-                cached_tokens = (
-                    usage.prompt_tokens_details.cached_tokens if usage.prompt_tokens_details is not None else 0
-                ) or 0
+                dollars_used = self.calculate_cost(prompt_tokens, completion_tokens)
+                cached_tokens = usage.prompt_tokens_details.cached_tokens
                 logger.trace(
                     "Used this many cached read tokens: {cached_tokens}",
                     cached_tokens=cached_tokens,
                 )
                 caching_info = CachingInfo(
                     read_from_cache=cached_tokens,
-                    provider_specific_data=OpenAICachingInfo(
-                        written_to_cache=(
-                            getattr(usage.prompt_tokens_details, "cache_write_tokens", 0)
-                            if usage.prompt_tokens_details is not None
-                            else 0
-                        )
-                        or 0
-                    ),
+                    provider_specific_data=OpenAICachingInfo(),
                 )
-                dollars_used = self.calculate_cost(prompt_tokens, completion_tokens, caching_info)
             else:
                 completion_tokens = -1
                 prompt_tokens = -1
@@ -565,50 +535,6 @@ class OpenAIChatAPI(OpenAICompatibleAPI):
 
     def count_tokens(self, text: str) -> int:
         return count_openai_tokens(text, self.model_name)
-
-    def estimate_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
-        pricing = self.model_info.provider_specific_info
-        if not isinstance(pricing, OpenAIModelInfo):
-            return self.basic_calculate_cost(prompt_tokens, completion_tokens)
-
-        is_long_context = pricing.long_context_threshold is not None and prompt_tokens > pricing.long_context_threshold
-        input_multiplier = pricing.long_context_input_multiplier if is_long_context else 1.0
-        output_multiplier = pricing.long_context_output_multiplier if is_long_context else 1.0
-        return (
-            prompt_tokens
-            * self.model_info.cost_per_input_token
-            * input_multiplier
-            * pricing.cache_write_input_multiplier
-            + completion_tokens * self.model_info.cost_per_output_token * output_multiplier
-        )
-
-    def calculate_cost(
-        self,
-        prompt_tokens: int,
-        completion_tokens: int,
-        caching_info: CachingInfo | None = None,
-    ) -> float:
-        pricing = self.model_info.provider_specific_info
-        if not isinstance(pricing, OpenAIModelInfo):
-            return self.basic_calculate_cost(prompt_tokens, completion_tokens)
-
-        cache_read_tokens = caching_info.read_from_cache if caching_info is not None else 0
-        cache_write_tokens = 0
-        if caching_info is not None and isinstance(caching_info.provider_specific_data, OpenAICachingInfo):
-            cache_write_tokens = caching_info.provider_specific_data.written_to_cache
-        regular_input_tokens = max(0, prompt_tokens - cache_read_tokens - cache_write_tokens)
-
-        is_long_context = pricing.long_context_threshold is not None and prompt_tokens > pricing.long_context_threshold
-        input_multiplier = pricing.long_context_input_multiplier if is_long_context else 1.0
-        output_multiplier = pricing.long_context_output_multiplier if is_long_context else 1.0
-        input_cost = self.model_info.cost_per_input_token * input_multiplier
-
-        return (
-            regular_input_tokens * input_cost
-            + cache_read_tokens * input_cost * pricing.cache_read_input_multiplier
-            + cache_write_tokens * input_cost * pricing.cache_write_input_multiplier
-            + completion_tokens * self.model_info.cost_per_output_token * output_multiplier
-        )
 
     def _parse_response_without_logprobs(
         self,
