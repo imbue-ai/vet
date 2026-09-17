@@ -59,23 +59,42 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check whether vet can run
+      id: preflight
+      shell: bash
+      env:
+        HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        BASE_REPO: ${{ github.repository }}
+      run: |
+        if [[ -z "$HEAD_REPO" ]]; then
+          echo "should-run=false" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Vet skipped::Vet reviews pull requests, and this workflow was not triggered by a pull_request event, so there is no diff to review."
+        elif [[ "$HEAD_REPO" != "$BASE_REPO" ]]; then
+          echo "should-run=false" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Vet skipped::Vet does not run on pull requests from forks ($HEAD_REPO). GitHub withholds repository secrets from fork pull requests and issues a read-only token, so vet has no API key to call and no permission to post review comments. A maintainer can review this pull request by re-running vet from a branch in $BASE_REPO."
+        else
+          echo "should-run=true" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Setup Python
+      if: steps.preflight.outputs.should-run == 'true'
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
     - name: Setup Node.js
-      if: inputs.agentic == 'true'
+      if: steps.preflight.outputs.should-run == 'true' && inputs.agentic == 'true'
       uses: actions/setup-node@v4
       with:
         node-version: "20"
 
     - name: Install Claude Code
-      if: inputs.agentic == 'true'
+      if: steps.preflight.outputs.should-run == 'true' && inputs.agentic == 'true'
       shell: bash
       run: npm install -g @anthropic-ai/claude-code
 
     - name: Install vet
+      if: steps.preflight.outputs.should-run == 'true'
       shell: bash
       run: |
         if [[ "${{ inputs.build-from-source }}" == "true" ]]; then
@@ -85,7 +104,7 @@ runs:
         fi
 
     - name: Run vet
-      if: github.event.pull_request.head.repo.full_name == github.repository
+      if: steps.preflight.outputs.should-run == 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}

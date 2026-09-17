@@ -154,6 +154,8 @@ jobs:
 
 The action handles Python setup, vet installation, merge base computation, and posting the review to the PR. `ANTHROPIC_API_KEY` must be set as a repository secret when using Anthropic models (the default). See [`action.yml`](https://github.com/imbue-ai/vet/blob/main/action.yml) for all available inputs.
 
+Pull requests opened from a fork are skipped. GitHub withholds repository secrets from fork pull requests and issues a read-only token, so vet has no API key to call and no permission to post review comments. The action reports the skip as a workflow notice rather than a failure; a maintainer can review such a pull request by re-running vet from a branch in the base repository.
+
 ## How it works
 
 Vet snapshots the repo and diff, optionally adds a goal and agent conversation, runs LLM checks, then filters/deduplicates findings into a final list of issues.
