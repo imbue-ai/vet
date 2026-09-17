@@ -14,6 +14,7 @@ from vet.cli.models import get_builtin_models_by_provider
 from vet.cli.models import get_models_by_provider
 from vet.cli.models import is_valid_model_id
 from vet.cli.models import validate_model_id
+from vet.imbue_core.agents.llm_apis.common import get_model_info_from_name
 from vet.imbue_core.agents.llm_apis.openai_api import OpenAIModelName
 from vet.imbue_core.agents.llm_apis.openai_api import get_model_info
 from vet.imbue_core.agents.llm_apis.openai_api import is_openai_reasoning_model
@@ -156,6 +157,38 @@ def test_new_openai_models_are_available_as_builtins_and_registry_models(
     assert registry_model.model_id is None
     assert registry_model.supports_temperature is False
     assert is_openai_reasoning_model(model_name.value)
+
+
+def test_registry_models_agree_with_the_builtins_they_shadow() -> None:
+    """Every registry entry that names a builtin model must report the same limits as that builtin.
+
+    The registry exists so that an older vet build can reach a newer model id. A model can
+    therefore be described twice: once by the builtin definition compiled into vet, and once by
+    registry/models.json. Whichever definition wins at runtime decides how vet sizes its prompts,
+    so the two have to say the same thing. The parametrized test above pins this for a hand-kept
+    list of OpenAI models; this one covers every registry entry, including providers added later.
+    """
+    registry = ModelsConfig.model_validate_json((Path(__file__).parents[2] / "registry" / "models.json").read_text())
+    builtin_model_ids = set(get_builtin_model_ids())
+
+    shadowing_entries = []
+    for provider_key, provider in registry.providers.items():
+        for model_key, model in provider.models.items():
+            resolved_model_id = model.model_id or model_key
+            if resolved_model_id not in builtin_model_ids:
+                continue
+            shadowing_entries.append(f"{provider_key}/{model_key}")
+            model_info = get_model_info_from_name(resolved_model_id)
+            assert model_info.max_input_tokens == model.context_window, (
+                f"{provider_key}/{model_key} declares context_window={model.context_window} "
+                f"but the builtin {resolved_model_id} reports max_input_tokens={model_info.max_input_tokens}"
+            )
+            assert model_info.max_output_tokens == model.max_output_tokens, (
+                f"{provider_key}/{model_key} declares max_output_tokens={model.max_output_tokens} "
+                f"but the builtin {resolved_model_id} reports max_output_tokens={model_info.max_output_tokens}"
+            )
+
+    assert shadowing_entries, "expected registry/models.json to describe at least one builtin model"
 
 
 def test_get_models_by_provider_returns_builtin_providers_when_no_config() -> None:
