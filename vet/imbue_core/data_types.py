@@ -322,6 +322,19 @@ class InvocationInfo(SerializableModel):
     num_turns: int | None = None
 
 
+class RunUsage(SerializableModel):
+    """Aggregated token usage and cost for a full vet run."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_creation_input_tokens: int = 0
+    cache_read_input_tokens: int = 0
+    # None means cost was not reported by the provider/harness (distinct from $0.00).
+    cost_usd: float | None = None
+    llm_calls: int = 0
+    duration_ms: float | None = None
+
+
 class IssueIdentificationLLMResponseMetadata(SerializableModel):
     """Configuration metadata for LLM responses."""
 
@@ -345,6 +358,43 @@ class LLMResponse(SerializableModel):
 
 class IssueIdentificationDebugInfo(SerializableModel):
     llm_responses: tuple[LLMResponse, ...]
+
+
+def _sum_optional_ints(values: list[int | None]) -> int:
+    return sum(value for value in values if value is not None)
+
+
+def _input_tokens_for_invocation(info: InvocationInfo) -> int | None:
+    if info.total_input_tokens is not None:
+        return info.total_input_tokens
+    return info.input_tokens
+
+
+def aggregate_run_usage(debug_info: IssueIdentificationDebugInfo) -> RunUsage:
+    """Aggregate per-call invocation info into run-level usage totals."""
+    responses = debug_info.llm_responses
+    infos = [response.invocation_info for response in responses if response.invocation_info is not None]
+
+    input_tokens = _sum_optional_ints([_input_tokens_for_invocation(info) for info in infos])
+    output_tokens = _sum_optional_ints([info.output_tokens for info in infos])
+    cache_creation_input_tokens = _sum_optional_ints([info.cache_creation_input_tokens for info in infos])
+    cache_read_input_tokens = _sum_optional_ints([info.cache_read_input_tokens for info in infos])
+
+    known_costs = [info.cost for info in infos if info.cost is not None]
+    cost_usd = sum(known_costs) if known_costs else None
+
+    duration_values = [info.duration_ms for info in infos if info.duration_ms is not None]
+    duration_ms = sum(duration_values) if duration_values else None
+
+    return RunUsage(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cache_creation_input_tokens=cache_creation_input_tokens,
+        cache_read_input_tokens=cache_read_input_tokens,
+        cost_usd=cost_usd,
+        llm_calls=len(responses),
+        duration_ms=duration_ms,
+    )
 
 
 class IssueIdentifierResult(SerializableModel):

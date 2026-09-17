@@ -10,6 +10,8 @@ from loguru import logger
 
 from vet.imbue_core.data_types import IdentifiedVerifyIssue
 from vet.imbue_core.data_types import IssueIdentificationDebugInfo
+from vet.imbue_core.data_types import RunUsage
+from vet.imbue_core.data_types import aggregate_run_usage
 from vet.imbue_tools.get_conversation_history.get_conversation_history import ConversationLoadingError
 from vet.imbue_tools.get_conversation_history.input_data_types import IdentifierInputs
 from vet.imbue_tools.repo_utils.project_context import LazyProjectContext
@@ -104,7 +106,7 @@ def find_issues(
     conversation_history: tuple[ConversationMessageUnion, ...] | None = None,
     extra_context: str | None = None,
     only_staged: bool = False,
-) -> tuple[IdentifiedVerifyIssue, ...]:
+) -> tuple[tuple[IdentifiedVerifyIssue, ...], RunUsage]:
     if only_staged:
         logger.debug(
             "Finding issues in {repo_path} (staged changes)",
@@ -131,9 +133,9 @@ def find_issues(
                 relative_to=relative_to,
             )
         # No code changes detected, so no issues to find.
-        return tuple()
+        return tuple(), RunUsage()
 
-    issues, _, _ = get_issues_with_raw_responses(
+    issues, debug_info, _ = get_issues_with_raw_responses(
         base_commit=base_commit,
         diff=diff,
         diff_no_binary=diff_no_binary,
@@ -143,4 +145,4 @@ def find_issues(
         conversation_history=conversation_history,
         extra_context=extra_context,
     )
-    return issues
+    return issues, aggregate_run_usage(debug_info)
