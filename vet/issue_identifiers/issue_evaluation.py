@@ -1,6 +1,7 @@
 from typing import Generator
 
 import jinja2
+from loguru import logger
 
 from vet.imbue_core.agents.llm_apis.build_apis import build_language_model_from_config
 from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
@@ -266,10 +267,18 @@ def filter_issues(
     """
 
     filter_llm_responses = []
+    total_raised = 0
+    confidence_dropped = 0
+    llm_evaluator_dropped = 0
+    threshold = get_vet_confidence_threshold(config)
 
     issue_generator_with_capture = ReturnCapturingGenerator(issue_generator)
     for issue in issue_generator_with_capture:
-        passes_filtration = evaluate_issue_through_confidence(issue, config)
+        total_raised += 1
+        passes_confidence = evaluate_issue_through_confidence(issue, config)
+        passes_filtration = passes_confidence
+        if not passes_confidence:
+            confidence_dropped += 1
         if passes_filtration:
             issue_code = IssueCode(issue.issue_code)
             formatted_guide = format_issue_identification_guide_for_llm(guides_by_issue_code[issue_code])
@@ -282,9 +291,29 @@ def filter_issues(
                 formatted_guide,
             )
             filter_llm_responses.extend(llm_responses)
+            if not passes_filtration:
+                llm_evaluator_dropped += 1
         issue.set_passes_filtration(passes_filtration)
         yield issue
     issue_generator_debug_info = issue_generator_with_capture.return_value
+
+    # A silent drop here is indistinguishable from "the identifier found nothing" at the CLI's
+    # exit code and --output JSON. Always logged (the log file sink in configure_logging is
+    # unconditional regardless of -v), so a run that looked clean is auditable after the fact --
+    # this is the mechanism that produced a false-clean {"issues": []} in practice (2026-09-20,
+    # wVet2b: 16 raised findings, 0 at or above the 0.8 default, exit 0, nothing on stderr).
+    if confidence_dropped or llm_evaluator_dropped:
+        logger.warning(
+            "filtration dropped {dropped} of {total} raised issue(s): {confidence_dropped} below "
+            "confidence threshold {threshold} (never reached the LLM evaluator), {llm_dropped} rejected "
+            "by the LLM evaluator. A clean result does not mean nothing was raised -- rerun with "
+            "--confidence-threshold 0.0 to see everything.",
+            dropped=confidence_dropped + llm_evaluator_dropped,
+            total=total_raised,
+            confidence_dropped=confidence_dropped,
+            threshold=threshold,
+            llm_dropped=llm_evaluator_dropped,
+        )
 
     augmented_debug_info = IssueIdentificationDebugInfo(
         llm_responses=issue_generator_debug_info.llm_responses + tuple(filter_llm_responses)

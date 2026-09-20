@@ -19,8 +19,7 @@ from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
-from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.common import generate_response_from_agent
+from vet.issue_identifiers.common import generate_issues_from_agent
 from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -158,7 +157,7 @@ def collate_issues_with_agent(
         combined_issues_string,
         guides_by_issue_code,
     )
-    response_text, collation_messages = generate_response_from_agent(collation_prompt, options)
+    collated_issues, collation_messages = generate_issues_from_agent(collation_prompt, options, phase="collation")
     collation_raw_messages = tuple(json.dumps(message.model_dump()) for message in collation_messages)
     collation_invocation_info = extract_invocation_info_from_messages(collation_messages)
 
@@ -173,7 +172,7 @@ def collate_issues_with_agent(
         ),
     )
 
-    yield from generate_issues_from_response_texts(response_texts=(response_text,))
+    yield from collated_issues
 
     augmented_debug_info = IssueIdentificationDebugInfo(
         llm_responses=issue_generator_debug_info.llm_responses + collation_llm_responses

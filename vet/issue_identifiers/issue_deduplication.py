@@ -18,7 +18,7 @@ from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
-from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.common import generate_issues_from_language_model
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
 
@@ -153,30 +153,29 @@ def deduplicate_issues(
     combined_issues_string = _convert_parsed_issues_to_combined_string(issues_passing_filtration)
     prompt = _get_deduplication_prompt(enabled_issue_codes, combined_issues_string, guides_by_issue_code)
 
-    costed_response = language_model.complete_with_usage_sync(
+    deduplicated_issues, costed_responses = generate_issues_from_language_model(
+        language_model,
         prompt,
-        params=LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
-        is_caching_enabled=language_model.cache_path is not None,
+        LanguageModelGenerationParams(temperature=0.0, max_tokens=config.max_output_tokens),
+        phase="deduplication",
     )
 
-    response = only(costed_response.responses)
-    invocation_info = extract_invocation_info_from_costed_response(costed_response)
-
-    yield from generate_issues_from_response_texts(response_texts=(response.text,))
+    yield from deduplicated_issues
 
     # As per above TODO, now also yield out all issues that didn't pass filtration unchanged (these will keep their passes_filtration=False)
     for issue in issues_not_passing_filtration:
         yield issue
 
-    deduplication_llm_responses = (
+    deduplication_llm_responses = tuple(
         LLMResponse(
             metadata=IssueIdentificationLLMResponseMetadata(
                 agentic_phase=AgenticPhase.DEDUPLICATION,
                 issue_type=None,
             ),
-            raw_response=(response.text,),
-            invocation_info=invocation_info,
-        ),
+            raw_response=(only(costed_response.responses).text,),
+            invocation_info=extract_invocation_info_from_costed_response(costed_response),
+        )
+        for costed_response in costed_responses
     )
 
     augmented_debug_info = IssueIdentificationDebugInfo(

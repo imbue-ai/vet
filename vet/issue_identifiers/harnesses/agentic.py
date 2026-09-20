@@ -3,6 +3,7 @@ Agentic harness that checks a given diff for issues using coding agents with too
 """
 
 import concurrent.futures
+import contextvars
 import json
 from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
@@ -28,10 +29,10 @@ from vet.imbue_tools.types.vet_config import VetConfig
 from vet.issue_identifiers.base import IssueIdentifier
 from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
+from vet.issue_identifiers.common import IssueResponseParsingError
 from vet.issue_identifiers.common import extract_invocation_info_from_messages
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
-from vet.issue_identifiers.common import generate_issues_from_response_texts
-from vet.issue_identifiers.common import generate_response_from_agent
+from vet.issue_identifiers.common import generate_issues_from_agent
 from vet.issue_identifiers.common import get_agent_options
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
@@ -161,16 +162,13 @@ Do not report duplicate issues with the same or equivalent descriptions.
 """
 
 
-ResponseText = str
-
-
 def _generate_issues_worker(
     issue_code: IssueCode,
     prompt: str,
     options: AgentOptions,
-) -> tuple[IssueCode, ResponseText, list[AgentMessage]]:
-    response_text, agent_messages = generate_response_from_agent(prompt, options)
-    return issue_code, response_text, agent_messages
+) -> tuple[IssueCode, list[GeneratedIssueSchema], list[AgentMessage]]:
+    issues, agent_messages = generate_issues_from_agent(prompt, options, phase=f"issue identification ({issue_code})")
+    return issue_code, issues, agent_messages
 
 
 class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
@@ -260,8 +258,12 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 for guide in self._identification_guides
             ]
             with ThreadPoolExecutor(max_workers=config.max_identify_workers) as executor:
+                # Copy the context into each worker (as multiplex_generators does) so contextvar-scoped
+                # state such as logging expectations follows the work into the thread.
                 tasks = [
-                    executor.submit(_generate_issues_worker, issue_code, prompt, options)
+                    executor.submit(
+                        contextvars.copy_context().run, _generate_issues_worker, issue_code, prompt, options
+                    )
                     for issue_code, prompt in issue_prompts
                 ]
 
@@ -270,7 +272,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 for task in concurrent.futures.as_completed(tasks):
                     try:
                         result = task.result()
-                    except AgentCLINotFoundError:
+                    except (AgentCLINotFoundError, IssueResponseParsingError):
+                        # An unparseable verdict may hold real findings; it must abort the run
+                        # rather than be logged and counted as "no issues for this type".
                         raise
                     except Exception as e:
                         log_exception(e, "Error processing issue type: {e}", e=e)
@@ -278,9 +282,9 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                         continue
 
                     num_succeeded += 1
-                    issue_code, issue_type_response_text, messages = result
+                    issue_code, issue_type_issues, messages = result
 
-                    yield from generate_issues_from_response_texts(response_texts=(issue_type_response_text,))
+                    yield from issue_type_issues
 
                     message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
                     invocation_info = extract_invocation_info_from_messages(messages)
@@ -303,7 +307,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
         else:
             prompt = self._get_prompt(project_context, config, identifier_inputs)
-            response_text, messages = generate_response_from_agent(prompt, options)
+            issues, messages = generate_issues_from_agent(prompt, options, phase="issue identification")
 
             message_dumps = tuple(json.dumps(message.model_dump()) for message in messages)
             invocation_info = extract_invocation_info_from_messages(messages)
@@ -319,7 +323,7 @@ class _AgenticIssueIdentifier(IssueIdentifier[CommitInputs]):
                 )
             ]
 
-            yield from generate_issues_from_response_texts(response_texts=(response_text,))
+            yield from issues
 
             return IssueIdentificationDebugInfo(llm_responses=tuple(llm_responses))
 

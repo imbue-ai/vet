@@ -25,7 +25,15 @@ ResponseSchema = TypeVar("ResponseSchema", bound=SerializableModel)
 
 
 class ResponseParsingError(Exception):
-    pass
+    """Raised when a response cannot be parsed into the expected schema.
+
+    ``raw_response`` carries the full, unmodified response text so callers can surface it --
+    a parse failure must never be mistaken for an empty result.
+    """
+
+    def __init__(self, message: str, raw_response: str = "") -> None:
+        super().__init__(message)
+        self.raw_response = raw_response
 
 
 def parse_model_json_response(response_text: str, result_type: type[ResponseSchema]) -> ResponseSchema:
@@ -40,7 +48,7 @@ def parse_model_json_response(response_text: str, result_type: type[ResponseSche
             response_text=response_text,
             cleaned_response=cleaned_response,
         )
-        raise ResponseParsingError(str(e)) from e
+        raise ResponseParsingError(str(e), raw_response=response_text) from e
     except ValidationError as e:
         log_exception(
             e,
@@ -48,4 +56,4 @@ def parse_model_json_response(response_text: str, result_type: type[ResponseSche
             response_text=response_text,
             cleaned_response=cleaned_response,
         )
-        raise ResponseParsingError(str(e)) from e
+        raise ResponseParsingError(str(e), raw_response=response_text) from e

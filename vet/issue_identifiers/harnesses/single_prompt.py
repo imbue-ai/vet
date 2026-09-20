@@ -25,7 +25,7 @@ from vet.issue_identifiers.common import GeneratedIssueSchema
 from vet.issue_identifiers.common import GeneratedResponseSchema
 from vet.issue_identifiers.common import extract_invocation_info_from_costed_response
 from vet.issue_identifiers.common import format_issue_identification_guide_for_llm
-from vet.issue_identifiers.common import generate_issues_from_response_texts
+from vet.issue_identifiers.common import generate_issues_from_language_model
 from vet.issue_identifiers.harnesses.base import IssueIdentifierHarness
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 
@@ -155,24 +155,20 @@ class _SinglePromptIssueIdentifier(IssueIdentifier[CommitInputs]):
             temperature=config.temperature,
             max_tokens=config.max_output_tokens,
         )
-        costed_response = language_model.complete_with_usage_sync(
-            prompt,
-            params=language_model_params,
-            is_caching_enabled=language_model.cache_path is not None,
+        issues, costed_responses = generate_issues_from_language_model(
+            language_model, prompt, language_model_params, phase="issue identification"
         )
 
-        response = only(costed_response.responses)
-        invocation_info = extract_invocation_info_from_costed_response(costed_response)
-
-        llm_responses = (
+        llm_responses = tuple(
             LLMResponse(
                 metadata=IssueIdentificationLLMResponseMetadata(agentic_phase=AgenticPhase.ISSUE_IDENTIFICATION),
-                raw_response=(response.text,),
-                invocation_info=invocation_info,
-            ),
+                raw_response=(only(costed_response.responses).text,),
+                invocation_info=extract_invocation_info_from_costed_response(costed_response),
+            )
+            for costed_response in costed_responses
         )
 
-        yield from generate_issues_from_response_texts(response_texts=(response.text,))
+        yield from issues
 
         return IssueIdentificationDebugInfo(llm_responses=llm_responses)
 
