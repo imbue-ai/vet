@@ -23,6 +23,7 @@ from vet.cli.config.loader import load_models_config
 from vet.cli.config.loader import load_registry_config
 from vet.cli.config.loader import update_remote_registry_cache
 from vet.cli.config.schema import ModelsConfig
+from vet.errors import IssueResponseParsingError
 from vet.formatters import OUTPUT_FIELDS
 from vet.formatters import OUTPUT_FORMATS
 from vet.formatters import validate_output_fields
@@ -716,6 +717,15 @@ def main(argv: list[str] | None = None) -> int:
     except AgentCLINotFoundError as e:
         print(f"vet: {e}", file=sys.stderr)
         return 2
+    except IssueResponseParsingError as e:
+        # Never degrade an unparseable verdict to "No issues found." -- it may contain real findings.
+        print(f"vet: {e}", file=sys.stderr)
+        print(
+            "vet: the review did not produce a machine-readable verdict; no result file was written. "
+            "Read the raw response above, then re-run.",
+            file=sys.stderr,
+        )
+        return 1
     except AgentProcessError as e:
         if _is_context_overflow(e):
             print(

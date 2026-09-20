@@ -99,3 +99,29 @@ class GitCommandError(GitException):
             hints.append("  • Run 'git status' to diagnose repository issues")
 
         return hints
+
+
+class IssueResponseParsingError(Exception):
+    """An issue-identification response could not be parsed into the issue schema, even after a retry.
+
+    Raised instead of silently treating the response as "no issues": a prose verdict that fails to
+    parse may contain real findings, so it must surface as a hard failure with the raw text attached.
+    """
+
+    def __init__(self, phase: str, reason: str, raw_responses: tuple[str, ...]) -> None:
+        self.phase = phase
+        self.reason = reason
+        self.raw_responses = raw_responses
+        attempts = len(raw_responses)
+        summary = (
+            f"{phase}: model response could not be parsed as issue JSON after {attempts} attempt"
+            f"{'s' if attempts != 1 else ''} ({reason}). "
+            "Treating this as zero findings would be a false pass, so the run is aborted."
+        )
+        super().__init__(summary)
+
+    def __str__(self) -> str:
+        parts = [self.args[0]]
+        for index, raw_response in enumerate(self.raw_responses, start=1):
+            parts.append(f"--- raw response (attempt {index}) ---\n{raw_response.rstrip()}\n--- end raw response ---")
+        return "\n".join(parts)

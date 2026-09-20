@@ -11,6 +11,7 @@ from loguru import logger
 from pydantic import Field
 from pydantic import PrivateAttr
 
+from vet.errors import IssueResponseParsingError
 from vet.imbue_core.agents.agent_api.api import get_agent_client
 from vet.imbue_core.agents.agent_api.claude.data_types import ClaudeCodeOptions
 from vet.imbue_core.agents.agent_api.codex.data_types import CodexOptions
@@ -26,6 +27,8 @@ from vet.imbue_core.agents.agent_api.errors import AgentProcessError
 from vet.imbue_core.agents.agent_api.opencode.data_types import OpenCodeOptions
 from vet.imbue_core.agents.llm_apis.anthropic_data_types import AnthropicCachingInfo
 from vet.imbue_core.agents.llm_apis.data_types import CostedLanguageModelResponse
+from vet.imbue_core.agents.llm_apis.data_types import LanguageModelGenerationParams
+from vet.imbue_core.agents.llm_apis.language_model_api import LanguageModelAPI
 from vet.imbue_core.async_monkey_patches import log_exception
 from vet.imbue_core.data_types import AgentHarnessType
 from vet.imbue_core.data_types import ConfidenceScore
@@ -37,9 +40,11 @@ from vet.imbue_core.data_types import IssueIdentifierResult
 from vet.imbue_core.data_types import IssueLocation
 from vet.imbue_core.data_types import LineRange
 from vet.imbue_core.data_types import SeverityScore
+from vet.imbue_core.itertools import only
 from vet.imbue_core.pydantic_serialization import SerializableModel
 from vet.imbue_tools.llm_output_parsing.parse_model_json_response import ResponseParsingError
 from vet.imbue_tools.llm_output_parsing.parse_model_json_response import parse_model_json_response
+from vet.imbue_tools.repo_utils.context_utils import escape_prompt_markers
 from vet.imbue_tools.repo_utils.project_context import ProjectContext
 from vet.issue_identifiers.identification_guides import IssueIdentificationGuide
 from vet.issue_identifiers.utils import ReturnCapturingGenerator
@@ -83,19 +88,139 @@ class GeneratedResponseSchema(SerializableModel):
     issues: list[GeneratedIssueSchema] = Field(default_factory=list, description="List of identified issues")
 
 
+# Maximum number of model calls for one issue-identification response: the original plus one
+# retry that demands JSON only.
+MAX_ISSUE_RESPONSE_ATTEMPTS = 2
+
+JSON_ONLY_RETRY_PROMPT_TEMPLATE = """Your previous response could not be parsed as JSON.
+
+Parser error: {{ parse_error }}
+
+Respond with JSON only. Output exactly one JSON object matching the schema below, inside a single ```json fenced block, with no prose, headings, or commentary before or after it.
+Do not redo the analysis and do not use any tools: convert the findings already stated in your previous response into that structure, verbatim in substance.
+If your previous response reported no issues, return:
+```json
+{"issues": []}
+```
+
+Schema:
+{{ response_schema | tojson(indent=2) }}
+
+Your previous response was:
+### Previous response ###
+{{ previous_response }}
+###
+"""
+
+
+def build_json_only_retry_prompt(previous_response: str, parse_error: str) -> str:
+    """Build the stricter follow-up prompt sent when a response did not parse as issue JSON."""
+    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+    return env.from_string(JSON_ONLY_RETRY_PROMPT_TEMPLATE).render(
+        parse_error=parse_error,
+        response_schema=GeneratedResponseSchema.model_json_schema(),
+        previous_response=escape_prompt_markers(previous_response),
+    )
+
+
+def parse_issues_from_response_text(response_text: str) -> list[GeneratedIssueSchema]:
+    """Parse one response into issues. Raises ResponseParsingError (with the raw text attached) on failure."""
+    return list(parse_model_json_response(response_text, GeneratedResponseSchema).issues)
+
+
 def generate_issues_from_response_texts(
     response_texts: Iterable[str],
+    phase: str = "issue identification",
 ) -> Generator[GeneratedIssueSchema, None, None]:
-    """Generate IssueIdentifierResult objects from LLM response text."""
+    """Generate GeneratedIssueSchema objects from already-obtained LLM response texts.
+
+    A response that does not parse raises IssueResponseParsingError. It is never skipped,
+    because skipping it would report zero findings for a response that may contain real ones.
+    Callers that can re-prompt the model should use generate_issues_from_agent or
+    generate_issues_from_language_model, which retry once with a JSON-only instruction first.
+    """
     for response_text in response_texts:
         try:
-            parsed_data = parse_model_json_response(response_text, GeneratedResponseSchema)
-        except ResponseParsingError:
-            logger.warning(f"Failed to parse response text: {response_text}")
-            continue
+            parsed_issues = parse_issues_from_response_text(response_text)
+        except ResponseParsingError as e:
+            raise IssueResponseParsingError(phase=phase, reason=str(e), raw_responses=(response_text,)) from e
+        yield from parsed_issues
 
-        for raw_issue in parsed_data.issues:
-            yield raw_issue
+
+def generate_issues_from_agent(
+    prompt: str,
+    options: AgentOptions,
+    phase: str,
+) -> tuple[list[GeneratedIssueSchema], list[AgentMessage]]:
+    """Run an agent prompt and parse its response into issues, retrying once with a JSON-only instruction.
+
+    Returns the parsed issues and the agent messages from every attempt (so raw responses stay
+    available for debugging). Raises IssueResponseParsingError if the retry also fails to parse.
+    """
+    all_messages: list[AgentMessage] = []
+    raw_responses: list[str] = []
+    current_prompt = prompt
+    last_error: ResponseParsingError | None = None
+    for attempt in range(1, MAX_ISSUE_RESPONSE_ATTEMPTS + 1):
+        response_text, messages = generate_response_from_agent(current_prompt, options)
+        all_messages.extend(messages)
+        raw_responses.append(response_text)
+        try:
+            return parse_issues_from_response_text(response_text), all_messages
+        except ResponseParsingError as e:
+            last_error = e
+            if attempt < MAX_ISSUE_RESPONSE_ATTEMPTS:
+                logger.warning(
+                    "{phase}: response did not parse as issue JSON ({error}); retrying once with a JSON-only instruction",
+                    phase=phase,
+                    error=str(e).splitlines()[0] if str(e) else "unknown",
+                )
+                current_prompt = build_json_only_retry_prompt(previous_response=response_text, parse_error=str(e))
+    assert last_error is not None
+    raise IssueResponseParsingError(
+        phase=phase, reason=str(last_error), raw_responses=tuple(raw_responses)
+    ) from last_error
+
+
+def generate_issues_from_language_model(
+    language_model: LanguageModelAPI,
+    prompt: str,
+    params: LanguageModelGenerationParams,
+    phase: str,
+) -> tuple[list[GeneratedIssueSchema], list[CostedLanguageModelResponse]]:
+    """Complete a prompt via the language-model API and parse it into issues, retrying once with a JSON-only instruction.
+
+    Returns the parsed issues and the costed responses from every attempt.
+    Raises IssueResponseParsingError if the retry also fails to parse.
+    """
+    costed_responses: list[CostedLanguageModelResponse] = []
+    raw_responses: list[str] = []
+    current_prompt = prompt
+    last_error: ResponseParsingError | None = None
+    for attempt in range(1, MAX_ISSUE_RESPONSE_ATTEMPTS + 1):
+        costed_response = language_model.complete_with_usage_sync(
+            current_prompt,
+            params=params,
+            is_caching_enabled=language_model.cache_path is not None,
+        )
+        costed_responses.append(costed_response)
+        response_text = only(costed_response.responses).text
+        raw_responses.append(response_text)
+        try:
+            return parse_issues_from_response_text(response_text), costed_responses
+        except ResponseParsingError as e:
+            last_error = e
+            if attempt < MAX_ISSUE_RESPONSE_ATTEMPTS:
+                logger.warning(
+                    "{phase}: response did not parse as issue JSON ({error}); retrying once with a JSON-only instruction",
+                    phase=phase,
+                    error=str(e).splitlines()[0] if str(e) else "unknown",
+                )
+                current_prompt = build_json_only_retry_prompt(previous_response=response_text, parse_error=str(e))
+    assert last_error is not None
+    raise IssueResponseParsingError(
+        phase=phase, reason=str(last_error), raw_responses=tuple(raw_responses)
+    ) from last_error
 
 
 def line_ranges_to_issue_locations(line_ranges: Iterable[LineRange], file_path: str) -> tuple[IssueLocation, ...]:
