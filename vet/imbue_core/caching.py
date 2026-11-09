@@ -9,8 +9,8 @@ from typing import Self
 from typing import Sequence
 from typing import TypeVar
 
-from diskcache import Cache
-from diskcache import JSONDisk
+from diskcache_community import Cache
+from diskcache_community import SafeJSONDisk
 
 from vet.imbue_core.cattrs_serialization import deserialize_from_json
 from vet.imbue_core.cattrs_serialization import serialize_to_json
@@ -168,7 +168,7 @@ def get_cache(data_path: Path) -> Cache:
     # not sure if the size limit applies when eviction is none, but ~64GB should be enough for now
     return Cache(
         str(data_path),
-        disk=JSONDisk,
+        disk=SafeJSONDisk.with_options(on_error="miss"),
         disk_compress_level=0,
         eviction_policy="none",
         size_limit=2**36,
